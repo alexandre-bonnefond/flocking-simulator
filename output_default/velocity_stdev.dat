@@ -1,0 +1,4 @@
+This file contains standard deviations. Check out "velocity.dat" for more details!
+time_(s) 	 avg_of_velocity_Magnitude_(cm/s) 	 stdev_of_velocity_Magnitude_(cm/s) 	 min_of_velocity_Magnitude_(cm/s) 	 max_of_velocity_Magnitude_(cm/s) 	 Length_of_avg_velocity_(cm/s) 	 avg_velocity_x_(cm/s) 	 avg_velocity_y_(cm/s) 	 avg_velocity_z_(cm/s)
+
+600.010000	15.007784	7.819017	42.975435	23.325350	64.319641	272.360479	247.184347	0.000000
