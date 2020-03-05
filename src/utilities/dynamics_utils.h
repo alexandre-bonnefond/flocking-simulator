@@ -324,4 +324,8 @@ int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
         const double Range, const double freq, const double power_thresh, 
         const double transmit_power, const double PacketLossQuadraticCoeff);
 
+/* Calculate the received power of an agent given its interdistance */
+double ReceivedPower(const double transmit_power, const double Dist,
+        const double freq, const int alpha);
+        
 #endif
