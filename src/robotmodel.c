@@ -308,7 +308,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(RealCoptForceVector, 3);
     static double ActualRealVelocity[3];
     NullVect(ActualRealVelocity, 3);
-    NullMatrix(OutputPhase->Laplacian, SitParams->NumberOfAgents, SitParams->NumberOfAgents);
+    //NullMatrix(OutputPhase->Laplacian, SitParams->NumberOfAgents, SitParams->NumberOfAgents);
 
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
@@ -328,11 +328,10 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                                         SitParams->DeltaT)) == 0));
 
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-
-        /* Fill the Laplacian Matrix*/
+        /* Fill the Laplacian Matrix in µW */
         for (i = 0; i < TempPhase.NumberOfAgents; i++){
             //printf("received pow of agent %d from agent %d = %f\n", j, TempPhase.RealIDs[i], TempPhase.ReceivedPower[i]);
-            OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = pow(10, TempPhase.ReceivedPower[i]/10);
+            OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = pow(10, TempPhase.ReceivedPower[i]/10)*1000;
         }
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
@@ -350,6 +349,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             SteppedPhase.InnerStates[j][k] = ChangedInnerStateOfActualAgent[k];
         }
     }
+    /* Print the Laplacian */
     /*
     for (i = 0; i < SitParams->NumberOfAgents; i++){
         for (j = 0; j < SitParams->NumberOfAgents; j++){

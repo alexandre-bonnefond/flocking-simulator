@@ -1522,6 +1522,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         Dist = VectAbs(DistFromRef);
         packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
         Received_power = ReceivedPower(transmit_power, Dist, freq, 2);
+        //printf("R_p = %fdBm for the distance being %fm and range is %f\n", Received_power, 0.01*Dist, Range);
         if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
             Phase->ReceivedPower[i] = Received_power;
             SwapAgents(Phase, i, NumberOfNearbyAgents);
@@ -1542,9 +1543,9 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 /* The log-distance with varying alpha is chosen here */
 double ReceivedPower(const double transmit_power, const double Dist,
         const double freq, const int alpha) {
-
+        
         double Power;
-        Power = transmit_power + 10 * alpha * 
-        log10(Dist * freq * 4 * M_PI / (299792458 * pow(10, -9))); // c en m/Gs, dist in meters, freq in GHz
+        Power = transmit_power - (10 * alpha * 
+        log10(Dist * 0.01 * freq) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
         return Power;
 }

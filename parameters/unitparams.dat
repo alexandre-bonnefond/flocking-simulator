@@ -22,9 +22,9 @@ Wind_Angle=0.000000
 Packet_Loss_Ratio=0.000000
 # Packet Loss Distance (cm)
 Packet_Loss_Distance=8000.000000
-# Transmittion power (dB)
+# Transmittion power (dBm)
 Transmit_Power=20.000000
 # Emitting frequency (GHz)
 Freq=2.600000
-# Sensitivity threshold (dB)
-Sensitivity_thresh=-10.000000
+# Sensitivity threshold (dBm)
+Sensitivity_thresh=-100.000000

@@ -431,7 +431,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         if (ActualVizParams.DisplayCommNetwork == true) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
                 DrawSensorRangeNetwork_2D(PhaseData, ActualUnitParams.R_C.Value,
-                        i,
+                        ActualUnitParams.sensitivity_thresh.Value, i,
                         ActualUnitParams.t_del.Value,
                         Now,
                         ActualSitParams.DeltaT,
@@ -542,7 +542,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         if (ActualVizParams.DisplayCommNetwork == true) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
                 DrawSensorRangeNetwork_3D(PhaseData, ActualUnitParams.R_C.Value,
-                        i,
+                        ActualUnitParams.sensitivity_thresh.Value, i,
                         ActualUnitParams.t_del.Value,
                         Now,
                         ActualSitParams.DeltaT,
@@ -796,6 +796,7 @@ void UpdatePositionsToDisplay() {
                  */
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
+                //printf("nb = %d\n", PhaseData->NumberOfAgents);
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */

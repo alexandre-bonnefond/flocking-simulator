@@ -82,7 +82,7 @@ void NullVect(double *VectorToNull, const int Dim);
  */
 void NullMatrix(double **MatrixToNull, const int rows, const int cols);
 
-/* Find maximum value of a matrix */
+/* Find maximum value of a matrix except on diagonal */
 double MaxMatrix(double **Matrix, const int rows, const int cols);
 
 /* Multiplicates a vector with a scalar value (3D)

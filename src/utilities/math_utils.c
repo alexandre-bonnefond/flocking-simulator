@@ -156,7 +156,9 @@ double MaxMatrix(double **Matrix, const int rows, const int cols){
     max = -2e22;
     for (i = 0; i < rows; i++){
         for (j = 0; j < cols; j++){
-            max = max < Matrix[i][j] ? Matrix[i][j] : max;
+            if (i != j){
+                max = max < Matrix[i][j] ? Matrix[i][j] : max;
+            }            
         }
     }
     return max;

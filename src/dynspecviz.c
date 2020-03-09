@@ -123,6 +123,7 @@ void DrawNetworkArrowBetweenPositions_2D(double *FromCoords, double *ToCoords,
 /* Drawing sensor range network */
 void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         const double SensorRangeToDisplay,
+        const double PowerThreshold,
         const int WhichAgent,
         const double Delay,
         const int Now,
@@ -147,15 +148,16 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     static double Red[3];
     FillVect(Red, 255, 0, 0);
     static double Green[3];
-    FillVect(Green, 255, 0, 0);
+    FillVect(Green, 0, 255, 0);
     static double White[3];
-    FillVect(Red, 255, 255, 255);
+    FillVect(White, 255, 255, 255);
     
     static double Intensity;
     static double MaxValueComm;
-    MaxValueComm = MaxMatrix(PhaseData[Now].Laplacian, PhaseData[0].NumberOfAgents, PhaseData[0].NumberOfAgents);
+    MaxValueComm = MaxMatrix(PhaseData[Now].Laplacian,
+     PhaseData[0].NumberOfAgents, PhaseData[0].NumberOfAgents);
     //printf("max = %f\n", MaxValueComm);
-
+    //printf("nb = %d\n", PhaseData[Now].NumberOfAgents);
     for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
         if (i != WhichAgent) {
 
@@ -163,7 +165,10 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
-            if (VectAbs(DifferenceVector) < SensorRangeToDisplay) {
+                //printf("value is = %f\n",PhaseData[Now].Laplacian[WhichAgent][i]);
+            if (VectAbs(DifferenceVector) < SensorRangeToDisplay && 
+                        PhaseData[Now].Laplacian[WhichAgent][i] >=
+                        pow(10, PowerThreshold/10) * 1000) {    //PowerThreshold in µW
                 GetAgentsCoordinatesFromTimeLine(NeighboursCoordinates,
                         PhaseData, i, Now);
                 VectDifference(DifferenceVector, ActualAgentsCoordinates,
@@ -210,6 +215,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 /* Drawing sensor range network */
 void DrawSensorRangeNetwork_3D(phase_t * PhaseData,
         const double SensorRangeToDisplay,
+        const double PowerThreshold,
         const int WhichAgent,
         const double Delay,
         const int Now,
@@ -234,7 +240,9 @@ void DrawSensorRangeNetwork_3D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
-            if (VectAbs(DifferenceVector) < SensorRangeToDisplay) {
+            if (VectAbs(DifferenceVector) < SensorRangeToDisplay &&
+                        PhaseData[Now].Laplacian[WhichAgent][i] >=
+                        pow(10, PowerThreshold / 10) * 1000) {
 
                 glColor3f(color[0], color[1], color[2]);
 
