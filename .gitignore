@@ -1,0 +1,8 @@
+# ignore .out file
+*.out
+
+# ignore all files in the following directories
+output_default/
+config/
+parameters/
+

@@ -1,3 +1,0 @@
-This file contains standard deviations. Check out "cluster_dependent_parameters.dat" for more details!
-time_(s)	cluster_dependent_correlation_avg	cluster_dependent_correlation_stdev	cluster_dependent_correlation_min	cluster_dependent_correlation_max
-600.010000	0.210704	0.184088	0.547372	0.005773

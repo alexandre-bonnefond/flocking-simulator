@@ -122,12 +122,10 @@ void DrawNetworkArrowBetweenPositions_2D(double *FromCoords, double *ToCoords,
 
 /* Drawing sensor range network */
 void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
-        const double SensorRangeToDisplay,
-        const double PowerThreshold,
+        unit_model_params_t * Unit_params,
         const int WhichAgent,
-        const double Delay,
         const int Now,
-        const double h, vizmode_params_t * VizParams, const float *color) {
+        vizmode_params_t * VizParams, const float *color) {
 
     int i, j;
 
@@ -136,6 +134,12 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
             WhichAgent, Now);
 
+    /*/if (WhichAgent == 3){
+            DrawCircle(RealToGlCoord_2D(ActualAgentsCoordinates[0] - VizParams->CenterX , VizParams->MapSizeXY),
+             RealToGlCoord_2D(ActualAgentsCoordinates[1] - VizParams->CenterY, 
+             VizParams->MapSizeXY), RealToGlCoord_2D(10000, VizParams->MapSizeXY), color);
+            printf("Drawing\n");
+    //}*/
     static double NeighboursCoordinates[3];
     static double DifferenceVector[3];
 
@@ -143,21 +147,35 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     static double ArrowCenterY;
     static double angle;
 
-    static double GradColors[3];
-    static double TempColors[3];
-    static double Red[3];
-    FillVect(Red, 255, 0, 0);
-    static double Green[3];
-    FillVect(Green, 0, 255, 0);
-    static double White[3];
-    FillVect(White, 255, 255, 255);
+    /*
+    float GradColors[3];
+    float TempColors[3];
+    float * FinalColor;
+
+    float Red[3];
+    Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
+    float * RedColor;
+    RedColor = Red;
+    float Green[3];
+    Green[0] = .1; Green[1] = 0.9; Green[2] = .1;
+    float * GreenColor;
+    GreenColor = Green;
+    float Yellow[3];
+    Yellow[0] = .8; Yellow[1] = 0.8; Yellow[2] = .1;
+    float * YellowColor;
+    YellowColor = Yellow;
+    */
     
     static double Intensity;
     static double MaxValueComm;
-    MaxValueComm = MaxMatrix(PhaseData[Now].Laplacian,
-     PhaseData[0].NumberOfAgents, PhaseData[0].NumberOfAgents);
-    //printf("max = %f\n", MaxValueComm);
-    //printf("nb = %d\n", PhaseData[Now].NumberOfAgents);
+    static double MinValueComm;
+
+    MaxValueComm = ReceivedPower(Unit_params->transmit_power.Value,
+                        0, 300, Unit_params->freq.Value, 2);  
+    MaxValueComm = pow(10, MaxValueComm/10) * 1000; // Value in µW
+    
+    MinValueComm = pow(10, Unit_params->sensitivity_thresh.Value/10) * 1000; // in µW
+
     for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
         if (i != WhichAgent) {
 
@@ -165,10 +183,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
-                //printf("value is = %f\n",PhaseData[Now].Laplacian[WhichAgent][i]);
-            if (VectAbs(DifferenceVector) < SensorRangeToDisplay && 
+            if (VectAbs(DifferenceVector) < Unit_params->R_C.Value && 
                         PhaseData[Now].Laplacian[WhichAgent][i] >=
-                        pow(10, PowerThreshold/10) * 1000) {    //PowerThreshold in µW
+                        MinValueComm) {    //PowerThreshold in µW
                 GetAgentsCoordinatesFromTimeLine(NeighboursCoordinates,
                         PhaseData, i, Now);
                 VectDifference(DifferenceVector, ActualAgentsCoordinates,
@@ -184,19 +201,24 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                 DifferenceVector[2] = 0;
                 angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
                 /*
-                Intensity = PhaseData[Now].Laplacian[WhichAgent][i]/MaxValueComm;
-                printf("int = %f\n", Intensity);
-                if (Intensity < 0.5){
+                Intensity = (PhaseData[Now].Laplacian[WhichAgent][i] - MinValueComm) / 
+                (MaxValueComm - MinValueComm);
+                //Intensity = pow(10, Intensity);
+                printf("int = %f and max value is %f and %f\n", Intensity, MaxValueComm, MinValueComm);
+                if (Intensity < (MaxValueComm - MinValueComm)/2) {
                         MultiplicateWithScalar(GradColors, Red, 1 - Intensity, 3);
-                        MultiplicateWithScalar(TempColors, White, Intensity, 3);
+                        MultiplicateWithScalar(TempColors, Yellow, Intensity, 3);
                         VectSum(GradColors, GradColors, TempColors);
                 }
                 else{
-                        MultiplicateWithScalar(GradColors, White, 1 - Intensity, 3);
+                        MultiplicateWithScalar(GradColors, Yellow, 1 - Intensity, 3);
                         MultiplicateWithScalar(TempColors, Green, Intensity, 3);
                         VectSum(GradColors, GradColors, TempColors);
                 }
                 */
+
+                //FinalColor = GradColors;
+                //printf("index des coulors %f %f %f\n",color[0], color[1], color[2] );
                 DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
                         RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
                         RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,

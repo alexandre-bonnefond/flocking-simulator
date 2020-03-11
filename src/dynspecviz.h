@@ -62,12 +62,10 @@ void DrawNetworkArrowBetweenPositions_2D(double *FromCoords,
 /* Sensor Range Newtork for agent "WhichAgent"
  */
 void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
-        const double SensorRangeToDisplay,
-        const double PowerThreshold,
+        unit_model_params_t * Unit_params,
         const int WhichAgent,
-        const double Delay,
         const int Now,
-        const double h, vizmode_params_t * VizParams, const float *color);
+        vizmode_params_t * VizParams, const float *color);
 
 /* 3D */
 

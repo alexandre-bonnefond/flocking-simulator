@@ -430,11 +430,8 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         /* Drawing communication network, if it's toggled on */
         if (ActualVizParams.DisplayCommNetwork == true) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
-                DrawSensorRangeNetwork_2D(PhaseData, ActualUnitParams.R_C.Value,
-                        ActualUnitParams.sensitivity_thresh.Value, i,
-                        ActualUnitParams.t_del.Value,
-                        Now,
-                        ActualSitParams.DeltaT,
+                DrawSensorRangeNetwork_2D(PhaseData,
+                        &ActualUnitParams, i, Now,
                         &ActualVizParams, ActualColorConfig.CommNetWorkColor);
             }
         }

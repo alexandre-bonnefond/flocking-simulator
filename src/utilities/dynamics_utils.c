@@ -1521,7 +1521,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
         Dist = VectAbs(DistFromRef);
         packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
-        Received_power = ReceivedPower(transmit_power, Dist, freq, 2);
+        Received_power = ReceivedPower(transmit_power, Dist, 300,  freq, 2);
         //printf("R_p = %fdBm for the distance being %fm and range is %f\n", Received_power, 0.01*Dist, Range);
         if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
             Phase->ReceivedPower[i] = Received_power;
@@ -1540,12 +1540,20 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 }
 
 /* Calculate the received power of an agent depending on which method is used */
-/* The log-distance with varying alpha is chosen here */
+/* The log-distance with varying alpha is chosen here and we have a reference distance */
 double ReceivedPower(const double transmit_power, const double Dist,
-        const double freq, const int alpha) {
+        const double Ref_dist, const double freq, const int alpha) {
         
         double Power;
-        Power = transmit_power - (10 * alpha * 
-        log10(Dist * 0.01 * freq) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
+
+        if (Dist < Ref_dist) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+            Power = transmit_power - (10 * alpha * 
+                log10(Ref_dist * 0.01 * freq) + 32.44);
+        }
+        else
+        {
+            Power = transmit_power - (10 * alpha * 
+                log10(Dist * 0.01 * freq) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
+        }
         return Power;
 }

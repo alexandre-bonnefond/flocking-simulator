@@ -33,10 +33,10 @@ angle=0
 #   |-------|     |--------| -5
 # -55      -5     5        55
 
-#leftrect.point=600 -600
-#leftrect.point=-600 -600
-#leftrect.point=-600 -55500
-#leftrect.point=600 -55500
+leftrect.point=600 -25000
+leftrect.point=-6000 -25000
+leftrect.point=-6000 -35500
+leftrect.point=600 -35500
 
 #rightrect.point=600 600
 #rightrect.point=600 55500
