@@ -1557,3 +1557,17 @@ double ReceivedPower(const double transmit_power, const double Dist,
         }
         return Power;
 }
+
+/* Smooth pairwise potential without finite cut-off */
+double ActionFunction(double z, double a, double b) {
+
+    double phi;
+    double sigma;               // directly sigma1(z +c)
+    double c;
+    c = fabs(a - b) / sqrt(4 * a *b);
+    sigma = (z + c) / sqrt(1 + pow((z + c), 2));
+    printf("sig = %f\n", sigma);
+    phi = .5 * ((a + b) * sigma + (a - b));
+
+    return phi;
+}

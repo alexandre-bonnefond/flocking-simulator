@@ -35,4 +35,11 @@ void AttractionLin(double *OutputVelocity,
         const double R_0_l, const int WhichAgent, const int Dim_l,
         const bool normalize);
 
+/* Gradient based term from Olfati Saber theory */
+void GradientBased(double *OutputVelocity,
+        phase_t * Phase, const double epsilon, const double a,
+        const double b, const double h,
+        const double d, const double r,
+        const int WhichAgent, const int Dim_l);
+
 #endif

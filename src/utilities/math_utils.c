@@ -241,6 +241,39 @@ void NormalizeVector(double *OutputVector, double *InputVector, double value) {
     return;
 }
 
+/* Compute the sigma norm of a vector */
+double SigmaNorm(double *InputVector, double epsilon) {
+
+    static double Abs;
+    Abs = VectAbs(InputVector);
+    return (1 / epsilon) * ((sqrt(1 + epsilon * pow(Abs, 2))) - 1);
+}
+
+/* Compute the sigma gradient */
+void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon) {
+
+    double value;
+    value = 1 / (1 + epsilon * SigmaNorm(InputVector, epsilon));
+    printf("value = %f\n", value);
+    NormalizeVector(OuptutVector, InputVector, value);
+}
+
+/* Bump function */
+double BumpFunction(double z, double h) {
+
+    if (z >= 0 && z < h) {
+        return 1;
+    }
+
+    else if (z >= h && z <= 1) {
+        return .5 * (1 + cos(M_PI * (z - h) / (1 - h)));
+    }
+
+    else {
+        return 0;
+    }
+}
+
 /* Rotates vector around Z axis */
 void RotateVectXY(double *OutputVector, double *InputVector, const double Angle) {
 

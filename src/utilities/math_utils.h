@@ -113,8 +113,16 @@ void UnitVect(double *OutputVector, double *InputVector);
 
 /* Same as UnitVect, but it doesn't give back a 1 long vector, but a value long one
 */
-
 void NormalizeVector(double *OutputVector, double *InputVector, double value);
+
+/* Sigma norm calculation (related to Olfati Saber method) */
+double SigmaNorm(double *InputVector, double epsilon);
+
+/* Compute the sigma gradient */
+void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon);
+
+/* Bump function which is a function that smoothly varies between 0 and 1 */
+double BumpFunction(double Input, double h);
 
 /* Rotates vector around Z axis
  * "OutputVector" will be the "InputVector" rotated with "Angle" around Z axis

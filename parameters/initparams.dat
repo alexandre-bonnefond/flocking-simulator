@@ -1,5 +1,5 @@
 # Number of agents
-NumberOfAgents=10
+NumberOfAgents=20
 # Length of the simulated experiment (s)
 # 
 Length=600.0

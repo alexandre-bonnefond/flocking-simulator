@@ -129,17 +129,22 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 
     int i, j;
 
+    float Red[3];
+    Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
+    float * RedColor;
+    RedColor = Red;
+    
     double *ActualAgentsCoordinates;
     ActualAgentsCoordinates = PhaseData[Now].Coordinates[WhichAgent];
     GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
             WhichAgent, Now);
 
-    /*/if (WhichAgent == 3){
+    bool DrawCircles = true;
+    if (DrawCircles == true){
             DrawCircle(RealToGlCoord_2D(ActualAgentsCoordinates[0] - VizParams->CenterX , VizParams->MapSizeXY),
              RealToGlCoord_2D(ActualAgentsCoordinates[1] - VizParams->CenterY, 
-             VizParams->MapSizeXY), RealToGlCoord_2D(10000, VizParams->MapSizeXY), color);
-            printf("Drawing\n");
-    //}*/
+             VizParams->MapSizeXY), RealToGlCoord_2D(Unit_params->R_C.Value, VizParams->MapSizeXY), RedColor);
+    }
     static double NeighboursCoordinates[3];
     static double DifferenceVector[3];
 
@@ -183,8 +188,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
+            //printf("Received Power = %f and min = %f\n", PhaseData[Now].Laplacian[WhichAgent][i], MinValueComm);        
             if (VectAbs(DifferenceVector) < Unit_params->R_C.Value && 
-                        PhaseData[Now].Laplacian[WhichAgent][i] >=
+                        PhaseData[Now].Laplacian[WhichAgent][i] >
                         MinValueComm) {    //PowerThreshold in µW
                 GetAgentsCoordinatesFromTimeLine(NeighboursCoordinates,
                         PhaseData, i, Now);

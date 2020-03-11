@@ -169,3 +169,56 @@ void AttractionLin(double *OutputVelocity,
     }
     //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
 }
+
+void GradientBased(double *OutputVelocity,
+        phase_t * Phase, const double epsilon, const double a,
+        const double b, const double h,
+        const double d, const double r,
+        const int WhichAgent, const int Dim_l) {
+
+        NullVect(OutputVelocity, 3);
+
+        int i;
+
+        double *AgentsCoordinates;
+        double *NeighboursCoordinates;
+
+        static double SigmaDistance;
+        static double PhiAlpha;
+        static double SigmaR;
+        static double SigmaD;
+
+        SigmaR = (1 / epsilon) * (sqrt(1 + epsilon * pow(r, 2)) - 1);
+        SigmaD = (1 / epsilon) * (sqrt(1 + epsilon * pow(d, 2)) - 1);
+        
+        AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+        static double DifferenceVector[3];
+        
+        for (i = 0; i < Phase->NumberOfAgents; i++) {
+            if (i == WhichAgent)
+                continue;
+
+            NeighboursCoordinates = Phase->Coordinates[i];
+            //VectDifference(DifferenceVector, AgentsCoordinates,
+            //        NeighboursCoordinates);
+            VectDifference(DifferenceVector, NeighboursCoordinates, AgentsCoordinates);
+            if (2 == Dim_l) {
+                DifferenceVector[2] = 0.0;
+            }
+            
+            SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
+            
+            SigmaGrad(DifferenceVector, DifferenceVector, epsilon);
+
+            PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * 
+                ActionFunction(SigmaDistance - SigmaD, a, b);
+            printf("rapport = %f\n", SigmaDistance / SigmaR);
+            printf("Sig distance = %f et SigD = %f et grad_abs = %f et phialpha = %f\n", SigmaDistance, SigmaD, VectAbs(DifferenceVector), PhiAlpha);
+            MultiplicateWithScalar(DifferenceVector, DifferenceVector, PhiAlpha, Dim_l);
+            printf("total = %f\n\n\n", VectAbs(DifferenceVector));
+            
+            VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+
+        }
+}

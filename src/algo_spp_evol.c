@@ -444,6 +444,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     NullVect(PotentialVelocity, 3);
     static double AttractionVelocity[3];
     NullVect(AttractionVelocity, 3);
+    static double GradientVelocity[3];
+    NullVect(GradientVelocity, 3);
     static double SlipVelocity[3];
     NullVect(SlipVelocity, 3);
 
@@ -465,6 +467,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     MultiplicateWithScalar(NormalizedAgentsVelocity, NormalizedAgentsVelocity,
             V_Flock, (int) Dim);
 
+    
     /* Repulsion */
     RepulsionLin(PotentialVelocity, Phase, V_Rep,
             Slope_Rep, R_0, WhichAgent, (int) Dim, false);
@@ -472,6 +475,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     /* Attraction */
     AttractionLin(AttractionVelocity, Phase, V_Rep,
             Slope_Rep/20, R_0 + 50, WhichAgent, (int) Dim, false);
+
+    /* Olfati Gradient based term for attraction//repulsion */
+    GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
 
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
@@ -489,10 +495,12 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     }
 
 
-
+    MultiplicateWithScalar(GradientVelocity, GradientVelocity, 100, (int) Dim);
+    //printf("Value is = %f compared to %f\n", VectAbs(GradientVelocity), VectAbs(PotentialVelocity));
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
-    VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-    VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    //VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+    //VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);
