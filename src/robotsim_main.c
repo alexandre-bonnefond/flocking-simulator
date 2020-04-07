@@ -346,7 +346,10 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
 
                 GetAgentsCoordinates(AgentsCoordinates, Phase, i);
-
+                char str[10];
+                sprintf(str, "%d", i);
+                DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, ActualColorConfig.LabelColor);
+                //DrawAgentLabel_2D(Phase, i, , true, &ActualVizParams, ActualColorConfig.LabelColor);
                 /* Draw Agents */
                 if (AgentsInDanger[i] == true) {
                     DrawCopter_2D(AgentsCoordinates[0] -
@@ -775,7 +778,6 @@ void UpdatePositionsToDisplay() {
         for (i = 0; i < ActualVizParams.VizSpeedUp; i++) {
 
             if (Now < TimeStepsToStore - 1) {
-
                 /* Calculating 1 step with the robot model */
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
                         PhaseData, &ActualUnitParams, &ActualFlockingParams,

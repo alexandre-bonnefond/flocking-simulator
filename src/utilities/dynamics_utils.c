@@ -1520,11 +1520,12 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
 
         Dist = VectAbs(DistFromRef);
-        packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
-        Received_power = ReceivedPower(transmit_power, Dist, 300,  freq, 2);
-        //printf("R_p = %fdBm for the distance being %fm and range is %f\n", Received_power, 0.01*Dist, Range);
-        if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
-            Phase->ReceivedPower[i] = Received_power;
+        //packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
+        Received_power = ReceivedPower(transmit_power, Dist, 600,  freq, 2);
+        Phase->ReceivedPower[i] = Received_power;
+        //if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
+        
+        if (Dist != 0 && Received_power > power_thresh) {
             SwapAgents(Phase, i, NumberOfNearbyAgents);
             NumberOfNearbyAgents++;
             i++;
@@ -1534,7 +1535,11 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         }
 
     }
-
+    // printf("Received powers of agent %d\n\n", Phase->RealIDs[0]);
+    // for (i = 0; i < Phase->NumberOfAgents; i++){
+    //     printf("%f (%d)\t", Phase->ReceivedPower[i], Phase->RealIDs[i]);
+    // }
+    // printf("\n\n");
     return NumberOfNearbyAgents;
 
 }
@@ -1566,7 +1571,6 @@ double ActionFunction(double z, double a, double b) {
     double c;
     c = fabs(a - b) / sqrt(4 * a *b);
     sigma = (z + c) / sqrt(1 + pow((z + c), 2));
-    printf("sig = %f\n", sigma);
     phi = .5 * ((a + b) * sigma + (a - b));
 
     return phi;

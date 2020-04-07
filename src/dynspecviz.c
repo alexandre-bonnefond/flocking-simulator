@@ -139,7 +139,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
             WhichAgent, Now);
 
-    bool DrawCircles = true;
+    bool DrawCircles = false;
     if (DrawCircles == true){
             DrawCircle(RealToGlCoord_2D(ActualAgentsCoordinates[0] - VizParams->CenterX , VizParams->MapSizeXY),
              RealToGlCoord_2D(ActualAgentsCoordinates[1] - VizParams->CenterY, 
@@ -176,11 +176,10 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     static double MinValueComm;
 
     MaxValueComm = ReceivedPower(Unit_params->transmit_power.Value,
-                        0, 300, Unit_params->freq.Value, 2);  
+                        0, 600, Unit_params->freq.Value, 2);  
     MaxValueComm = pow(10, MaxValueComm/10) * 1000; // Value in µW
     
     MinValueComm = pow(10, Unit_params->sensitivity_thresh.Value/10) * 1000; // in µW
-
     for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
         if (i != WhichAgent) {
 
@@ -189,9 +188,12 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
             //printf("Received Power = %f and min = %f\n", PhaseData[Now].Laplacian[WhichAgent][i], MinValueComm);        
-            if (VectAbs(DifferenceVector) < Unit_params->R_C.Value && 
-                        PhaseData[Now].Laplacian[WhichAgent][i] >
-                        MinValueComm) {    //PowerThreshold in µW
+            //if (PhaseData[Now].Laplacian[WhichAgent][i] > MinValueComm) {
+            if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
+            //if (VectAbs(DifferenceVector) < Unit_params->R_C.Value && 
+             //           PhaseData[Now].Laplacian[WhichAgent][i] >
+              //          MinValueComm) {    //PowerThreshold in µW
+
                 GetAgentsCoordinatesFromTimeLine(NeighboursCoordinates,
                         PhaseData, i, Now);
                 VectDifference(DifferenceVector, ActualAgentsCoordinates,

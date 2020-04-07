@@ -45,7 +45,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
         LocalActualPhaseToCreate->RealIDs[i] = Phase->RealIDs[i];
         LocalActualPhaseToCreate->ReceivedPower[i] = Phase->ReceivedPower[i];
-
+        
         for (j = 0; j < 3; j++) {
             LocalActualPhaseToCreate->Coordinates[i][j] =
                     Phase->Coordinates[i][j];
@@ -71,10 +71,24 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                 transmit_power, packet_loss_distance >
                 0 ? packet_loss_ratio / packet_loss_distance /
                 packet_loss_distance : 0);
+
     } else {
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0);
         NumberOfNeighbours = 1;
     }
+
+
+    //printf("%f\n", LocalActualPhaseToCreate->ReceivedPower[5]);
+    // for (i = 0; i < Phase->NumberOfAgents; i++){
+    //     if (i == WhichAgent){
+    //         Phase->Laplacian[i][i] = NumberOfNeighbours;
+    //     }
+    //     else
+    //     {
+    //         Phase->Laplacian[WhichAgent][i] = LocalActualPhaseToCreate->ReceivedPower[LocalActualPhaseToCreate->RealIDs[i]];
+    //     }
+    //     //printf("%f\n", Phase->Laplacian[WhichAgent][i]);        
+    // }
 
     /* Setting up delay and GPS inaccuracy for positions and velocities */
 
@@ -88,7 +102,6 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     NullVect(RealPosition, 3);
     static double GPSPositionToAdd[3];
     NullVect(GPSPositionToAdd, 3);
-    //printf("id=%d\n", LocalActualPhaseToCreate->RealIDs[0]);
     for (i = 1; i < NumberOfNeighbours; i++) {
         //printf("id of neighbours is %d\n", LocalActualPhaseToCreate->RealIDs[i]);
         GetAgentsCoordinates(RealPosition, DelayedPhase,
@@ -248,7 +261,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         double *Accelerations) {
 
     int i, j, k;
-
     static double CheckVelocityCache[3];
     NullVect(CheckVelocityCache, 3);
     static double CheckAccelerationCache[3];
@@ -324,14 +336,24 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 &LocalActualDelayedPhase, j, UnitParams->R_C.Value, UnitParams->freq.Value,
                 UnitParams->sensitivity_thresh.Value, UnitParams->transmit_power.Value,
                 UnitParams->packet_loss_ratio.Value, UnitParams->packet_loss_distance.Value,
-                (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /
+                (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
                                         SitParams->DeltaT)) == 0));
-
+                                        
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
         /* Fill the Laplacian Matrix in µW */
-        for (i = 0; i < TempPhase.NumberOfAgents; i++){
-            //printf("received pow of agent %d from agent %d = %f\n", j, TempPhase.RealIDs[i], TempPhase.ReceivedPower[i]);
-            OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = pow(10, TempPhase.ReceivedPower[i]/10)*1000;
+
+        for (i = 0; i < SitParams->NumberOfAgents; i++){
+            if ( j == TempPhase.RealIDs[i]){
+                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.NumberOfAgents;
+            }
+            else
+            {
+                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i]; // pow(10, TempPhase.ReceivedPower[i]/10)*1000;
+            }
+            
+            
+            //printf("%f\n", LocalActualPhase.ReceivedPower[i]);
+            //printf("%f\n", TempPhase.ReceivedPower[i]);
         }
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
@@ -350,15 +372,16 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
     }
     /* Print the Laplacian */
-    /*
-    for (i = 0; i < SitParams->NumberOfAgents; i++){
-        for (j = 0; j < SitParams->NumberOfAgents; j++){
-            printf("%f\t", OutputPhase->Laplacian[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n\n\n\n");
-    */
+    
+    // for (i = 0; i < SitParams->NumberOfAgents; i++){
+    //     for (j = 0; j < SitParams->NumberOfAgents; j++){
+    //         printf("%f\t", OutputPhase->Laplacian[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n\n\n\n");
+    
+            //printf("received pow of agent %d from agent %d = %f\n", j, TempPhase.RealIDs[i], TempPhase.ReceivedPower[i]);
 
     double OnePerDeltaT = 1. / SitParams->DeltaT;
     /* The acceleration saturates at a_max. We save out the acceleration magnitude values before 

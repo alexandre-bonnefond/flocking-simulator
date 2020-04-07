@@ -200,8 +200,6 @@ void GradientBased(double *OutputVelocity,
                 continue;
 
             NeighboursCoordinates = Phase->Coordinates[i];
-            //VectDifference(DifferenceVector, AgentsCoordinates,
-            //        NeighboursCoordinates);
             VectDifference(DifferenceVector, NeighboursCoordinates, AgentsCoordinates);
             if (2 == Dim_l) {
                 DifferenceVector[2] = 0.0;
@@ -213,12 +211,10 @@ void GradientBased(double *OutputVelocity,
 
             PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * 
                 ActionFunction(SigmaDistance - SigmaD, a, b);
-            printf("rapport = %f\n", SigmaDistance / SigmaR);
-            printf("Sig distance = %f et SigD = %f et grad_abs = %f et phialpha = %f\n", SigmaDistance, SigmaD, VectAbs(DifferenceVector), PhiAlpha);
             MultiplicateWithScalar(DifferenceVector, DifferenceVector, PhiAlpha, Dim_l);
-            printf("total = %f\n\n\n", VectAbs(DifferenceVector));
             
             VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
-
+            
         }
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, 100, (int) Dim_l); // x100 to have the speed in cm/s
 }

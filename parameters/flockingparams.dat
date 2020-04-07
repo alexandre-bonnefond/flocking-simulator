@@ -7,7 +7,7 @@ V_Frict=63.000000
 # Maximum velocity (Multiply it with 0.010000 to get its Value in m/s)
 V_Max=800.000000
 # Equilibrium distance (Multiply it with 0.010000 to get its Value in m)
-R_0=3160.000000
+R_0=3600.000000
 # Friction range (Multiply it with 0.010000 to get its Value in m)
 R_0_Offset_Frict=8530.000000
 # Shill dist offset (Multiply it with 0.010000 to get its Value in m)
@@ -23,9 +23,9 @@ Slope_Shill=3.550000
 # Velocity of shill agents (Multiply it with 0.010000 to get its Value in m/s)
 V_Shill=1362.174000
 # Acc limit of shill (Multiply it with 0.010000 to get its Value in m/s^2)
-Acc_Shill=302.000000
+Acc_Shill=5300.000000
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)
-ArenaRadius=50000.000000
+ArenaRadius=62500.000000
 # Friction coefficient (-)
 C_Frict=0.050000
 # Arena Center X (Multiply it with 0.010000 to get its Value in m)
@@ -33,6 +33,6 @@ ArenaCenterX=-9962.666667
 # Arena Center Y (Multiply it with 0.010000 to get its Value in m)
 ArenaCenterY=8549.333333
 # Shape of the arena (Multiply it with 0.000000 to get its real Value)
-ArenaShape=0.000000
+ArenaShape=1.000000
 # Number of dimensions in the simulation (2 or 3)
 Dim=2.000000

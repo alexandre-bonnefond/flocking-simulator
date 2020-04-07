@@ -469,15 +469,16 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     
     /* Repulsion */
-    RepulsionLin(PotentialVelocity, Phase, V_Rep,
-            Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+     RepulsionLin(PotentialVelocity, Phase, V_Rep,
+             Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
-    /* Attraction */
-    AttractionLin(AttractionVelocity, Phase, V_Rep,
-            Slope_Rep/20, R_0 + 50, WhichAgent, (int) Dim, false);
+    // /* Attraction */
+     AttractionLin(AttractionVelocity, Phase, V_Rep,
+             Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
 
     /* Olfati Gradient based term for attraction//repulsion */
-    GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
+    GradientBased(GradientVelocity, Phase, .1, 500, 800, 0.2,
+         R_0, 100000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
 
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
@@ -495,12 +496,10 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     }
 
 
-    MultiplicateWithScalar(GradientVelocity, GradientVelocity, 100, (int) Dim);
-    //printf("Value is = %f compared to %f\n", VectAbs(GradientVelocity), VectAbs(PotentialVelocity));
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
-    //VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-    //VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
-    VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+    VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+    VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    //VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);

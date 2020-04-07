@@ -254,7 +254,6 @@ void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon) {
 
     double value;
     value = 1 / (1 + epsilon * SigmaNorm(InputVector, epsilon));
-    printf("value = %f\n", value);
     NormalizeVector(OuptutVector, InputVector, value);
 }
 
