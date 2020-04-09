@@ -331,13 +331,12 @@ void CentreOfPolygon2D(double *CentrePoint, double *Polygon,
 void CentroidOfPolygon2D(double *CentroidPoint, double *Polygon,
         const int NumberOfVertices);
 
-/* Calculating the intersection points of a polygon and a line.
+/* Calculating the intersection points of a polygon and a segment.
  * Also returns the number of intersections.
- * Line is given by the reference points "RefPoint1" and "RefPoint2"
+ * segment is given by the reference points "RefPoint1" and "RefPoint2"
  */
-void IntersectionOfLineAndPolygon2D(double **IntersectionPoints,
-        int *NumberOfIntersections,
-        double *RefPoint1, double *RefPoint2,
+int IntersectionOfSegmentAndPolygon2D(double **IntersectionPoints,
+        double *RefPoint1, double *RefPoint2, 
         double *Polygon, const int NumberOfVertices);
 
 /* Creating envelope polygon around set of polygons (in 2D, XY coordinate system)

@@ -6,6 +6,9 @@
 /* Drawing copters, etc. (dynamics-specific objects) */
 
 #include "dynspecviz.h"
+#include "algo_spp_evol.h"
+#include "utilities/obstacles.h"
+#include <stdlib.h>
 
 static double EyeFromCenter[3];
 static double DistanceFromCenter;
@@ -133,7 +136,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
     float * RedColor;
     RedColor = Red;
-    
+
     double *ActualAgentsCoordinates;
     ActualAgentsCoordinates = PhaseData[Now].Coordinates[WhichAgent];
     GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
@@ -148,38 +151,22 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
     static double NeighboursCoordinates[3];
     static double DifferenceVector[3];
 
+    //static double Intersections[2][3];
+//     static int NumberOfIntersections = 0;
+    static double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS];
+
+
     static double ArrowCenterX;
     static double ArrowCenterY;
     static double angle;
 
-    /*
-    float GradColors[3];
-    float TempColors[3];
-    float * FinalColor;
+    for (i = 0; i < obstacles.o_count; i++){            
+            for (j = 0; j < obstacles.o[i].p_count; j++){
+                    Polygons[i][2*j] = obstacles.o[i].p[j][0];
+                    Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
+            }
+    }
 
-    float Red[3];
-    Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
-    float * RedColor;
-    RedColor = Red;
-    float Green[3];
-    Green[0] = .1; Green[1] = 0.9; Green[2] = .1;
-    float * GreenColor;
-    GreenColor = Green;
-    float Yellow[3];
-    Yellow[0] = .8; Yellow[1] = 0.8; Yellow[2] = .1;
-    float * YellowColor;
-    YellowColor = Yellow;
-    */
-    
-    static double Intensity;
-    static double MaxValueComm;
-    static double MinValueComm;
-
-    MaxValueComm = ReceivedPower(Unit_params->transmit_power.Value,
-                        0, 600, Unit_params->freq.Value, 2);  
-    MaxValueComm = pow(10, MaxValueComm/10) * 1000; // Value in µW
-    
-    MinValueComm = pow(10, Unit_params->sensitivity_thresh.Value/10) * 1000; // in µW
     for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
         if (i != WhichAgent) {
 
@@ -187,18 +174,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
-            //printf("Received Power = %f and min = %f\n", PhaseData[Now].Laplacian[WhichAgent][i], MinValueComm);        
-            //if (PhaseData[Now].Laplacian[WhichAgent][i] > MinValueComm) {
+            //if condition about distance only
             if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
-            //if (VectAbs(DifferenceVector) < Unit_params->R_C.Value && 
-             //           PhaseData[Now].Laplacian[WhichAgent][i] >
-              //          MinValueComm) {    //PowerThreshold in µW
-
-                GetAgentsCoordinatesFromTimeLine(NeighboursCoordinates,
-                        PhaseData, i, Now);
-                VectDifference(DifferenceVector, ActualAgentsCoordinates,
-                        NeighboursCoordinates);
-
+                
                 ArrowCenterX =
                         (ActualAgentsCoordinates[0] +
                         NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;
@@ -208,30 +186,49 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 
                 DifferenceVector[2] = 0;
                 angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
-                /*
-                Intensity = (PhaseData[Now].Laplacian[WhichAgent][i] - MinValueComm) / 
-                (MaxValueComm - MinValueComm);
-                //Intensity = pow(10, Intensity);
-                printf("int = %f and max value is %f and %f\n", Intensity, MaxValueComm, MinValueComm);
-                if (Intensity < (MaxValueComm - MinValueComm)/2) {
-                        MultiplicateWithScalar(GradColors, Red, 1 - Intensity, 3);
-                        MultiplicateWithScalar(TempColors, Yellow, Intensity, 3);
-                        VectSum(GradColors, GradColors, TempColors);
-                }
-                else{
-                        MultiplicateWithScalar(GradColors, Yellow, 1 - Intensity, 3);
-                        MultiplicateWithScalar(TempColors, Green, Intensity, 3);
-                        VectSum(GradColors, GradColors, TempColors);
-                }
-                */
 
-                //FinalColor = GradColors;
-                //printf("index des coulors %f %f %f\n",color[0], color[1], color[2] );
                 DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
                         RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
                         RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
                                 VizParams->MapSizeXY), RealToGlCoord_2D(30,
                                 VizParams->MapSizeXY), angle, color);
+                
+
+                for (j = 0; j < obstacles.o_count; j++){
+
+                        double **Intersections;
+                        Intersections = malloc(sizeof(double *) * 2);
+                        Intersections[0] = malloc(sizeof(double) * 3);
+                        Intersections[1] = malloc(sizeof(double) * 3);
+
+                        int NumberOfIntersections;
+
+                        NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                        PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
+                        Polygons[j], obstacles.o[j].p_count);
+
+                        if (NumberOfIntersections == 2){
+
+                                // DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
+                                // VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
+                                // VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                // DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
+                                // VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
+                                // VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
+                                RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
+                                RealToGlCoord_2D(50, VizParams->MapSizeXY), RedColor);
+                        }
+
+                        freeMatrix(Intersections, 2, 3);
+
+                }
+                
+                
 
             }
 

@@ -180,7 +180,11 @@ char *GetModelSpecificStringToDisplay(phase_t * Phase,
         flocking_model_params_t * FlockingParams,
         unit_model_params_t * UnitModelParams,
         sit_parameters_t * SitParams, double TimeStep) {
-    return "";
+            
+            char *str;
+            str = malloc(sizeof(char)*40);
+            sprintf(str, "Average received power = %f", Phase->Laplacian[3][2]);
+            return str;
 }
 
 /* For handling model-specific keboard events */

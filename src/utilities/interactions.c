@@ -170,6 +170,19 @@ void AttractionLin(double *OutputVelocity,
     //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
 }
 
+/* Smooth pairwise potential without finite cut-off */
+double ActionFunction(double z, double a, double b) {
+
+    double phi;
+    double sigma;               // directly sigma1(z +c)
+    double c;
+    c = fabs(a - b) / sqrt(4 * a *b);
+    sigma = (z + c) / sqrt(1 + pow((z + c), 2));
+    phi = .5 * ((a + b) * sigma + (a - b));
+
+    return phi;
+}
+
 void GradientBased(double *OutputVelocity,
         phase_t * Phase, const double epsilon, const double a,
         const double b, const double h,

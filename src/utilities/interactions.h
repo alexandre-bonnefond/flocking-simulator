@@ -35,6 +35,10 @@ void AttractionLin(double *OutputVelocity,
         const double R_0_l, const int WhichAgent, const int Dim_l,
         const bool normalize);
 
+
+/* Smooth pairwise potential with finite cut-off  (see Olfati function) */
+double ActionFunction(double z, double a, double b);
+
 /* Gradient based term from Olfati Saber theory */
 void GradientBased(double *OutputVelocity,
         phase_t * Phase, const double epsilon, const double a,

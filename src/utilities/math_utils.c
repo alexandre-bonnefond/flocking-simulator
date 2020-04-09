@@ -1158,26 +1158,30 @@ void CentroidOfPolygon2D(double *CentroidPoint, double *Polygon,
     CentroidPoint[1] /= (6.0 * signedArea);
 }
 
-/* Returns the intersection points of a polygon and a line */
-void IntersectionOfLineAndPolygon2D(double **IntersectionPoints,
-        int *NumberOfIntersections, double *RefPoint1,
-        double *RefPoint2, double *Polygon, const int NumberOfVertices) {
+/* Returns the intersection points of a polygon and a segment */
+int IntersectionOfSegmentAndPolygon2D(double ** IntersectionPoints,
+        double *RefPoint1, double *RefPoint2, 
+        double *Polygon, const int NumberOfVertices) {
 
     int i;
+    int NumberOfIntersections = 0;
 
     static double TempVect1[3];
     static double TempVect2[3];
     static double TempIntersect[3];
 
     for (i = 0; i < NumberOfVertices * 2; i += 2) {
-
         FillVect(TempVect1, Polygon[i], Polygon[i + 1], 0.0);
         FillVect(TempVect2, Polygon[(i + 2) % (2 * NumberOfVertices)],
-                Polygon[(i + 4) % (2 * NumberOfVertices)], 0.0);
-        // Still not complete
-
+                Polygon[(i + 3) % (2 * NumberOfVertices)], 0.0);
+        if (IntersectionOfLineSegments(TempIntersect, RefPoint1, RefPoint2,
+        TempVect1, TempVect2) == true) {
+            FillVect(IntersectionPoints[NumberOfIntersections], TempIntersect[0],
+            TempIntersect[1], TempIntersect[2]);
+            NumberOfIntersections += 1;
+        }
     }
-
+    return NumberOfIntersections;
 }
 
 /* Creating envelope polygon around set of polygons (in 2D, XY coordinate system) */

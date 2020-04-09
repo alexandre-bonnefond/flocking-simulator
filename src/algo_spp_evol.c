@@ -277,7 +277,7 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
             ArenaCenterX, ArenaCenterY, 0,
             0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
 
-    PlaceAgentsInsideARing(Phase, 7000, 0, Phase->NumberOfAgents,
+    PlaceAgentsInsideARing(Phase, 15000, 0, Phase->NumberOfAgents,
              ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
     /* reset z coordinate in two dimensions */
@@ -477,8 +477,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
              Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
 
     /* Olfati Gradient based term for attraction//repulsion */
-    GradientBased(GradientVelocity, Phase, .1, 500, 800, 0.2,
-         R_0, 100000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
+    GradientBased(GradientVelocity, Phase, .1, 400, 450, 0.3,
+         R_0, 50000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
 
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
@@ -497,9 +497,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
 
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
-    VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-    VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
-    //VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+    //VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+    //VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);

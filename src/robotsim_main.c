@@ -419,7 +419,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                             ActualUnitParams.Wind_Magn_Avg.Value *
                             WindVelocityVector[0]),
                     ActualColorConfig.VelocityArrowColor);
-            static char WindLabel[10];
+            static char WindLabel[312];
             sprintf(WindLabel, "Wind Speed: %1.1f m/s",
                     0.01 * hypot(ActualUnitParams.Wind_Magn_Avg.Value *
                             WindVelocityVector[0],

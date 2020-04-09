@@ -19,7 +19,7 @@ void DrawMenuItem(const char key,
 
     DrawTransparentShape(-0.9, Y - 0.025, 1.8, HEIGHT_OF_MENU_ITEM, color);
 
-    static char keylabel[3];
+    static char keylabel[4];
     sprintf(keylabel, "'%c'", key);
 
     static double TopOfMenuItem;
@@ -131,7 +131,7 @@ void DrawMenuItemOfFlockingModel(const char key,
         const fl_param_double_t * Param, double Y, const float *color) {
 
     int i;
-    static char value[7];
+    static char value[32];
     static bool Labeled;
     Labeled = false;
     sprintf(value, " ");
@@ -183,7 +183,7 @@ void DrawMenuItemOfFlockingModel(const char key,
         /* Checking existence of labels for specific stored values */
         for (i = 0; i < (Param->NumberOfLabels); i++) {
             if (Param->Labels.Values[i] == Param->StoredValue) {
-                sprintf(value, "Press F12 to change to '%s'!",
+                sprintf(value, "Press F12 to change to %s!",
                         Param->Labels.Captions[i]);
                 Labeled = true;
                 break;

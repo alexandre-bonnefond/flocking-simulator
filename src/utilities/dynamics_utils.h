@@ -328,8 +328,4 @@ int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
 double ReceivedPower(const double transmit_power, const double Dist,
         const double Ref_dist, const double freq, const int alpha);
         
-
-/* Smooth pairwise potential with finite cut-off  (see Olfati function) */
-double ActionFunction(double z, double a, double b);
-
 #endif
