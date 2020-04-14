@@ -22,6 +22,7 @@
 #include "utilities/debug_utils.h"
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* Step positions and velocities
  */

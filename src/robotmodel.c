@@ -29,7 +29,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         phase_t * Phase,
         phase_t * DelayedPhase,
         obstacles_t obstacles,
-        double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
+        double **Polygons,
         const int WhichAgent,
         const double R_C,
         const double freq,
@@ -329,8 +329,13 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(ActualRealVelocity, 3);
     //NullMatrix(OutputPhase->Laplacian, SitParams->NumberOfAgents, SitParams->NumberOfAgents);
 
-    double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS];
-
+    double **Polygons;
+    // NullMatrix(Polygons, obstacles.o_count, MAX_OBSTACLE_POINTS);
+    Polygons = malloc(sizeof(double) * obstacles.o_count);
+    for (i = 0; i < obstacles.o_count; i++) {
+        Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
+    }
+    
     for (i = 0; i < obstacles.o_count; i++){            
             for (j = 0; j < obstacles.o[i].p_count; j++){
                     Polygons[i][2*j] = obstacles.o[i].p[j][0];
@@ -384,6 +389,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             SteppedPhase.InnerStates[j][k] = ChangedInnerStateOfActualAgent[k];
         }
     }
+
+    
+    //freeMatrix(Polygons, MAX_OBSTACLES, MAX_OBSTACLE_POINTS);
     /* Print the Laplacian */
     
     // for (i = 0; i < SitParams->NumberOfAgents; i++){

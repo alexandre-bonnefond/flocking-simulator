@@ -329,7 +329,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
 /* Calculate the received power of an agent given its interdistance */
 double ReceivedPower(double * RefCoords, double * NeighbourCoords,
                         obstacles_t obstacles,
-                        double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
+                        double **Polygons,
                         const double transmit_power, 
                         const double Dist, const double Ref_dist, 
                         const double freq, const int alpha);

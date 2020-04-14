@@ -28,8 +28,8 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     for (i = 0; i < NumberOfAgents; i++) {
         Phase->RealIDs[i] = i;
     }
-    NullVect(Phase->ReceivedPower, NumberOfAgents);
-    NullMatrix(Phase->Laplacian, NumberOfAgents, NumberOfAgents);
+    // NullVect(Phase->ReceivedPower, NumberOfAgents);
+    // NullMatrix(Phase->Laplacian, NumberOfAgents, NumberOfAgents);
 }
 
 void freePhase(phase_t * Phase) {
@@ -1549,7 +1549,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
 double ReceivedPower(double * RefCoords, double * NeighbourCoords,
                     obstacles_t obstacles, 
-                    double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
+                    double **Polygons,
                     const double transmit_power,
                     const double Dist, const double Ref_dist, 
                     const double freq, const int alpha) {
