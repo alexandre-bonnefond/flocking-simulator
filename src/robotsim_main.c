@@ -85,7 +85,7 @@ static bool HighRes = true;
 #define DISTANCE_FROM_CENTER_LIMIT 12000        // Minimum value of distance from center
 #define DISTANCE_FROM_CENTER_XY_LIMIT 4000      // Minimum distance from center on XY plane
 
-int MenuWindowID, VizWindowID;  /* IDs of windows */
+int MenuWindowID, VizWindowID, StatWindow; /* IDs of windows */
 color_config_t ActualColorConfig;       /* contains color setups */
 vizmode_params_t ActualVizParams;       /* contains mode setup (e.g. CoM-following toggle, etc.) */
 stat_utils_t ActualStatUtils;   /* for statistical calculations... */
@@ -236,6 +236,19 @@ void DisplayMenu() {
     /* End of drawing */
     glutSwapBuffers();
 
+}
+
+/* Display some stats on a chart */
+void DisplayChart() {
+
+    glClearColor(ActualColorConfig.EraseColor[0],
+            ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2],
+            1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    
+
+    glutSwapBuffers();
 }
 
 /* Displaying quadcopters */
@@ -566,6 +579,8 @@ void UpdateMenu() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -874,6 +889,8 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1038,6 +1055,8 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
 
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
+    glutPostRedisplay();
+    glutSetWindow(StatWindow);
     glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
@@ -1320,6 +1339,8 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1405,6 +1426,8 @@ void HandleMouse(int button, int state, int x, int y) {
 
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
+    glutPostRedisplay();
+    glutSetWindow(StatWindow);
     glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
@@ -1683,6 +1706,10 @@ int main(int argc, char *argv[]) {
         glutIdleFunc(UpdateMenu);
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
+
+        DisplayWindow(600, 400, ActualVizParams.Resolution + 65 + 400, 0);
+        StatWindow = glutCreateWindow("Actual received power");
+        glutDisplayFunc(DisplayChart);
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
                 0);

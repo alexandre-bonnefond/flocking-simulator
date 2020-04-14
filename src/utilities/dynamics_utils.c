@@ -5,6 +5,8 @@
 
 #include "dynamics_utils.h"
 
+double LinearLoss = 0.008;
+
 /*
     Tools for manipulating phase space
 */
@@ -1500,8 +1502,8 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
 /* Packing of nearby agents to the first blocks of the phase space */
 int SelectNearbyVisibleAgents(phase_t * Phase,
         double *ReferencePosition,
-        double Range, double freq, double power_thresh, 
-        double transmit_power, double PacketLossQuadraticCoeff) {
+        double Range, double power_thresh, 
+        double PacketLossQuadraticCoeff) {
 
     static double DistFromRef[3];
     NullVect(DistFromRef, 3);
@@ -1509,8 +1511,8 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
     static double Dist = 0.0;
 
     int i;
-    bool packet_lost;
-    double Received_power;
+    // bool packet_lost;
+    //double Received_power;
 
     int NumberOfNearbyAgents = 1;
 
@@ -1518,14 +1520,13 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
         GetAgentsCoordinates(DistFromRef, Phase, i);
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
-
         Dist = VectAbs(DistFromRef);
         //packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
-        Received_power = ReceivedPower(transmit_power, Dist, 600,  freq, 2);
-        Phase->ReceivedPower[i] = Received_power;
+        // Received_power = ReceivedPower(transmit_power, Dist, 600,  freq, 2);
+        // Phase->ReceivedPower[i] = Received_power;
         //if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
         
-        if (Dist != 0 && Received_power > power_thresh) {
+        if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
             SwapAgents(Phase, i, NumberOfNearbyAgents);
             NumberOfNearbyAgents++;
             i++;
@@ -1546,9 +1547,14 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
-double ReceivedPower(const double transmit_power, const double Dist,
-        const double Ref_dist, const double freq, const int alpha) {
+double ReceivedPower(double * RefCoords, double * NeighbourCoords,
+                    obstacles_t obstacles, 
+                    double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
+                    const double transmit_power,
+                    const double Dist, const double Ref_dist, 
+                    const double freq, const int alpha) {
         
+        int j;
         double Power;
 
         if (Dist < Ref_dist) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
@@ -1560,5 +1566,29 @@ double ReceivedPower(const double transmit_power, const double Dist,
             Power = transmit_power - (10 * alpha * 
                 log10(Dist * 0.01 * freq) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
         }
+
+        for (j = 0; j < obstacles.o_count; j++){
+
+            double **Intersections;
+            Intersections = malloc(sizeof(double *) * 2);
+            Intersections[0] = malloc(sizeof(double) * 3);
+            Intersections[1] = malloc(sizeof(double) * 3);
+
+            int NumberOfIntersections;
+            double Loss;
+            static double DistanceThrough[3];
+
+            NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+            RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
+
+            if (NumberOfIntersections == 2) {
+                    VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
+                    Loss = LinearLoss * VectAbs(DistanceThrough);
+                    Power -= Loss;
+
+            }
+
+            freeMatrix(Intersections, 2, 3);
+        }   
         return Power;
 }

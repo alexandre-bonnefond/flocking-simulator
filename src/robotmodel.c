@@ -16,6 +16,7 @@ phase_t TempPhase;
 
 double *ChangedInnerStateOfActualAgent;
 
+
 static int NumberOfNeighbours = 0;      /* Number of units observed by the actual agent */
 
 /* For passing debug information to CalculatePreferredVelocity function */
@@ -27,6 +28,8 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         phase_t * GPSDelayedPhase,
         phase_t * Phase,
         phase_t * DelayedPhase,
+        obstacles_t obstacles,
+        double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
         const int WhichAgent,
         const double R_C,
         const double freq,
@@ -36,7 +39,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         const double packet_loss_distance, const bool OrderByDistance) {
 
     int i, j;
-    LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   // ???
+    LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
 
     /* Setting up order by distance from actual unit */
@@ -63,12 +66,29 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     static double ActualAgentsPosition[3];
     GetAgentsCoordinates(ActualAgentsPosition, Phase, WhichAgent);
 
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+
+        static double NeighbourDistance[3];
+        static double NeighbourPosition[3];
+        double Distance = 0;
+        double Received_Power = 0;
+
+        GetAgentsCoordinates(NeighbourPosition, Phase, i);
+        VectDifference(NeighbourDistance, NeighbourPosition, ActualAgentsPosition);
+        Distance = VectAbs(NeighbourDistance);
+
+        Received_Power = ReceivedPower(ActualAgentsPosition, NeighbourPosition, 
+                            obstacles, Polygons, transmit_power, Distance, 600, freq, 2);
+
+        LocalActualPhaseToCreate->ReceivedPower[i] = Received_Power;
+    }
+
     if (OrderByDistance) {
         /* OrderByDistance selects the nearby agents, and places their phase to the beginning of the full phase array. */
         NumberOfNeighbours =
                 SelectNearbyVisibleAgents(LocalActualPhaseToCreate,
-                ActualAgentsPosition, R_C, freq, power_thresh,
-                transmit_power, packet_loss_distance >
+                ActualAgentsPosition, R_C, power_thresh,
+                packet_loss_distance >
                 0 ? packet_loss_ratio / packet_loss_distance /
                 packet_loss_distance : 0);
 
@@ -76,19 +96,6 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0);
         NumberOfNeighbours = 1;
     }
-
-
-    //printf("%f\n", LocalActualPhaseToCreate->ReceivedPower[5]);
-    // for (i = 0; i < Phase->NumberOfAgents; i++){
-    //     if (i == WhichAgent){
-    //         Phase->Laplacian[i][i] = NumberOfNeighbours;
-    //     }
-    //     else
-    //     {
-    //         Phase->Laplacian[WhichAgent][i] = LocalActualPhaseToCreate->ReceivedPower[LocalActualPhaseToCreate->RealIDs[i]];
-    //     }
-    //     //printf("%f\n", Phase->Laplacian[WhichAgent][i]);        
-    // }
 
     /* Setting up delay and GPS inaccuracy for positions and velocities */
 
@@ -322,6 +329,15 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(ActualRealVelocity, 3);
     //NullMatrix(OutputPhase->Laplacian, SitParams->NumberOfAgents, SitParams->NumberOfAgents);
 
+    double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS];
+
+    for (i = 0; i < obstacles.o_count; i++){            
+            for (j = 0; j < obstacles.o[i].p_count; j++){
+                    Polygons[i][2*j] = obstacles.o[i].p[j][0];
+                    Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
+            }
+    }
+
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
         /* Constructing debug information about the actual agent */
@@ -333,14 +349,14 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
-                &LocalActualDelayedPhase, j, UnitParams->R_C.Value, UnitParams->freq.Value,
+                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams->R_C.Value, UnitParams->freq.Value,
                 UnitParams->sensitivity_thresh.Value, UnitParams->transmit_power.Value,
                 UnitParams->packet_loss_ratio.Value, UnitParams->packet_loss_distance.Value,
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
                                         SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-        /* Fill the Laplacian Matrix in µW */
+        /* Fill the Laplacian Matrix in dBm */
 
         for (i = 0; i < SitParams->NumberOfAgents; i++){
             if ( j == TempPhase.RealIDs[i]){
@@ -351,9 +367,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i]; // pow(10, TempPhase.ReceivedPower[i]/10)*1000;
             }
             
-            
-            //printf("%f\n", LocalActualPhase.ReceivedPower[i]);
-            //printf("%f\n", TempPhase.ReceivedPower[i]);
         }
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);

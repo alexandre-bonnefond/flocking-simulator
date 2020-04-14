@@ -8,10 +8,12 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include "datastructs.h"
 #include "math_utils.h"
 #include "param_utils.h"
+#include "obstacles.h"
 
 /* Array that containts noise boolean variable
  * If Noise[i] is "false", then no output noise will be added to its acceleration
@@ -321,11 +323,15 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition);
  * are not lost
  */
 int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
-        const double Range, const double freq, const double power_thresh, 
-        const double transmit_power, const double PacketLossQuadraticCoeff);
+        const double Range, const double power_thresh, 
+        const double PacketLossQuadraticCoeff);
 
 /* Calculate the received power of an agent given its interdistance */
-double ReceivedPower(const double transmit_power, const double Dist,
-        const double Ref_dist, const double freq, const int alpha);
+double ReceivedPower(double * RefCoords, double * NeighbourCoords,
+                        obstacles_t obstacles,
+                        double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS],
+                        const double transmit_power, 
+                        const double Dist, const double Ref_dist, 
+                        const double freq, const int alpha);
         
 #endif
