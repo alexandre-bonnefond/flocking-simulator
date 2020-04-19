@@ -28,7 +28,7 @@ static char ModelSpecificOutputFileName[512];
     strcat (ModelSpecificOutputFileName, "\0"); \
     file = fopen (ModelSpecificOutputFileName, "w");
 
-/* This struct conatins all (?) necessary parameters
+/* This struct contains all (?) necessary parameters
  * for creating statistical calculations 
  */
 typedef struct {

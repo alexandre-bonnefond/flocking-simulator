@@ -246,7 +246,7 @@ void DisplayChart() {
             1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    
+
 
     glutSwapBuffers();
 }
@@ -1763,10 +1763,10 @@ int main(int argc, char *argv[]) {
         /* Opening output files */
         FILE *f_Correlation, *f_CoM, *f_Velocity,
                 *f_DistanceBetweenNeighbours, *f_DistanceBetweenUnits,
-                *f_CollisionRatio, *f_Acceleration, *f_Collisions;
+                *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions;
         FILE *f_Correlation_StDev, *f_CoM_StDev, *f_Velocity_StDev,
                 *f_CollisionRatio_StDev, *f_DistanceBetweenUnits_StDev,
-                *f_Acceleration_StDev, *f_DistanceBetweenNeighbours_StDev;
+                *f_Acceleration_StDev, *f_ReceivedPowers_StDev, *f_DistanceBetweenNeighbours_StDev;
 
         /* Positions and velocities */
 
@@ -1935,6 +1935,26 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        if (FALSE != ActualSaveModes.SaveReceivedPowers) {
+            strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+            strcat(OutputFileName, "/received_powers.dat\0");
+            f_ReceivedPowers = fopen(OutputFileName, "w");
+            fprintf(f_ReceivedPowers,
+                    "\n# 1. time_(s)\n# 2. avg_of_received_power_(dBm)\n# 3. stdev_of_received_power_(dBm)\n# 4. min_of_received_power_(dBm)\n# 5. max_of_received_power_(dBm)\n\n");
+            fprintf(f_ReceivedPowers,
+                    "time_(s) \t avg_of_received_power_(dBm) \t stdev_of_received_power_(dBm) \t min_of_received_power_(dBm) \t max_of_received_power_(dBm)\n");
+            if (STAT == ActualSaveModes.SaveReceivedPowers
+                    || STEADYSTAT == ActualSaveModes.SaveReceivedPowers) {
+                strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+                strcat(OutputFileName, "/received_powers_stdev.dat\0");
+                f_ReceivedPowers_StDev = fopen(OutputFileName, "w");
+                fprintf(f_ReceivedPowers_StDev,
+                        "This file contains standard deviations. Check out \"received_power.dat\" for more details!\n");
+                fprintf(f_ReceivedPowers_StDev,
+                        "time_(s) \t avg_of_received_power_(dBm) \t stdev_of_received_power_(dBm) \t min_of_received_power_(dBm) \t max_of_received_power_(dBm)\n");
+            }
+        }
+
         double *Accelerations;
         Accelerations = malloc(ActualSitParams.NumberOfAgents * sizeof(double));
 
@@ -1961,7 +1981,6 @@ int main(int argc, char *argv[]) {
                         &ActualSitParams, &ActualUnitParams,
                         ActualStatUtils.ElapsedTime,
                         ActualStatUtils.OutputDirectory);
-
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
 
@@ -2171,6 +2190,26 @@ int main(int argc, char *argv[]) {
 
             }
 
+            if (FALSE != ActualSaveModes.SaveReceivedPowers) {
+                StatData = StatOfReceivedPower(&ActualPhase);
+            }
+            switch (ActualSaveModes.SaveReceivedPowers) {
+            case TIMELINE:{
+                fprintf(f_ReceivedPowers, "%lf\t%lf\t%lf\t%lf\t%lf\n",
+                        ActualStatUtils.ElapsedTime, StatData[0], StatData[1],
+                        StatData[2], StatData[3]);
+                break;
+            }
+            case STAT:{
+                UPDATE_STATISTICS(ReceivedPowers, 4);
+                break;
+            }
+            case STEADYSTAT:{
+                UPDATE_STATISTICS(ReceivedPowers, 4);
+                break;
+            }
+            }
+
             /* Saving model-specific statistics */
             if (FALSE != ActualSaveModes.SaveModelSpecifics) {
                 SaveModelSpecificStats(&ActualPhase, &ActualStatUtils,
@@ -2247,6 +2286,11 @@ int main(int argc, char *argv[]) {
         if (FALSE != ActualSaveModes.SaveAcceleration) {
             SAVE_STATISTICS(Acceleration, 4);
             fclose(f_Acceleration);
+        }
+
+        if (FALSE != ActualSaveModes.SaveReceivedPowers) {
+            SAVE_STATISTICS(ReceivedPowers, 4);
+            fclose(f_ReceivedPowers);
         }
 
         if (FALSE != ActualSaveModes.SaveModelSpecifics) {

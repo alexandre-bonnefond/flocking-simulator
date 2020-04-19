@@ -71,16 +71,13 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         static double NeighbourDistance[3];
         static double NeighbourPosition[3];
         double Distance = 0;
-        double Received_Power = 0;
 
         GetAgentsCoordinates(NeighbourPosition, Phase, i);
         VectDifference(NeighbourDistance, NeighbourPosition, ActualAgentsPosition);
         Distance = VectAbs(NeighbourDistance);
 
-        Received_Power = ReceivedPower(ActualAgentsPosition, NeighbourPosition, 
+        LocalActualPhaseToCreate->ReceivedPower[i] = ReceivedPower(ActualAgentsPosition, NeighbourPosition, 
                             obstacles, Polygons, transmit_power, Distance, 600, freq, 2);
-
-        LocalActualPhaseToCreate->ReceivedPower[i] = Received_Power;
     }
 
     if (OrderByDistance) {
@@ -327,20 +324,15 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(RealCoptForceVector, 3);
     static double ActualRealVelocity[3];
     NullVect(ActualRealVelocity, 3);
-    //NullMatrix(OutputPhase->Laplacian, SitParams->NumberOfAgents, SitParams->NumberOfAgents);
 
     double **Polygons;
-    // NullMatrix(Polygons, obstacles.o_count, MAX_OBSTACLE_POINTS);
     Polygons = malloc(sizeof(double) * obstacles.o_count);
     for (i = 0; i < obstacles.o_count; i++) {
         Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
-    }
-    
-    for (i = 0; i < obstacles.o_count; i++){            
-            for (j = 0; j < obstacles.o[i].p_count; j++){
-                    Polygons[i][2*j] = obstacles.o[i].p[j][0];
-                    Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
-            }
+        for (j = 0; j < obstacles.o[i].p_count; j++){
+            Polygons[i][2*j] = obstacles.o[i].p[j][0];
+            Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
+        }
     }
 
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
@@ -361,15 +353,15 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                                         SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-        /* Fill the Laplacian Matrix in dBm */
 
+        /* Fill the Laplacian Matrix in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++){
             if ( j == TempPhase.RealIDs[i]){
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.NumberOfAgents;
             }
             else
             {
-                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i]; // pow(10, TempPhase.ReceivedPower[i]/10)*1000;
+                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];
             }
             
         }
@@ -401,8 +393,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     //     printf("\n");
     // }
     // printf("\n\n\n\n");
-    
-            //printf("received pow of agent %d from agent %d = %f\n", j, TempPhase.RealIDs[i], TempPhase.ReceivedPower[i]);
 
     double OnePerDeltaT = 1. / SitParams->DeltaT;
     /* The acceleration saturates at a_max. We save out the acceleration magnitude values before 

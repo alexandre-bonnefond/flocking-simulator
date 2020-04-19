@@ -200,7 +200,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                         //         freeMatrix(Intersections, 2, 3);
                         // }
 
-                        printf("%f\n", PhaseData[Now].Laplacian[WhichAgent][i]);
+                        //printf("%f\n", PhaseData[Now].Laplacian[WhichAgent][i]);
 
 
                         //if condition about distance only

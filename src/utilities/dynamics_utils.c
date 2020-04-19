@@ -689,7 +689,7 @@ void GetAgentsVelocityFromTimeLine(double *Velocity, phase_t * PhaseData,
 
 }
 
-/* Inserts the actual position and velocity of the agents into "PhaseData" */
+/* Inserts the actual position, velocity and Laplacian of the agents into "PhaseData" */
 void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
         const int WhichStep) {
 
@@ -699,8 +699,8 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
             PhaseData[WhichStep].Coordinates[j][i] = Phase->Coordinates[j][i];
             PhaseData[WhichStep].Velocities[j][i] = Phase->Velocities[j][i];
         }
+        PhaseData[WhichStep].Laplacian[j] = Phase->Laplacian[j];
     }
-    PhaseData[WhichStep].Laplacian = Phase->Laplacian;
 }
 
 /* Inserting inner states into inner state timeline */

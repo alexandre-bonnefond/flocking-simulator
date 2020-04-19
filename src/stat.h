@@ -20,6 +20,7 @@ typedef struct {
 
     /* Sums for averages */
     double Data_Acceleration_Sum[4];
+    double Data_ReceivedPowers_Sum[4];
     double Data_Correlation_Sum[4];
     double Data_DistanceBetweenUnits_Sum[4];
     double Data_DistanceBetweenNeighbours_Sum[3];
@@ -29,6 +30,7 @@ typedef struct {
 
     /* stDevs */
     double Data_Acceleration_StDev[4];
+    double Data_ReceivedPowers_StDev[4];
     double Data_Correlation_StDev[4];
     double Data_DistanceBetweenUnits_StDev[4];
     double Data_DistanceBetweenNeighbours_StDev[3];
@@ -47,7 +49,7 @@ typedef struct {
         static int d; \
         for (d = 0; d < n; d++) { \
             ActualStatistics.Data_##stat##_Sum[d] += StatData[d] * ActualSitParams.DeltaT; \
-            ActualStatistics.Data_##stat##_StDev[d] += StatData[d] * StatData [d] * ActualSitParams.DeltaT; \
+            ActualStatistics.Data_##stat##_StDev[d] += StatData[d] * StatData[d] * ActualSitParams.DeltaT; \
         } \
     }
 
@@ -119,5 +121,10 @@ double *StatOfAcceleration(double *Accelerations, const double NumberOfAgents);
  * the number of collisions and dangerous situations.
  */
 double RatioOfDangerousSituations(phase_t * Phase, const double RadiusOfCopter);
+
+/* Returns an array that contains the average, deviation, minimum and maximum of
+ * received power
+ */
+double *StatOfReceivedPower(phase_t * Phase);
 
 #endif

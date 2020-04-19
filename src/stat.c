@@ -396,3 +396,57 @@ double RatioOfDangerousSituations(phase_t * Phase, const double RadiusOfCopter) 
             (Phase->NumberOfAgents - 1));
 
 }
+
+
+/* Returns an array that contains the average, deviation, minimum and maximum of
+ * received power
+ */
+double *StatOfReceivedPower(phase_t * Phase) {
+
+    int i, j;
+
+    Avg = 0.0;
+    StDev = 0.0;
+    Min = 2e222;
+    Max = 0.0;
+    
+    static double StatData[4];
+
+    static double RcPower = 0.0;
+
+    for (i = 0; i < Phase->NumberOfAgents - 1; i++) {
+
+        for (j = i + 1; j < Phase->NumberOfAgents; j++) {
+
+            RcPower = Phase->Laplacian[i][j];
+
+            if (RcPower > Max) {
+                Max = RcPower;
+            }
+            if (RcPower < Min) {
+                Min = RcPower;
+            }
+
+            Avg += RcPower;
+            StDev += RcPower * RcPower;
+
+        }
+
+    }
+
+    Avg *= 2.0 / (Phase->NumberOfAgents * (Phase->NumberOfAgents - 1));
+    StDev *= 2.0 / (Phase->NumberOfAgents * (Phase->NumberOfAgents - 1));
+    StDev -= Avg * Avg;
+
+    if (StDev < 0.0) {
+        StDev = 0.0;
+    }
+
+    StatData[0] = Avg;
+    StatData[1] = sqrt(StDev);
+    StatData[2] = Min;
+    StatData[3] = Max;
+
+    return StatData;
+
+}
