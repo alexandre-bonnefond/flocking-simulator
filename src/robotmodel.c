@@ -85,6 +85,10 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
         OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours);
 
+        if (NumberOfNeighbours > Size_Neighbourhood) {
+            NumberOfNeighbours = Size_Neighbourhood;
+        }
+
         for (int k = 0; k < NumberOfNeighbours; k++) {
             printf("%f\n", LocalActualPhaseToCreate->ReceivedPower[k]);
         }
@@ -347,9 +351,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
-                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams,
+                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams, 
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
-                                        SitParams->DeltaT)) == 0));
+                SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
 
