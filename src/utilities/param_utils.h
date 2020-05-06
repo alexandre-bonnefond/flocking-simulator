@@ -129,13 +129,10 @@ typedef struct {
     /* Range of communication */
     unit_param_double_t R_C;
 
-    /* Packet loss is a random process modelled with quadradically increasing
-       probability with distance, reaching a given packet_loss_ratio at
-       packet_loss_distance, i.e., y = ax^2 where a = ratio/distance^2 */
-    unit_param_double_t packet_loss_ratio;      /* 0-1 */
-    unit_param_double_t packet_loss_distance;   /* 0- */
-
     /* Communication parameters */
+    unit_param_double_t linear_loss;
+    unit_param_double_t ref_distance;
+    unit_param_double_t alpha;
     unit_param_double_t transmit_power;
     unit_param_double_t freq;
     unit_param_double_t sensitivity_thresh;

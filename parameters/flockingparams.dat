@@ -7,7 +7,7 @@ V_Frict=63.000000
 # Maximum velocity (Multiply it with 0.010000 to get its Value in m/s)
 V_Max=800.000000
 # Equilibrium distance (Multiply it with 0.010000 to get its Value in m)
-R_0=10800.000000
+R_0=10000.000000
 # Friction range (Multiply it with 0.010000 to get its Value in m)
 R_0_Offset_Frict=8530.000000
 # Shill dist offset (Multiply it with 0.010000 to get its Value in m)
@@ -24,6 +24,8 @@ Slope_Shill=3.550000
 V_Shill=1362.174000
 # Acc limit of shill (Multiply it with 0.010000 to get its Value in m/s^2)
 Acc_Shill=5300.000000
+# Size of the neighbourhood
+Size_Neighbourhood=4.0
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)
 ArenaRadius=62500.000000
 # Friction coefficient (-)

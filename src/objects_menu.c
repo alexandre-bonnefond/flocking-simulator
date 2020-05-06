@@ -29,7 +29,7 @@ void DrawMenuItem(const char key,
             color);
     DrawString(-0.6, TopOfMenuItem - 0.015, GLUT_BITMAP_8_BY_13, MenuLabel,
             color);
-    DrawString(-0.6, TopOfMenuItem - 0.07, GLUT_BITMAP_8_BY_13,
+    DrawString(-0.6, TopOfMenuItem - 0.06, GLUT_BITMAP_8_BY_13,
             UnitOfMeasurement, color);
     DrawString(0.6, TopOfMenuItem - 0.03, GLUT_BITMAP_9_BY_15, Value, color);
 
@@ -86,8 +86,8 @@ void DrawMenuItemsOfUnitModel(const unit_model_params_t * UnitParams,
             color);
 
     /* Control algorith parameters */
-    DrawMenuItemOfUnitModel('1', &UnitParams->Tau_PID_XY, 2, 1.0, 0.8 - Offset,
-            color);
+    DrawMenuItemOfUnitModel('1', &UnitParams->Tau_PID_XY, 2, 1.0, 
+            0.8 - Offset, color);
     DrawMenuItemOfUnitModel('2', &UnitParams->Tau_PID_Z, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM - Offset, color);
     DrawMenuItemOfUnitModel('3', &UnitParams->a_max, 1, 0.01,
@@ -111,18 +111,19 @@ void DrawMenuItemsOfUnitModel(const unit_model_params_t * UnitParams,
             0.8 - HEIGHT_OF_MENU_ITEM * 9 - Offset, color);
     DrawMenuItemOfUnitModel('b', &UnitParams->Wind_Magn_Avg, 2, 0.01,
             0.8 - HEIGHT_OF_MENU_ITEM * 10 - Offset, color);
-    /* Parameters of packet loss */
-    DrawMenuItemOfUnitModel('c', &UnitParams->packet_loss_ratio, 2, 1.0,
-            0.8 - HEIGHT_OF_MENU_ITEM * 11 - Offset, color);
-    DrawMenuItemOfUnitModel('d', &UnitParams->packet_loss_distance, 1, 0.01,
-            0.8 - HEIGHT_OF_MENU_ITEM * 12 - Offset, color);
     /* Parameters of the communictation */
-    DrawMenuItemOfUnitModel('e', &UnitParams->transmit_power, 2, 1.0,
+    DrawMenuItemOfUnitModel('c', &UnitParams->linear_loss, 3, 1.0,
+            0.8 - HEIGHT_OF_MENU_ITEM * 11 - Offset, color);
+    DrawMenuItemOfUnitModel('d', &UnitParams->alpha, 1, 1.0,
+            0.8 - HEIGHT_OF_MENU_ITEM * 12 - Offset, color);
+    DrawMenuItemOfUnitModel('e', &UnitParams->ref_distance, 1, 0.01,
             0.8 - HEIGHT_OF_MENU_ITEM * 13 - Offset, color);
-    DrawMenuItemOfUnitModel('f', &UnitParams->freq, 2, 1.0,
+    DrawMenuItemOfUnitModel('f', &UnitParams->transmit_power, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM * 14 - Offset, color);
-    DrawMenuItemOfUnitModel('g', &UnitParams->sensitivity_thresh, 2, 1.0,
+    DrawMenuItemOfUnitModel('g', &UnitParams->freq, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM * 15 - Offset, color);
+    DrawMenuItemOfUnitModel('h', &UnitParams->sensitivity_thresh, 2, 1.0,
+            0.8 - HEIGHT_OF_MENU_ITEM * 16 - Offset, color);
 
 }
 
@@ -170,7 +171,7 @@ void DrawMenuItemOfFlockingModel(const char key,
         }
 
     }
-
+    printf("%d\n", key);
     DrawMenuItem(key, Param->Name, Param->UnitOfMeas, value, Y, color);
 
     /* Display stored value, if the parameter is Constant */
@@ -235,11 +236,12 @@ void DrawMenuItemsOfFlockingModel(const flocking_model_params_t *
 
     int i = 0;
     int n = 0;
+    char * place;
     static char key[10];
 
     for (i = 0; i < FlockingParams->NumberOfParameters; i++) {
         if (FlockingParams->Params[i].InMenu == true) {
-            sprintf(key, "%01x", i + 1);
+            place = fromDeci(key, 20, i + 1);
             DrawMenuItemOfFlockingModel(key[0], &FlockingParams->Params[i],
                     0.8 - i * HEIGHT_OF_MENU_ITEM - Offset, color);
         }

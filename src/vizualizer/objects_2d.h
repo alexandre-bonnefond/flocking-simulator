@@ -16,6 +16,11 @@
 
 #include <stdbool.h>
 
+struct point {
+        GLfloat x;
+        GLfloat y;
+};
+
 /* Windows and other general tools */
 
 /* Displays a window with given width and height at (posX, posY) coordinates

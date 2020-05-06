@@ -41,6 +41,15 @@ double Acc_Shill;
 double Slope_Shill;
 double R_0_Shill;
 
+/* Parameters of the gradient term from Olfati */
+double H_Bump;
+double Epsilon;
+double A_Action_Function;
+double B_Action_Function;
+
+/* Hyper parameters of the flocking */
+double Size_Neighbourhood;
+
 /* 2 or 3 dimensions? */
 double Dim;
 

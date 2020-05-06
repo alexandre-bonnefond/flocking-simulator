@@ -6,7 +6,7 @@ a_max=600.000000
 # Comm. range (cm)
 R_C=10000.000000
 # Delay of comm. (s)
-t_del=1.000000
+t_del=0.2000
 # GPS refresh rate (s)
 t_GPS=0.200000
 # Parameters of inner noises (cm^2 / s^2)
@@ -18,10 +18,12 @@ Sigma_outer_Z=0.000000
 Wind_Magn_Avg=0.000000
 Wind_StDev=0.000000
 Wind_Angle=0.000000
-# Packet Loss Ratio (0-1)
-Packet_Loss_Ratio=0.000000
-# Packet Loss Distance (cm)
-Packet_Loss_Distance=8000.000000
+# Reference Comm Distance (cm)
+Reference_Distance=600.000000
+# Alpha (-)
+Alpha=2.000000
+# Linear loss (dBm/m)
+Linear_Loss=0.008000
 # Transmittion power (dBm)
 Transmit_Power=20.000000
 # Emitting frequency (GHz)

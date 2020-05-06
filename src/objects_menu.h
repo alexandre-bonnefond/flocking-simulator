@@ -9,7 +9,7 @@
 #ifndef OBJECTS_MENU_H
 #define OBJECTS_MENU_H
 
-#define HEIGHT_OF_MENU_ITEM 0.109 //113
+#define HEIGHT_OF_MENU_ITEM 0.090
 
 #include "vizualizer/objects_2d.h"
 #include "algo.h"

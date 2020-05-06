@@ -31,12 +31,8 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         obstacles_t obstacles,
         double **Polygons,
         const int WhichAgent,
-        const double R_C,
-        const double freq,
-        const double power_thresh,
-        const double transmit_power,
-        const double packet_loss_ratio,
-        const double packet_loss_distance, const bool OrderByDistance) {
+        unit_model_params_t * UnitParams,
+        const bool OrderByDistance) {
 
     int i, j;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
@@ -76,18 +72,23 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         VectDifference(NeighbourDistance, NeighbourPosition, ActualAgentsPosition);
         Distance = VectAbs(NeighbourDistance);
 
-        LocalActualPhaseToCreate->ReceivedPower[i] = ReceivedPower(ActualAgentsPosition, NeighbourPosition, 
-                            obstacles, Polygons, transmit_power, Distance, 600, freq, 2);
+        LocalActualPhaseToCreate->ReceivedPower[i] = ReceivedPowerLog(ActualAgentsPosition, 
+                            NeighbourPosition, obstacles, Polygons, UnitParams, Distance);
     }
 
     if (OrderByDistance) {
         /* OrderByDistance selects the nearby agents, and places their phase to the beginning of the full phase array. */
         NumberOfNeighbours =
                 SelectNearbyVisibleAgents(LocalActualPhaseToCreate,
-                ActualAgentsPosition, R_C, power_thresh,
-                packet_loss_distance >
-                0 ? packet_loss_ratio / packet_loss_distance /
-                packet_loss_distance : 0);
+                ActualAgentsPosition, UnitParams->R_C.Value, 
+                UnitParams->sensitivity_thresh.Value);
+
+        OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours);
+
+        for (int k = 0; k < NumberOfNeighbours; k++) {
+            printf("%f\n", LocalActualPhaseToCreate->ReceivedPower[k]);
+        }
+        printf("\n");
 
     } else {
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0);
@@ -346,9 +347,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
-                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams->R_C.Value, UnitParams->freq.Value,
-                UnitParams->sensitivity_thresh.Value, UnitParams->transmit_power.Value,
-                UnitParams->packet_loss_ratio.Value, UnitParams->packet_loss_distance.Value,
+                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams,
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
                                         SitParams->DeltaT)) == 0));
                                         

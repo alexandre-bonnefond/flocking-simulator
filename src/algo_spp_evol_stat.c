@@ -28,10 +28,12 @@ static double StDev_Temp;
 FILE *f_DistanceFromArenaFile;
 FILE *f_ClusterDependentParams;
 FILE *f_ClusterParams;
+FILE *f_ClusterRP;
 
 FILE *f_DistanceFromArenaFile_StDev;
 FILE *f_ClusterDependentParams_StDev;
 FILE *f_ClusterParams_StDev;
+FILE *f_ClusterRP_StDev;
 
 double **Adjacency;
 static int Dimension;
@@ -43,6 +45,8 @@ double TimeElapsedNearArena = 0.0;
 /* Variables for storing time averages */
 double Data_Corr_Sum = 0.0, Data_CorrStd_Sum = 0.0, Data_CorrMin_Sum =
         0.0, Data_CorrMax_Sum = 0.0;
+double Data_RP_Sum = 0.0, Data_RPStd_Sum = 0.0, Data_RPMin_Sum =
+        0.0, Data_RPMax_Sum = 0.0;
 double Data_MinCluster_Sum = 0.0;
 double Data_MaxCluster_Sum = 0.0;
 double Data_IndependentAgents_Sum = 0;
@@ -53,6 +57,8 @@ double Data_DistanceFromArena_Sum = 0.0, Data_DistanceFromArenaMin_Sum = 0.0,
 /* Variables for storing standard deviations */
 double Data_Corr_StDev = 0.0, Data_CorrStd_StDev = 0.0, Data_CorrMin_StDev =
         0.0, Data_CorrMax_StDev = 0.0;
+double Data_RP_StDev = 0.0, Data_RPStd_StDev = 0.0, Data_RPMin_StDev =
+        0.0, Data_RPMax_StDev = 0.0;
 double Data_MinCluster_StDev = 0.0, Data_MaxCluster_StDev =
         0.0, Data_IndependentAgents_StDev = 0.0;
 double Data_DistanceFromArena_StDev = 0.0, Data_DistanceFromArenaMin_StDev =
@@ -69,6 +75,7 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
     INITIALIZE_OUTPUT_FILE("cluster_dependent_correlation.dat",
             f_ClusterDependentParams);
     INITIALIZE_OUTPUT_FILE("cluster_parameters.dat", f_ClusterParams);
+    INITIALIZE_OUTPUT_FILE("cluster_dependent_received_power.dat", f_ClusterRP);
 
     /* Headers */
     if (STAT != StatUtils->SaveMode && STEADYSTAT != StatUtils->SaveMode) {
@@ -79,6 +86,8 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
             "time_(s)\tcluster_dependent_correlation_avg\tcluster_dependent_correlation_stdev\tcluster_dependent_correlation_min\tcluster_dependent_correlation_max\n");
     fprintf(f_ClusterParams,
             "time_(s)\tmin_cluster_size\tmax_cluster_size\tagents_not_in_cluster\n");
+    fprintf(f_ClusterRP,
+            "time_(s)\tcluster_dependent_received_power_avg\tcluster_dependent_received_power_stdev\tcluster_dependent_received_power_min\tcluster_dependent_received_power_max\n");
 
     if (STAT == StatUtils->SaveMode || STEADYSTAT == StatUtils->SaveMode) {
 
@@ -91,6 +100,8 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
                 f_ClusterDependentParams_StDev);
         INITIALIZE_OUTPUT_FILE("cluster_parameters_stdev.dat",
                 f_ClusterParams_StDev);
+        INITIALIZE_OUTPUT_FILE("cluster_dependent_received_power_stdev.dat",
+                f_ClusterRP_StDev);
 
         fprintf(f_DistanceFromArenaFile_StDev,
                 "This file contains standard deviations. Check out \"distance_from_arena.dat\" for more details!\n");
@@ -98,6 +109,8 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
                 "This file contains standard deviations. Check out \"cluster_dependent_parameters.dat\" for more details!\n");
         fprintf(f_ClusterParams_StDev,
                 "This file contains standard deviations. Check out \"cluster_parameters.dat\" for more details!\n");
+        fprintf(f_ClusterRP_StDev,
+                "This file contains standard deviations. Check out \"cluster_dependent_received_power.dat\" for more details!\n");
 
         fprintf(f_DistanceFromArenaFile_StDev,
                 "time_elapsed_near_arena_(s)\tdistance_from_arena_avg_(cm)\tdistance_from_arena_stdev_(cm)\tdistance_from_arena_min_(cm)\tdistance_from_arena_max_(cm)\tnumber_of_agents_outside\n");
@@ -105,6 +118,8 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
                 "time_(s)\tcluster_dependent_correlation_avg\tcluster_dependent_correlation_stdev\tcluster_dependent_correlation_min\tcluster_dependent_correlation_max\n");
         fprintf(f_ClusterParams_StDev,
                 "time_(s)\tmin_cluster_size\tmax_cluster_size\tagents_not_in_cluster\n");
+        fprintf(f_ClusterRP_StDev,
+                "time_(s)\tcluster_dependent_received_power_avg\tcluster_dependent_received_power_stdev\tcluster_dependent_received_power_min\tcluster_dependent_received_power_max\n");
     }
 
     TimeElapsedNearArena = 0.0;
@@ -145,16 +160,16 @@ void ConstructAdjacency(double **OutputAdjacency, phase_t * Phase,
 }
 
 void CreateCluster(const int i, double **InputAdjacency,
-        const int NumberOfAgents) {
+        const int NumberOfAgents, unit_model_params_t * UnitParams) {
 
     int k;
 
     Visited[i] = true;
 
     for (k = 0; k < NumberOfAgents; k++) {
-        if (InputAdjacency[i][k] == 1.0) {
+        if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value) {
             if (Visited[k] != true) {
-                CreateCluster(k, InputAdjacency, NumberOfAgents);
+                CreateCluster(k, InputAdjacency, NumberOfAgents, UnitParams);
             }
         }
     }
@@ -176,15 +191,7 @@ double GetInteractionRange() {
 void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
         unit_model_params_t * UnitParams, stat_utils_t * StatUtils) {
 
-    /* Initializing and constructing adjacency matrix, if it is necessary */
-    if (false == AdjacencyAllocated) {
-        Dimension = SitParams->NumberOfAgents;
-        Adjacency = doubleMatrix(Dimension, Dimension);
-        Visited = BooleanData(Dimension);
-        AdjacencyAllocated = true;
-    }
-
-    ConstructAdjacency(Adjacency, Phase, GetInteractionRange());
+    Visited = BooleanData(Dimension);
 
     int i, j;
     static double AgentsCoordinates[3];
@@ -197,16 +204,17 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     static int MaxClusterSize;
     static int MinClusterSize;
 
-    static double Avg;
-    static double StDev;
-    static double Min, Max;
+    static double Avg_Corr, Avg_RP;
+    static double StDev_Corr, StDev_RP;
+    static double Min_Corr, Min_RP, Max_Corr, Max_RP;
     static int MaxSize;
-    Min = 2e222;
-    Max = 0.0;
-    static double Temp;
-    Avg = 0.0;
-    StDev = 0.0;
-
+    Min_Corr = Min_RP = 2e222;
+    Max_Corr = 0.0;
+    Max_RP = -2e222;
+    static double Temp_Corr, Temp_RP;
+    Avg_Corr = Avg_RP = 0.0;
+    StDev_Corr = StDev_RP = 0.0;
+    
     static bool IsItInCluster;
     NumberOfAgentsInCluster = 0;
     AgentsNotInCluster = 0;
@@ -225,7 +233,7 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
             Visited[k] = false;
         }
 
-        CreateCluster(i, Adjacency, Phase->NumberOfAgents);
+        CreateCluster(i, Phase->Laplacian, Phase->NumberOfAgents, UnitParams);
         for (k = 0; k < SitParams->NumberOfAgents; k++) {
             if (true == Visited[k]) {
                 NumberOfAgentsInithCluster++;
@@ -244,15 +252,26 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
             if (i != j && Visited[j] == true) {
                 GetAgentsVelocity(NeighboursCoordinates, Phase, j);
                 UnitVect(NeighboursCoordinates, NeighboursCoordinates);
-                Temp = ScalarProduct(AgentsCoordinates, NeighboursCoordinates,
+                Temp_Corr = ScalarProduct(AgentsCoordinates, NeighboursCoordinates,
                         3);
-                Avg += Temp;
-                StDev += Temp * Temp;
-                if (Temp > Max) {
-                    Max = Temp;
+                Temp_RP = Phase->Laplacian[i][j];
+
+                Avg_Corr += Temp_Corr;
+                Avg_RP += Temp_RP;
+                StDev_Corr += Temp_Corr * Temp_Corr;
+                StDev_RP += Temp_RP * Temp_RP;
+
+                if (Temp_Corr > Max_Corr) {
+                    Max_Corr = Temp_Corr;
                 }
-                if (Temp < Min) {
-                    Min = Temp;
+                if (Temp_RP > Max_RP) {
+                    Max_RP = Temp_RP;
+                }
+                if (Temp_Corr < Min_Corr) {
+                    Min_Corr = Temp_Corr;
+                }
+                if (Temp_RP < Min_RP) {
+                    Min_RP = Temp_RP;
                 }
                 NumberOfAgentsInCluster += 1;
             }
@@ -261,12 +280,12 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
 
         if (NumberOfAgentsInithCluster > MaxClusterSize
                 && NumberOfAgentsInithCluster > 1) {
-            MaxClusterSize = NumberOfAgentsInithCluster;
+            MaxClusterSize = NumberOfAgentsInithCluster - 1;
         }
         if ((NumberOfAgentsInithCluster < MinClusterSize
                         && NumberOfAgentsInithCluster > 1 && MinClusterSize > 0)
                 || (MinClusterSize == 0 && NumberOfAgentsInithCluster > 1)) {
-            MinClusterSize = NumberOfAgentsInithCluster;
+            MinClusterSize = NumberOfAgentsInithCluster - 1;
         }
 
         AgentsNotInCluster += (IsItInCluster == true ? 0 : 1);
@@ -274,43 +293,54 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     }
 
     if (NumberOfAgentsInCluster > 0) {
-        Avg /= NumberOfAgentsInCluster;
-        StDev /= NumberOfAgentsInCluster;
-        StDev -= Avg * Avg;
+        Avg_Corr /= NumberOfAgentsInCluster;
+        StDev_Corr /= NumberOfAgentsInCluster;
+        StDev_Corr -= Avg_Corr * Avg_Corr;
+
+        Avg_RP /= NumberOfAgentsInCluster;
+        StDev_RP /= NumberOfAgentsInCluster;
+        StDev_RP -= Avg_RP * Avg_RP;
     } else {
-        Avg = 0.0;
-        StDev = 0.0;
-        Min = 0.0;
-        Max = 0.0;
+        Avg_Corr = 0.0;
+        StDev_Corr = 0.0;
+        Min_Corr = 0.0;
+        Max_Corr = 0.0;
+
+        Avg_RP = 0.0;
+        StDev_RP = 0.0;
+        Min_RP = 0.0;
+        Max_RP = 0.0;
     }
 
-    if (StDev < 0.0) {
-        StDev = 0.0;
+    if (StDev_Corr < 0.0) {
+        StDev_Corr = 0.0;
     }
 
     if (TIMELINE == StatUtils->SaveMode) {
 
         fprintf(f_ClusterDependentParams, "%lf\t%lf\t%lf\t%lf\t%lf\n",
-                StatUtils->ElapsedTime, Avg, sqrt(StDev), Min, Max);
+                StatUtils->ElapsedTime, Avg_Corr, sqrt(StDev_Corr), Min_Corr, Max_Corr);
         fprintf(f_ClusterParams, "%lf\t%d\t%d\t%d\n",
                 StatUtils->ElapsedTime, MinClusterSize, MaxClusterSize,
                 AgentsNotInCluster);
+        fprintf(f_ClusterRP, "%lf\t%lf\t%lf\t%lf\t%lf\n",
+                StatUtils->ElapsedTime, Avg_RP, sqrt(StDev_RP), Min_RP, Max_RP);
 
     } else {
 
-        Data_Corr_Sum += Avg * SitParams->DeltaT;
-        Data_CorrStd_Sum += sqrt(StDev) * SitParams->DeltaT;
-        Data_CorrMin_Sum += Min * SitParams->DeltaT;
-        Data_CorrMax_Sum += Max * SitParams->DeltaT;
+        Data_Corr_Sum += Avg_Corr * SitParams->DeltaT;
+        Data_CorrStd_Sum += sqrt(StDev_Corr) * SitParams->DeltaT;
+        Data_CorrMin_Sum += Min_Corr * SitParams->DeltaT;
+        Data_CorrMax_Sum += Max_Corr * SitParams->DeltaT;
 
         Data_MinCluster_Sum += MinClusterSize * SitParams->DeltaT;
         Data_MaxCluster_Sum += MaxClusterSize * SitParams->DeltaT;
         Data_IndependentAgents_Sum += AgentsNotInCluster * SitParams->DeltaT;
 
-        Data_Corr_StDev += Avg * Avg * SitParams->DeltaT;
-        Data_CorrStd_StDev += StDev * SitParams->DeltaT;
-        Data_CorrMin_StDev += Min * Min * SitParams->DeltaT;
-        Data_CorrMax_StDev += Max * Max * SitParams->DeltaT;
+        Data_Corr_StDev += Avg_Corr * Avg_Corr * SitParams->DeltaT;
+        Data_CorrStd_StDev += StDev_Corr * SitParams->DeltaT;
+        Data_CorrMin_StDev += Min_Corr * Min_Corr * SitParams->DeltaT;
+        Data_CorrMax_StDev += Max_Corr * Max_Corr * SitParams->DeltaT;
 
         Data_MinCluster_StDev +=
                 MinClusterSize * MinClusterSize * SitParams->DeltaT;
@@ -318,6 +348,16 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
                 MaxClusterSize * MaxClusterSize * SitParams->DeltaT;
         Data_IndependentAgents_StDev +=
                 AgentsNotInCluster * AgentsNotInCluster * SitParams->DeltaT;
+
+        Data_RP_Sum += Avg_RP * SitParams->DeltaT;
+        Data_RPStd_Sum += sqrt(StDev_RP) * SitParams->DeltaT;
+        Data_RPMin_Sum += Min_RP * SitParams->DeltaT;
+        Data_RPMax_Sum += Max_RP * SitParams->DeltaT;
+
+        Data_RP_StDev += Avg_RP * Avg_RP * SitParams->DeltaT;
+        Data_RPStd_StDev += StDev_RP * SitParams->DeltaT;
+        Data_RPMin_StDev += Min_RP * Min_RP * SitParams->DeltaT;
+        Data_RPMax_StDev += Max_RP * Max_RP * SitParams->DeltaT;
 
     }
 
@@ -358,7 +398,6 @@ void SaveModelSpecificStats(phase_t * Phase,
             VectDifference(TempCoords, ArenaCoordinates, AgentsCoordinates);
             dist = VectAbs(TempCoords);
             dist = (dist > ArenaRadius ? dist - ArenaRadius : 0.0);
-
         } else if (1.0 == ArenaShape) { // Cube-shaped arena
 
             static double FromSide[3];
@@ -452,6 +491,10 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils) {
                 Data_MinCluster_Sum / ElapsedTime,
                 Data_MaxCluster_Sum / ElapsedTime,
                 Data_IndependentAgents_Sum / ElapsedTime);
+        fprintf(f_ClusterRP, "%lf\t%lf\t%lf\t%lf\t%lf\n",
+                ElapsedTime, Data_RP_Sum / ElapsedTime,
+                Data_RPStd_Sum / ElapsedTime, Data_RPMin_Sum / ElapsedTime,
+                Data_RPMax_Sum / ElapsedTime);
         fprintf(f_DistanceFromArenaFile, "%lf\t%lf\t%lf\t%lf\t%lf\t",
                 TimeElapsedNearArena,
                 Data_DistanceFromArena_Sum / TimeElapsedNearArena,
@@ -468,6 +511,13 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils) {
         SAVE_STDEV(CorrMin, ClusterDependentParams);
         SAVE_STDEV(CorrMax, ClusterDependentParams);
         fprintf(f_ClusterDependentParams_StDev, "\n");
+
+        fprintf(f_ClusterRP_StDev, "%lf", ElapsedTime);
+        SAVE_STDEV(RP, ClusterRP);
+        SAVE_STDEV(RPStd, ClusterRP);
+        SAVE_STDEV(RPMin, ClusterRP);
+        SAVE_STDEV(RPMax, ClusterRP);
+        fprintf(f_ClusterRP_StDev, "\n");
 
         fprintf(f_ClusterParams_StDev, "%lf", ElapsedTime);
         SAVE_STDEV(MinCluster, ClusterParams);
@@ -495,12 +545,14 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils) {
         fclose(f_DistanceFromArenaFile_StDev);
         fclose(f_ClusterDependentParams_StDev);
         fclose(f_ClusterParams_StDev);
+        fclose(f_ClusterRP_StDev);
 
     }
 
     fclose(f_DistanceFromArenaFile);
     fclose(f_ClusterDependentParams);
     fclose(f_ClusterParams);
+    fclose(f_ClusterRP);
 
     freeMatrix(Adjacency, Dimension, Dimension);
     free(Visited);

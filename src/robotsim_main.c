@@ -37,6 +37,7 @@
 #include "objects_menu.h"
 #include "colors.h"
 #include "vizualizer/objects_3d.h"
+#include "vizualizer/objects_2d.h"
 #include "algo_gui.h"
 #include "algo_stat.h"
 #include "dynspecviz.h"
@@ -245,10 +246,93 @@ void DisplayChart() {
             ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2],
             1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_DEPTH_TEST);
+    
+    static int ii = 0;
 
+    int size = (int) (((STORED_TIME) / ActualSitParams.DeltaT) - 1.0);
 
+    struct point graph[size];
 
+    double max = -2e222;
+    double min = 2e222;
+
+    for (int i = 0; i < size; i++) {
+        graph[i].x = i;
+        graph[i].y = cos(i);
+        // graph[i].y = PhaseData[i].Laplacian[2][3] + cos(ii);
+
+        if (graph[i].y < min) {
+            min = graph[i].y;
+        }
+        if (graph[i].y > max) {
+            max =  graph[i].y;
+        }
+    }
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, size, 0, 1, -1, 1);
+
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(0.0f, -50.0f);
+    for(int i = 0; i < Now - 1; i++) {
+        glVertex2f(graph[i].x, graph[i].y); 
+    }
+    glEnd();        
+
+    // glViewport(0, 0, window_width, window_height);
+    
+    // int window_width = glutGet(GLUT_WINDOW_WIDTH);
+    // int window_height = glutGet(GLUT_WINDOW_HEIGHT);
+    // int MapeSize = size;
+
+    // static struct point box[4] = {{-20, -10}, {20, -10}, {20, 10}, {-20, 10}};
+    // glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_STATIC_DRAW);
+
+    // glEnableClientState(GL_VERTEX_ARRAY);
+    // glVertexPointer(2, GL_FLOAT, 0, box);
+    // glDrawArrays(GL_LINE_LOOP, 0, 4);
+    // glDisableClientState(GL_VERTEX_ARRAY);
+
+    // int size = (int) (((STORED_TIME) / ActualSitParams.DeltaT) - 1.0);
+    
+    // struct point graph[size];
+
+    // for(int i = 0; i < size; i++) {
+    //     float x = (i - size/2) / 100;
+    //     graph[i].x = x;
+    //     //graph[i].y = 20 * (sin(x + ii) + 1)/2 -10;
+    //     graph[i].y =  20 * (PhaseData[i].Laplacian[1][5] + 90) / (30) - 10;
+    //     printf("%f\n", graph[i].y);
+    // }
+
+    // glEnableClientState(GL_VERTEX_ARRAY);
+    // glVertexPointer(2, GL_FLOAT, 0, graph);
+    // glDrawArrays(GL_LINE_STRIP, 0, size);
+    // glDisableClientState(GL_VERTEX_ARRAY);
+    
+
+    
+    // gluOrtho2D(0, 600, 0, 400);
+    // glMatrixMode(GL_MODELVIEW);
+    // GLuint vbo;
+    // GLint attribute_coord2d;
+    // glGenBuffers(1, &vbo);
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof graph, graph, GL_STREAM_DRAW);
+
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    
+    // glEnableVertexAttribArray(attribute_coord2d);
+    // glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    // glDrawArrays(GL_LINE_STRIP, 0, 2000);
+    // glDisableVertexAttribArray(attribute_coord2d);
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glFlush();
     glutSwapBuffers();
+    
+    ii++;
 }
 
 /* Displaying quadcopters */
@@ -791,7 +875,6 @@ void UpdatePositionsToDisplay() {
          * the number of calculated steps between two "frames"
          */
         for (i = 0; i < ActualVizParams.VizSpeedUp; i++) {
-
             if (Now < TimeStepsToStore - 1) {
                 /* Calculating 1 step with the robot model */
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
@@ -804,13 +887,11 @@ void UpdatePositionsToDisplay() {
                         &ActualSitParams, &ActualUnitParams,
                         TimeStep * ActualSitParams.DeltaT,
                         ActualStatUtils.OutputDirectory);
-
                 /* Inserting output phase of the "step" function into the
                  * globally-allocated PhaseData and InnerStatesTimeLine
                  */
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
-                //printf("nb = %d\n", PhaseData->NumberOfAgents);
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */
@@ -1346,16 +1427,28 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
 
 }
 
+
+void HandleMouse2(int button, int state, int x, int y) {
+
+    static int Modder = 0;
+    static double RotationAxis[3];
+    Modder = glutGetModifiers();
+    // printf("%f %f\n", MouseCoordToReal_2D(x, 600*400,
+    //                 ActualVizParams.Resolution), MouseCoordToReal_2D(y, 600*400,
+    //                 ActualVizParams.Resolution));
+}
 /* Mouse functions */
 void HandleMouse(int button, int state, int x, int y) {
 
     static int Modder = 0;
     static double RotationAxis[3];
     Modder = glutGetModifiers();
-
+    // printf("%f %f\n", MouseCoordToReal_2D(x, ActualVizParams.MapSizeXY,
+    //                 ActualVizParams.Resolution), MouseCoordToReal_2D(y, ActualVizParams.MapSizeXY,
+    //                 ActualVizParams.Resolution));
     /* 2D visualization mode functions */
     if (ActualVizParams.TwoDimViz == true) {
-
+        printf("%f\n", ActualVizParams.MapSizeXY);
         /* Scroll down - zoom in */
         if (button == 3) {
             if (state == GLUT_DOWN) {
@@ -1710,6 +1803,7 @@ int main(int argc, char *argv[]) {
         DisplayWindow(600, 400, ActualVizParams.Resolution + 65 + 400, 0);
         StatWindow = glutCreateWindow("Actual received power");
         glutDisplayFunc(DisplayChart);
+        glutMouseFunc(HandleMouse2);
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
                 0);
@@ -1798,7 +1892,7 @@ int main(int argc, char *argv[]) {
             strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
             strcat(OutputFileName, "/collisions.dat\0");
             f_Collisions = fopen(OutputFileName, "w");
-            fprintf(f_Collisions, "time_(s) \t number_of_collisions\n\n");
+            fprintf(f_Collisions, "time_(s)\tnumber_of_collisions\n\n");
         }
 
         if (FALSE != ActualSaveModes.SaveDistanceBetweenUnits) {
@@ -1808,7 +1902,7 @@ int main(int argc, char *argv[]) {
             fprintf(f_DistanceBetweenUnits,
                     "\n# 1. time_(s)\n# 2. avg_of_distance_between_units_(cm)\n# 3. stdev_of_distance_between_units_(cm)\n# 4. min_of_distance_between_units_(cm)\n# 5. max_of_distance_between_units_(cm)\n\n");
             fprintf(f_DistanceBetweenUnits,
-                    "time_(s) \t avg_of_distance_between_units_(cm) \t stdev_of_distance_between_units_(cm) \t min_of_distance_between_units_(cm) \t max_of_distance_between_units_(cm)\n");
+                    "time_(s)\tavg_of_distance_between_units_(cm)\tstdev_of_distance_between_units_(cm)\tmin_of_distance_between_units_(cm)\tmax_of_distance_between_units_(cm)\n");
             if (STAT == ActualSaveModes.SaveDistanceBetweenUnits
                     || STEADYSTAT == ActualSaveModes.SaveDistanceBetweenUnits) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1817,7 +1911,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_DistanceBetweenUnits_StDev,
                         "This file contains standard deviations. Check out \"dist_between_units.dat\" for more details!\n");
                 fprintf(f_DistanceBetweenUnits_StDev,
-                        "time_(s) \t avg_of_distance_between_units_(cm) \t stdev_of_distance_between_units_(cm) \t min_of_distance_between_units_(cm) \t max_of_distance_between_units_(cm)\n");
+                        "time_(s)\tavg_of_distance_between_units_(cm)\tstdev_of_distance_between_units_(cm)\tmin_of_distance_between_units_(cm)\tmax_of_distance_between_units_(cm)\n");
             }
         }
 
@@ -1828,7 +1922,7 @@ int main(int argc, char *argv[]) {
             fprintf(f_DistanceBetweenNeighbours,
                     "\n# 1. time_(s)\n# 2. avg_of_distance_between_neighbours_(cm)\n# 3. stdev_of_distance_between_neighbours_(cm)\n# 4. max_of_distance_between_neighbours_(cm)\n\n");
             fprintf(f_DistanceBetweenNeighbours,
-                    "time_(s) \t avg_of_distance_between_neighbours_(cm) \t stdev_of_distance_between_neighbours_(cm) \t max_of_distance_between_neighbours_(cm)\n");
+                    "time_(s)\tavg_of_distance_between_neighbours_(cm)\tstdev_of_distance_between_neighbours_(cm)\tmax_of_distance_between_neighbours_(cm)\n");
             if (STAT == ActualSaveModes.SaveDistanceBetweenNeighbours
                     || STEADYSTAT ==
                     ActualSaveModes.SaveDistanceBetweenNeighbours) {
@@ -1838,7 +1932,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_DistanceBetweenNeighbours_StDev,
                         "This file contains standard deviations. Check out \"dist_between_neighbours.dat\" for more details!\n");
                 fprintf(f_DistanceBetweenNeighbours_StDev,
-                        "time_(s) \t avg_of_distance_between_neighbours_(cm) \t stdev_of_distance_between_neighbours_(cm) \t min_of_distance_between_neighbours_(cm) \t max_of_distance_between_neighbours_(cm)\n");
+                        "time_(s)\tavg_of_distance_between_neighbours_(cm)\tstdev_of_distance_between_neighbours_(cm)\tmin_of_distance_between_neighbours_(cm)\tmax_of_distance_between_neighbours_(cm)\n");
             }
         }
 
@@ -1849,7 +1943,7 @@ int main(int argc, char *argv[]) {
             fprintf(f_Velocity,
                     "\n# 1. time_(s)\n# 2. avg_of_velocity_Magnitude_(cm/s)\n# 3. stdev_of_velocity_Magnitude_(cm/s)\n# 4. min_of_velocity_Magnitude_(cm/s)\n# 5. max_of_velocity_Magnitude_(cm/s)\n# 6. Length_of_avg_velocity_(cm/s)\n# 7. avg_velocity_x_(cm/s)\n# 8. avg_velocity_y_(cm/s)\n# 9. avg_velocity_z_(cm/s)\n\n");
             fprintf(f_Velocity,
-                    "time_(s) \t avg_of_velocity_Magnitude_(cm/s) \t stdev_of_velocity_Magnitude_(cm/s) \t min_of_velocity_Magnitude_(cm/s) \t max_of_velocity_Magnitude_(cm/s) \t Length_of_avg_velocity_(cm/s) \t avg_velocity_x_(cm/s) \t avg_velocity_y_(cm/s) \t avg_velocity_z_(cm/s)\n\n");
+                    "time_(s)\tavg_of_velocity_Magnitude_(cm/s)\tstdev_of_velocity_Magnitude_(cm/s)\tmin_of_velocity_Magnitude_(cm/s)\tmax_of_velocity_Magnitude_(cm/s)\tLength_of_avg_velocity_(cm/s)\tavg_velocity_x_(cm/s)\tavg_velocity_y_(cm/s)\tavg_velocity_z_(cm/s)\n\n");
             if (STAT == ActualSaveModes.SaveVelocity
                     || STEADYSTAT == ActualSaveModes.SaveVelocity) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1858,7 +1952,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_Velocity_StDev,
                         "This file contains standard deviations. Check out \"velocity.dat\" for more details!\n");
                 fprintf(f_Velocity_StDev,
-                        "time_(s) \t avg_of_velocity_Magnitude_(cm/s) \t stdev_of_velocity_Magnitude_(cm/s) \t min_of_velocity_Magnitude_(cm/s) \t max_of_velocity_Magnitude_(cm/s) \t Length_of_avg_velocity_(cm/s) \t avg_velocity_x_(cm/s) \t avg_velocity_y_(cm/s) \t avg_velocity_z_(cm/s)\n\n");
+                        "time_(s)\tavg_of_velocity_Magnitude_(cm/s)\tstdev_of_velocity_Magnitude_(cm/s)\tmin_of_velocity_Magnitude_(cm/s)\tmax_of_velocity_Magnitude_(cm/s)\tLength_of_avg_velocity_(cm/s)\tavg_velocity_x_(cm/s)\tavg_velocity_y_(cm/s)\tavg_velocity_z_(cm/s)\n\n");
             }
         }
 
@@ -1867,7 +1961,7 @@ int main(int argc, char *argv[]) {
             strcat(OutputFileName, "/CoM.dat\0");
             f_CoM = fopen(OutputFileName, "w");
             fprintf(f_CoM,
-                    "time_(s) \t CoM_x_(cm) \t CoM_y_(cm) \t CoM_z_(cm)\n\n");
+                    "time_(s)\tCoM_x_(cm)\tCoM_y_(cm)\tCoM_z_(cm)\n\n");
             if (STAT == ActualSaveModes.SaveCoM
                     || STEADYSTAT == ActualSaveModes.SaveCoM) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1876,7 +1970,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_CoM_StDev,
                         "This file contains standard deviations. Check out \"CoM.dat\" for more details!\n");
                 fprintf(f_CoM_StDev,
-                        "time_(s) \t CoM_x_(cm) \t CoM_y_(cm) \t CoM_z_(cm)\n\n");
+                        "time_(s)\tCoM_x_(cm)\tCoM_y_(cm)\tCoM_z_(cm)\n\n");
             }
         }
 
@@ -1885,7 +1979,7 @@ int main(int argc, char *argv[]) {
             strcat(OutputFileName, "/correlation.dat\0");
             f_Correlation = fopen(OutputFileName, "w");
             fprintf(f_Correlation,
-                    "time_(s) \t avg_of_velocity_correlation \t stdev_of_normalized_velocity_scalar_product \t min_of_normalized_velocity_scalar_product \t max_of_normalized_velocity_scalar_product\n\n");
+                    "time_(s)\tavg_of_velocity_correlation\tstdev_of_normalized_velocity_scalar_product\tmin_of_normalized_velocity_scalar_product\tmax_of_normalized_velocity_scalar_product\n\n");
             if (STAT == ActualSaveModes.SaveCorrelation
                     || STEADYSTAT == ActualSaveModes.SaveCorrelation) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1894,7 +1988,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_Correlation_StDev,
                         "This file contains standard deviations. Check out \"correlation.dat\" for more details!\n");
                 fprintf(f_Correlation_StDev,
-                        "time_(s) \t avg_of_velocity_correlation \t stdev_of_normalized_velocity_scalar_product \t min_of_normalized_velocity_scalar_product \t max_of_normalized_velocity_scalar_product\n\n");
+                        "time_(s)\tavg_of_velocity_correlation\tstdev_of_normalized_velocity_scalar_product\tmin_of_normalized_velocity_scalar_product\tmax_of_normalized_velocity_scalar_product\n\n");
             }
         }
 
@@ -1902,7 +1996,7 @@ int main(int argc, char *argv[]) {
             strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
             strcat(OutputFileName, "/collision_ratio.dat\0");
             f_CollisionRatio = fopen(OutputFileName, "w");
-            fprintf(f_CollisionRatio, "time_(s) \t ratio_of_collisions\n\n");
+            fprintf(f_CollisionRatio, "time_(s)\tratio_of_collisions\n\n");
             if (STAT == ActualSaveModes.SaveCollisionRatio
                     || STEADYSTAT == ActualSaveModes.SaveCollisionRatio) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1911,7 +2005,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_CollisionRatio_StDev,
                         "This file contains standard deviations. Check out \"collision_ratio.dat\" for more details!\n");
                 fprintf(f_CollisionRatio_StDev,
-                        "time_(s) \t ratio_of_collisions\n\n");
+                        "time_(s)\tratio_of_collisions\n\n");
             }
         }
 
@@ -1922,7 +2016,7 @@ int main(int argc, char *argv[]) {
             fprintf(f_Acceleration,
                     "\n# 1. time_(s)\n# 2. avg_of_acceleration_Magnitude_(cm/s^2)\n# 3. stdev_of_acceleration_Magnitude_(cm/s^2)\n# 4. min_of_acceleration_Magnitude_(cm/s^2)\n# 5. max_of_acceleration_Magnitude_(cm/s^2)\n# 6. Length_of_avg_acceleration_(cm/s^2)\n# 7. avg_acceleration_x_(cm/s^2)\n# 8. avg_acceleration_y_(cm/s^2)\n# 9. avg_acceleration_z_(cm/s^2)\n\n");
             fprintf(f_Acceleration,
-                    "time_(s) \t avg_of_acceleration_Magnitude_(cm/s^2) \t stdev_of_acceleration_Magnitude_(cm/s^2) \t min_of_acceleration_Magnitude_(cm/s^2) \t max_of_acceleration_Magnitude_(cm/s^2) \t Length_of_avg_acceleration_(cm/s^2) \t avg_acceleration_x_(cm/s^2) \t avg_acceleration_y_(cm/s^2) \t avg_acceleration_z_(cm/s^2)\n\n");
+                    "time_(s)\tavg_of_acceleration_Magnitude_(cm/s^2)\tstdev_of_acceleration_Magnitude_(cm/s^2)\tmin_of_acceleration_Magnitude_(cm/s^2)\tmax_of_acceleration_Magnitude_(cm/s^2)\tLength_of_avg_acceleration_(cm/s^2)\tavg_acceleration_x_(cm/s^2)\tavg_acceleration_y_(cm/s^2)\tavg_acceleration_z_(cm/s^2)\n\n");
             if (STAT == ActualSaveModes.SaveAcceleration
                     || STEADYSTAT == ActualSaveModes.SaveAcceleration) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1931,7 +2025,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_Acceleration_StDev,
                         "This file contains standard deviations. Check out \"acceleration.dat\" for more details!\n");
                 fprintf(f_Acceleration_StDev,
-                        "time_(s) \t avg_of_acceleration_Magnitude_(cm/s^2) \t stdev_of_acceleration_Magnitude_(cm/s^2) \t min_of_acceleration_Magnitude_(cm/s^2) \t max_of_acceleration_Magnitude_(cm/s^2) \t Length_of_avg_acceleration_(cm/s^2) \t avg_acceleration_x_(cm/s^2) \t avg_acceleration_y_(cm/s^2) \t avg_acceleration_z_(cm/s^2)\n\n");
+                        "time_(s)\tavg_of_acceleration_Magnitude_(cm/s^2)\tstdev_of_acceleration_Magnitude_(cm/s^2)\tmin_of_acceleration_Magnitude_(cm/s^2)\tmax_of_acceleration_Magnitude_(cm/s^2)\tLength_of_avg_acceleration_(cm/s^2)\tavg_acceleration_x_(cm/s^2)\tavg_acceleration_y_(cm/s^2)\tavg_acceleration_z_(cm/s^2)\n\n");
             }
         }
 
@@ -1942,7 +2036,7 @@ int main(int argc, char *argv[]) {
             fprintf(f_ReceivedPowers,
                     "\n# 1. time_(s)\n# 2. avg_of_received_power_(dBm)\n# 3. stdev_of_received_power_(dBm)\n# 4. min_of_received_power_(dBm)\n# 5. max_of_received_power_(dBm)\n\n");
             fprintf(f_ReceivedPowers,
-                    "time_(s) \t avg_of_received_power_(dBm) \t stdev_of_received_power_(dBm) \t min_of_received_power_(dBm) \t max_of_received_power_(dBm)\n");
+                    "time_(s)\tavg_of_received_power_(dBm)\tstdev_of_received_power_(dBm)\tmin_of_received_power_(dBm)\tmax_of_received_power_(dBm)\n");
             if (STAT == ActualSaveModes.SaveReceivedPowers
                     || STEADYSTAT == ActualSaveModes.SaveReceivedPowers) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -1951,7 +2045,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_ReceivedPowers_StDev,
                         "This file contains standard deviations. Check out \"received_power.dat\" for more details!\n");
                 fprintf(f_ReceivedPowers_StDev,
-                        "time_(s) \t avg_of_received_power_(dBm) \t stdev_of_received_power_(dBm) \t min_of_received_power_(dBm) \t max_of_received_power_(dBm)\n");
+                        "time_(s)\tavg_of_received_power_(dBm)\tstdev_of_received_power_(dBm)\tmin_of_received_power_(dBm)\tmax_of_received_power_(dBm)\n");
             }
         }
 

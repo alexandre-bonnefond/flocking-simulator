@@ -108,28 +108,34 @@ void ChangeUnitModelParameter(unit_model_params_t * params, int WhichParam,
         break;
     case 12:
     {
-        params->packet_loss_ratio.Value += StepSize * 0.01;
-        if (params->packet_loss_ratio.Value < 0.0) {
-            params->packet_loss_ratio.Value = 0.0;
-        } else if (params->packet_loss_ratio.Value > 1.0) {
-            params->packet_loss_ratio.Value = 1.0;
+        params->linear_loss.Value += StepSize * 0.01;
+        if (params->linear_loss.Value < 0.0) {
+            params->linear_loss.Value = 0.0;
         }
-    }
+    }   
         break;
     case 13:
     {
-        params->packet_loss_distance.Value += StepSize * 10.0;
-        if (params->packet_loss_distance.Value < 0.0) {
-            params->packet_loss_distance.Value = 0.0;
+        params->alpha.Value += StepSize;
+        if (params->alpha.Value < 0.0) {
+            params->alpha.Value = 0.0;
         }
     }
         break;
     case 14:
     {
-        params->transmit_power.Value += StepSize * 0.01;
+        params->ref_distance.Value += StepSize * 10.0;
+        if (params->ref_distance.Value < 0.0) {
+            params->ref_distance.Value = 0.0;
+        }
     }
         break;
     case 15:
+    {
+        params->transmit_power.Value += StepSize * 0.01;
+    }
+        break;
+    case 16:
     {
         params->freq.Value += StepSize * 0.01;
         if (params->freq.Value < 0.0) {
@@ -137,7 +143,7 @@ void ChangeUnitModelParameter(unit_model_params_t * params, int WhichParam,
         }
     }
         break;
-    case 16:
+    case 17:
     {
         params->sensitivity_thresh.Value += StepSize * 0.01;
     }
@@ -161,8 +167,9 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->Sigma_Outer_XY.UnitOfMeas, "m^2/s^3");
     sprintf(UnitParams->Sigma_Outer_Z.UnitOfMeas, "m^2/s^3");
     sprintf(UnitParams->Wind_Magn_Avg.UnitOfMeas, "m/s");
-    sprintf(UnitParams->packet_loss_distance.UnitOfMeas, "m");
-    sprintf(UnitParams->packet_loss_ratio.UnitOfMeas, "-");
+    sprintf(UnitParams->linear_loss.UnitOfMeas, "dBm/m");
+    sprintf(UnitParams->ref_distance.UnitOfMeas, "m");
+    sprintf(UnitParams->alpha.UnitOfMeas, "-");
     sprintf(UnitParams->transmit_power.UnitOfMeas, "dBm");
     sprintf(UnitParams->freq.UnitOfMeas, "GHz");
     sprintf(UnitParams->sensitivity_thresh.UnitOfMeas, "dBm");
@@ -179,8 +186,9 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->Sigma_Outer_XY.Name, "Strength of outer noise (XY)");
     sprintf(UnitParams->Sigma_Outer_Z.Name, "Strength of outer noise (Z)");
     sprintf(UnitParams->Wind_Magn_Avg.Name, "Average Wind Speed");
-    sprintf(UnitParams->packet_loss_ratio.Name, "Packet Loss Ratio");
-    sprintf(UnitParams->packet_loss_distance.Name, "Packet Loss Distance");
+    sprintf(UnitParams->linear_loss.Name, "Obstacles Linear Loss");
+    sprintf(UnitParams->alpha.Name, "Alpha Comm");
+    sprintf(UnitParams->ref_distance.Name, "Reference Comm Distance");
     sprintf(UnitParams->transmit_power.Name, "Transmit Power");
     sprintf(UnitParams->freq.Name, "Frequency");
     sprintf(UnitParams->sensitivity_thresh.Name, "Sensitivity Threshold");
@@ -208,8 +216,9 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         UnitParams->Sigma_GPS_Z.Value = 0.0;
         UnitParams->Sigma_Outer_XY.Value = 0.0;
         UnitParams->Sigma_Outer_Z.Value = 0.0;
-        UnitParams->packet_loss_ratio.Value = 0.5;
-        UnitParams->packet_loss_distance.Value = UnitParams->R_C.Value;
+        UnitParams->linear_loss.Value = 0.008;
+        UnitParams->ref_distance.Value = 600;
+        UnitParams->alpha.Value = 2;
         UnitParams->transmit_power.Value = 10.0;
         UnitParams->freq.Value = 2.6;
         UnitParams->sensitivity_thresh.Value = -10.0;
@@ -288,11 +297,14 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
             } else if (strcmp(ReadedName, "Wind_Angle") == 0) {
                 UnitParams->Wind_Angle.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
-            } else if (strcmp(ReadedName, "Packet_Loss_Ratio") == 0) {
-                UnitParams->packet_loss_ratio.Value = atof(ReadedValue);
+            } else if (strcmp(ReadedName, "Linear_Loss") == 0) {
+                UnitParams->linear_loss.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
-            } else if (strcmp(ReadedName, "Packet_Loss_Distance") == 0) {
-                UnitParams->packet_loss_distance.Value = atof(ReadedValue);
+            } else if (strcmp(ReadedName, "Reference_Distance") == 0) {
+                UnitParams->ref_distance.Value = atof(ReadedValue);
+                NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "Alpha") == 0) {
+                UnitParams->alpha.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
             } else if (strcmp(ReadedName, "Transmit_Power") == 0) {
                 UnitParams->transmit_power.Value = atof(ReadedValue);
@@ -324,8 +336,9 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         printf("Wind_Magn_Avg=0.0\n");
         printf("Wind_StDev=0.0\n");
         printf("Wind_Angle=0.0\n");
-        printf("Packet_Loss_Ratio=0.5\n");
-        printf("Packet_Loss_Distance=10000\n");
+        printf("Alpha=2\n");
+        printf("Reference_Distance=600\n");
+        printf("Linear_Loss=0.05\n");
         printf("Transmit_Power=10\n");
         printf("Freq=2.6\n");
         printf("Sensitivity_thresh=-10\n");
@@ -370,12 +383,15 @@ void SaveUnitModelParamsToFile(FILE * OutputFile_Unit,
     fprintf(OutputFile_Unit, "Wind_StDev=%lf\n", UnitParams->Wind_StDev.Value);
     fprintf(OutputFile_Unit, "Wind_Angle=%lf\n", UnitParams->Wind_Angle.Value);
 
-    fprintf(OutputFile_Unit, "# Packet Loss Ratio (0-1)\n");
-    fprintf(OutputFile_Unit, "Packet_Loss_Ratio=%lf\n",
-            UnitParams->packet_loss_ratio.Value);
-    fprintf(OutputFile_Unit, "# Packet Loss Distance (cm)\n");
-    fprintf(OutputFile_Unit, "Packet_Loss_Distance=%lf\n",
-            UnitParams->packet_loss_distance.Value);
+    fprintf(OutputFile_Unit, "# Reference Comm Distance (cm)\n");
+    fprintf(OutputFile_Unit, "Reference_Distance=%lf\n",
+            UnitParams->ref_distance.Value);
+    fprintf(OutputFile_Unit, "# Alpha (-)\n");
+    fprintf(OutputFile_Unit, "Alpha=%lf\n",
+            UnitParams->alpha.Value);
+    fprintf(OutputFile_Unit, "# Linear loss (dBm/m)\n");
+    fprintf(OutputFile_Unit, "Linear_Loss=%lf\n",
+            UnitParams->linear_loss.Value);
     fprintf(OutputFile_Unit, "# Transmittion power (dBm)\n");
     fprintf(OutputFile_Unit, "Transmit_Power=%lf\n",
             UnitParams->transmit_power.Value);

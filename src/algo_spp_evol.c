@@ -165,6 +165,67 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Max = 2e222
     );
 
+    /* Olfati Saber gradient component parameters */
+
+
+    /* Param of the bump function, shifting the decaying starting point to the "right" when h rises */
+    CREATE_FLOCKING_PARAM(H_Bump,
+        .Name = "Decay point",
+        .UnitOfMeas = "-",
+        .Value = 0.3,
+        .Digits = 2,
+        .SizeOfStep = 0.01,
+        .Mult = 1.0,
+        .Min = 0,
+        .Max = 1
+    );
+
+    /* Param of the sigma norm */
+    CREATE_FLOCKING_PARAM(Epsilon,
+        .Name = "Epsilon",
+        .UnitOfMeas = "-",
+        .Value = 0.1,
+        .Digits = 2,
+        .SizeOfStep = 0.01,
+        .Mult = 1.0,
+        .Min = 0,
+        .Max = 10
+    );
+
+    CREATE_FLOCKING_PARAM(A_Action_Function,
+        .Name = "A Action Function",
+        .UnitOfMeas = "m",
+        .Value = 50,
+        .Digits = 1,
+        .SizeOfStep = 1,
+        .Mult = 0.01,
+        .Min = 0,
+        .Max = 2e222
+    );
+
+    CREATE_FLOCKING_PARAM(B_Action_Function,
+        .Name = "B Action Function",
+        .UnitOfMeas = "m",
+        .Value = 250,
+        .Digits = 1,
+        .SizeOfStep = 1,
+        .Mult = 0.01,
+        .Min = 0,
+        .Max = 2e222
+    );
+
+    /* Hyper parameters */
+    CREATE_FLOCKING_PARAM(Size_Neighbourhood,
+        .Name = "Size of neighbourhood",
+        .UnitOfMeas = "-",
+        .Value = 4,
+        .Digits = 1,
+        .SizeOfStep = 1,
+        .Mult = 1.0,
+        .Min = 0,
+        .Max = 2e222
+    );
+
     /* Size of the arena */
     /* Diameter of circle or Length of the edges of the square */
     CREATE_FLOCKING_PARAM(ArenaRadius,
@@ -497,8 +558,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
 
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
-    //VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-    //VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    // VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+    // VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
     VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);

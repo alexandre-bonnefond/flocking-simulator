@@ -735,6 +735,8 @@ void ShiftDataLine(phase_t * PhaseData, const int HowManyRows,
                         PhaseData[HowManyRows - HowManyRowsToSave +
                         i].Velocities[j][k];
             }
+            PhaseData[i].Laplacian[j] = PhaseData[HowManyRows
+            - HowManyRowsToSave + i].Laplacian[j];
         }
     }
 
@@ -1455,7 +1457,7 @@ void SwapAgents(phase_t * Phase, const int i, const int j) {
 }
 
 /* Orders agents by distance from a given position */
-/* Warning! Simple insertion short! */
+/* Warning! Simple insertion sort! */
 void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
 
     static double DistFromRef[3];
@@ -1499,11 +1501,41 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
     }
 }
 
+/* Orders agents by Received Power */
+/* Warning! Simple insertion sort! */
+void OrderAgentsByPower(phase_t * Phase, int SizeToSort) {
+
+    static double RP1;
+    static double RP2;
+
+    int i, j;
+
+    for (i = 1; i < SizeToSort; i++) {
+
+        RP1 = Phase->ReceivedPower[i];
+
+        j = i;
+
+        RP2 = Phase->ReceivedPower[j-1];
+
+        while (j > 0 && RP2 < RP1) {
+
+            /* Swapping velocities, positions, received power, inner states and real IDs */
+            SwapAgents(Phase, j - 1, j);
+
+            j--;
+
+            RP1 = Phase->ReceivedPower[j];
+            RP2 = Phase->ReceivedPower[j - 1];
+
+        }
+    }
+}
+
 /* Packing of nearby agents to the first blocks of the phase space */
 int SelectNearbyVisibleAgents(phase_t * Phase,
         double *ReferencePosition,
-        double Range, double power_thresh, 
-        double PacketLossQuadraticCoeff) {
+        double Range, double power_thresh) {
 
     static double DistFromRef[3];
     NullVect(DistFromRef, 3);
@@ -1511,9 +1543,6 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
     static double Dist = 0.0;
 
     int i;
-    // bool packet_lost;
-    //double Received_power;
-
     int NumberOfNearbyAgents = 1;
 
     for (i = Phase->NumberOfAgents - 1; i >= NumberOfNearbyAgents; i--) {
@@ -1521,11 +1550,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         GetAgentsCoordinates(DistFromRef, Phase, i);
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
         Dist = VectAbs(DistFromRef);
-        //packet_lost = (randomizeDouble(0, 1) < Dist * Dist * PacketLossQuadraticCoeff);
-        // Received_power = ReceivedPower(transmit_power, Dist, 600,  freq, 2);
-        // Phase->ReceivedPower[i] = Received_power;
-        //if (Dist != 0 && Dist <= Range && !packet_lost && Received_power > power_thresh) {
-        
+
         if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
             SwapAgents(Phase, i, NumberOfNearbyAgents);
             NumberOfNearbyAgents++;
@@ -1547,26 +1572,24 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
-double ReceivedPower(double * RefCoords, double * NeighbourCoords,
+double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                     obstacles_t obstacles, 
                     double **Polygons,
-                    const double transmit_power,
-                    const double Dist, const double Ref_dist, 
-                    const double freq, const int alpha) {
+                    unit_model_params_t * UnitParams,
+                    const double Dist) {
         
         int j;
         double Power;
 
-        if (Dist < Ref_dist) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
-            Power = transmit_power - (10 * alpha * 
-                log10(Ref_dist * 0.01 * freq) + 32.44);
+        if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+            Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                log10(UnitParams->ref_distance.Value * 0.01 * UnitParams->freq.Value) + 32.44);
         }
         else
         {
-            Power = transmit_power - (10 * alpha * 
-                log10(Dist * 0.01 * freq) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
+            Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
         }
-
         for (j = 0; j < obstacles.o_count; j++){
 
             double **Intersections;
@@ -1583,10 +1606,11 @@ double ReceivedPower(double * RefCoords, double * NeighbourCoords,
 
             if (NumberOfIntersections == 2) {
                     VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-                    Loss = LinearLoss * VectAbs(DistanceThrough);
+                    Loss = UnitParams->linear_loss.Value * VectAbs(DistanceThrough);
                     Power -= Loss;
 
             }
+            // printf("%f\n", UnitParams->transmit_power.Value);
 
             freeMatrix(Intersections, 2, 3);
         }   

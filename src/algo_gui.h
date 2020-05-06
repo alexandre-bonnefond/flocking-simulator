@@ -25,6 +25,7 @@
 /* For changing variables from algo_..._gui.c */
 static int jj;
 
+
 /* For reseting Phases
  */
 void ModelSpecificReset(phase_t * Phase,

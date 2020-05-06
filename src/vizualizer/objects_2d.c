@@ -14,6 +14,7 @@
 /* Useful global variables */
 static float ActualColor[3];
 
+
 /* Windows and other general tools */
 
 /* Displays a window with given width and height at (posX, posY) coordinates */

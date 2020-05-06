@@ -318,20 +318,21 @@ void SwapAgents(phase_t * Phase, const int i, const int j);
  */
 void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition);
 
+/* Orders agents by Received Power */
+void OrderAgentsByPower(phase_t * Phase, int SizeToSort);
+
 /* Packing of nearby agents to the first blocks of the phase space
  * Returns the number of agents which are closer than R_C and whose packets
  * are not lost
  */
 int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
-        const double Range, const double power_thresh, 
-        const double PacketLossQuadraticCoeff);
+        const double Range, const double power_thresh);
 
 /* Calculate the received power of an agent given its interdistance */
-double ReceivedPower(double * RefCoords, double * NeighbourCoords,
+double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                         obstacles_t obstacles,
                         double **Polygons,
-                        const double transmit_power, 
-                        const double Dist, const double Ref_dist, 
-                        const double freq, const int alpha);
+                        unit_model_params_t * UnitParams,
+                        const double Dist);
         
 #endif

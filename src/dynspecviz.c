@@ -34,7 +34,6 @@ void DrawVelocityArrow_2D(const double x, const double y,
  */
 void DrawCopter_2D(const double x, const double y, const double MapSizexy,
         const double Radius, const float *agentcolor) {
-
     /* Real size of the copter */
     DrawFullCircle(RealToGlCoord_2D(x, MapSizexy), RealToGlCoord_2D(y,
                     MapSizexy), RealToGlCoord_2D(40, MapSizexy), agentcolor);

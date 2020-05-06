@@ -408,7 +408,7 @@ double *StatOfReceivedPower(phase_t * Phase) {
     Avg = 0.0;
     StDev = 0.0;
     Min = 2e222;
-    Max = 0.0;
+    Max = -2e222;
     
     static double StatData[4];
 

@@ -40,6 +40,11 @@ double randomizePowerLawDouble(const double x0, const double x1,
 // integer power
 int ipow(int base, int exp);
 
+
+// Function to convert a given decimal number 
+// to a base 'base' and 
+char * fromDeci(char res[], int base, int inputNum);
+
 /* Linear algebra */
 
 /* Fills a vector with the input values (x, y, z components)
