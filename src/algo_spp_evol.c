@@ -485,7 +485,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         flocking_model_params_t * FlockingParams,
         vizmode_params_t * VizParams,
         const double Delay,
-        const double ActualTime, agent_debug_info_t * DebugInfo) {
+        const double ActualTime, agent_debug_info_t * DebugInfo,
+        const int Flocking_type) {
 
     /* Clear output velocity */
     NullVect(OutputVelocity, 3);
@@ -538,7 +539,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
              Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
 
     /* Olfati Gradient based term for attraction//repulsion */
-    GradientBased(GradientVelocity, Phase, .1, 400, 450, 0.3,
+    GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
          R_0, 50000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
 
     /* (by now far from but better than) Viscous friction-like term */
@@ -556,11 +557,17 @@ void CalculatePreferredVelocity(double *OutputVelocity,
                 V_Shill, R_0_Shill, Acc_Shill, Slope_Shill, WhichAgent);
     }
 
-
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
-    // VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-    // VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
-    VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+
+    if (Flocking_type == 0) {
+        VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+        VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+    }
+
+    else if (Flocking_type == 1) {
+        VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+    }
+    
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);

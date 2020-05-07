@@ -54,6 +54,9 @@ char * fromDeci(char res[], int base, int inputNum);
 void FillVect(double *VectToFill, const double x, const double y,
         const double z);
 
+/* Return a vector with the indexes corresponding to a sorted vector */
+void ArgMaxSort(double *InputVect, int Length, int * IndexVect);
+
 /* Returns the Magnitude of the input vector (3 dimensions)
  */
 double VectAbs(double *InputVector);

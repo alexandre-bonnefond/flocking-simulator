@@ -81,18 +81,24 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         NumberOfNeighbours =
                 SelectNearbyVisibleAgents(LocalActualPhaseToCreate,
                 ActualAgentsPosition, UnitParams->R_C.Value, 
-                UnitParams->sensitivity_thresh.Value);
+                UnitParams->sensitivity_thresh.Value, (int)(UnitParams->communication_type.Value));
 
-        OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours);
+        
+        if ((int)UnitParams->communication_type.Value == 1 || (int)UnitParams->communication_type.Value == 2) {
+            OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours);
+        }
+        else if ((int)UnitParams->communication_type.Value == 0) {
+            OrderAgentsByDistance(LocalActualPhaseToCreate, ActualAgentsPosition);
+        }
 
         if (NumberOfNeighbours > Size_Neighbourhood) {
             NumberOfNeighbours = Size_Neighbourhood;
         }
 
-        for (int k = 0; k < NumberOfNeighbours; k++) {
-            printf("%f\n", LocalActualPhaseToCreate->ReceivedPower[k]);
-        }
-        printf("\n");
+        // for (int k = 0; k < NumberOfNeighbours; k++) {
+        //     printf("%f %d\n", LocalActualPhaseToCreate->ReceivedPower[k], LocalActualPhaseToCreate->RealIDs[k]);
+        // }
+        // printf("\n");
 
     } else {
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0);
@@ -234,7 +240,7 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
 
         CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 0,
                 FlockingParams, VizParams, UnitParams->t_del.Value,
-                TimeStepReal * DeltaT, &DebugInfo);
+                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value);
 
         for (i = 0; i < 3; i++) {
 

@@ -148,6 +148,22 @@ void ChangeUnitModelParameter(unit_model_params_t * params, int WhichParam,
         params->sensitivity_thresh.Value += StepSize * 0.01;
     }
         break;
+    case 18:
+    {
+        params->communication_type.Value += StepSize;
+        if (params->communication_type.Value < 0.0) {
+            params->communication_type.Value = 0.0;
+        }
+    }
+        break;
+    case 19:
+    {
+        params->flocking_type.Value += StepSize;
+        if (params->flocking_type.Value < 0.0) {
+            params->flocking_type.Value = 0.0;
+        }
+    }
+        break;
     }
 
 }
@@ -173,6 +189,8 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.UnitOfMeas, "dBm");
     sprintf(UnitParams->freq.UnitOfMeas, "GHz");
     sprintf(UnitParams->sensitivity_thresh.UnitOfMeas, "dBm");
+    sprintf(UnitParams->communication_type.UnitOfMeas, "-");
+    sprintf(UnitParams->flocking_type.UnitOfMeas, "-");
 
     /* Parameter Names */
     sprintf(UnitParams->Tau_PID_XY.Name, "Tau_PID (XY)");
@@ -192,6 +210,8 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.Name, "Transmit Power");
     sprintf(UnitParams->freq.Name, "Frequency");
     sprintf(UnitParams->sensitivity_thresh.Name, "Sensitivity Threshold");
+    sprintf(UnitParams->communication_type.Name, "Type of communication");
+    sprintf(UnitParams->flocking_type.Name, "Type of flocking");
 }
 
 /* Gets the "unit model" parameter set from an input file
@@ -222,6 +242,8 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         UnitParams->transmit_power.Value = 10.0;
         UnitParams->freq.Value = 2.6;
         UnitParams->sensitivity_thresh.Value = -10.0;
+        UnitParams->communication_type.Value = 0.0;
+        UnitParams->flocking_type.Value = 0.0;
 
         printf("WARNING! Unit model params are not loaded!\n");
 
@@ -315,14 +337,20 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
             } else if (strcmp(ReadedName, "Sensitivity_thresh") == 0) {
                 UnitParams->sensitivity_thresh.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "Communication_type") == 0) {
+                UnitParams->communication_type.Value = atof(ReadedValue);
+                NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "Flocking_type") == 0) {
+                UnitParams->flocking_type.Value = atof(ReadedValue);
+                NumberOfReadedNames++;
             }
         }
     }
 
     //Checking the existance of parameters...
-    if (NumberOfReadedNames < 18) {
+    if (NumberOfReadedNames < 20) {
 
-        printf("15 paramers are necessary in \n'%s' \n\nRequired format (example):\n\n", recover_fileName(InputFile));
+        printf("19 paramers are necessary in \n'%s' \n\nRequired format (example):\n\n", recover_fileName(InputFile));
         printf("tau_PID_XY=1\n");
         printf("tau_PID_Z=1\n");
         printf("a_max=600\n");
@@ -342,6 +370,8 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         printf("Transmit_Power=10\n");
         printf("Freq=2.6\n");
         printf("Sensitivity_thresh=-10\n");
+        printf("Communication_type=0\n");
+        printf("Flocking_type=0\n");
 
         exit(-1);
 
@@ -401,6 +431,12 @@ void SaveUnitModelParamsToFile(FILE * OutputFile_Unit,
     fprintf(OutputFile_Unit, "# Sensitivity threshold (dBm)\n");
     fprintf(OutputFile_Unit, "Sensitivity_thresh=%lf\n",
             UnitParams->sensitivity_thresh.Value);
+    fprintf(OutputFile_Unit, "# Communication type (-)\n");
+    fprintf(OutputFile_Unit, "Communication_type=%lf\n",
+            UnitParams->communication_type.Value);
+    fprintf(OutputFile_Unit, "# Flocking type (-)\n");
+    fprintf(OutputFile_Unit, "Flocking_type=%lf\n",
+            UnitParams->flocking_type.Value);
 }
 
 /* Gets the "situation" parameters from an input file

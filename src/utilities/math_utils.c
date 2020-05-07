@@ -146,6 +146,49 @@ void FillVect(double *VectToFill, const double x, const double y,
 
 }
 
+
+/* Return a vector with the indexes corresponding to a sorted vector */
+void ArgMaxSort(double *InputVect, int Length, int * IndexVect) {
+
+    static double a;
+    static double b;
+    double temp;
+
+    int i, j;
+
+    for (i = 0; i < Length; i++) {
+        IndexVect[i] = i;
+    }
+
+    for (i = 1; i < Length; i++) {
+
+        a = InputVect[i];
+
+        j = i;
+
+        b = InputVect[j-1];
+
+        while (j > 0 && b < a) {
+
+            temp = InputVect[j-1];
+            InputVect[j-1] = InputVect[j];
+            InputVect[j] = temp;
+
+            temp = IndexVect[j-1];
+            IndexVect[j-1] = IndexVect[j];
+            IndexVect[j] = temp;
+
+            j--;
+
+            a = InputVect[j];
+            b = InputVect[j - 1];
+
+        }
+    }
+}
+
+
+
 /* Returns the Length of the input vector (3 dimensions) */
 double VectAbs(double *InputVector) {
     return sqrt(InputVector[0] * InputVector[0] +

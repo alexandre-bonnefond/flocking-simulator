@@ -4,9 +4,9 @@ tau_PID_Z=1.000000
 # Maximum Value of acceleration (cm / s^2)
 a_max=600.000000
 # Comm. range (cm)
-R_C=10000.000000
+R_C=15000.000000
 # Delay of comm. (s)
-t_del=0.2000
+t_del=0.200000
 # GPS refresh rate (s)
 t_GPS=0.200000
 # Parameters of inner noises (cm^2 / s^2)
@@ -30,3 +30,7 @@ Transmit_Power=20.000000
 Freq=2.400000
 # Sensitivity threshold (dBm)
 Sensitivity_thresh=-70.000000
+# Communication type (-)
+Communication_type=2.000000
+# Flocking type (-)
+Flocking_type=0.000000

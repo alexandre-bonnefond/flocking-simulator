@@ -326,7 +326,7 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort);
  * are not lost
  */
 int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
-        const double Range, const double power_thresh);
+        const double Range, const double power_thresh, const int communication_mode);
 
 /* Calculate the received power of an agent given its interdistance */
 double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,

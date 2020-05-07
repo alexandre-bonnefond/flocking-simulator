@@ -113,6 +113,7 @@ typedef struct {
 
 } unit_param_double_t;
 
+
 /* Parameters of the model of a single unit
  */
 typedef struct {
@@ -136,6 +137,10 @@ typedef struct {
     unit_param_double_t transmit_power;
     unit_param_double_t freq;
     unit_param_double_t sensitivity_thresh;
+
+    /* Hyperparameters */
+    unit_param_double_t communication_type;
+    unit_param_double_t flocking_type;
 
 
     /* Noise parameters */

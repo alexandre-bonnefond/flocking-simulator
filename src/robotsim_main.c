@@ -1109,10 +1109,9 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
         char key_temp[1];
         key_temp[0] = key;
         int keyint = strtol(key_temp, NULL, 20);
-
         if (ActualVizParams.UnitParamsDisplayed == true) {
 
-            if (keyint <= 17 && keyint > 0) {
+            if (keyint <= 19 && keyint > 0) {
                 ActualVizParams.WhichParamIsSelected = keyint;
             }
 
@@ -1448,7 +1447,6 @@ void HandleMouse(int button, int state, int x, int y) {
     //                 ActualVizParams.Resolution));
     /* 2D visualization mode functions */
     if (ActualVizParams.TwoDimViz == true) {
-        printf("%f\n", ActualVizParams.MapSizeXY);
         /* Scroll down - zoom in */
         if (button == 3) {
             if (state == GLUT_DOWN) {

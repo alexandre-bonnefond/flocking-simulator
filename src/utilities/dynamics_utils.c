@@ -1535,7 +1535,7 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort) {
 /* Packing of nearby agents to the first blocks of the phase space */
 int SelectNearbyVisibleAgents(phase_t * Phase,
         double *ReferencePosition,
-        double Range, double power_thresh) {
+        double Range, double power_thresh, int communication_mode) {
 
     static double DistFromRef[3];
     NullVect(DistFromRef, 3);
@@ -1544,20 +1544,48 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
     int i;
     int NumberOfNearbyAgents = 1;
-
     for (i = Phase->NumberOfAgents - 1; i >= NumberOfNearbyAgents; i--) {
 
         GetAgentsCoordinates(DistFromRef, Phase, i);
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
         Dist = VectAbs(DistFromRef);
 
-        if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
-            SwapAgents(Phase, i, NumberOfNearbyAgents);
-            NumberOfNearbyAgents++;
-            i++;
-        } else if (Dist == 0) {
-            SwapAgents(Phase, i, 0);
-            i++;
+        switch (communication_mode)
+        {
+        case 0:
+            if (Dist != 0 && Dist <= Range) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents);
+                NumberOfNearbyAgents++;
+                i++;
+            } else if (Dist == 0) {
+                SwapAgents(Phase, i, 0);
+                i++;
+            }
+            break;
+        case 1:
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents);
+                NumberOfNearbyAgents++;
+                i++;
+            } else if (Dist == 0) {
+                SwapAgents(Phase, i, 0);
+                i++;
+            }
+            break;
+        case 2:
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents);
+                NumberOfNearbyAgents++;
+                i++;
+            } else if (Dist == 0) {
+                SwapAgents(Phase, i, 0);
+                i++;
+            }
+            break;
+        default:
+            printf("Communication type is not acknowledged\n");
+            return 0;
+            break;
         }
 
     }
@@ -1590,29 +1618,31 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                 log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
         }
-        for (j = 0; j < obstacles.o_count; j++){
+        if (UnitParams->communication_type.Value == 2) {
+            for (j = 0; j < obstacles.o_count; j++){
 
-            double **Intersections;
-            Intersections = malloc(sizeof(double *) * 2);
-            Intersections[0] = malloc(sizeof(double) * 3);
-            Intersections[1] = malloc(sizeof(double) * 3);
+                double **Intersections;
+                Intersections = malloc(sizeof(double *) * 2);
+                Intersections[0] = malloc(sizeof(double) * 3);
+                Intersections[1] = malloc(sizeof(double) * 3);
 
-            int NumberOfIntersections;
-            double Loss;
-            static double DistanceThrough[3];
+                int NumberOfIntersections;
+                double Loss;
+                static double DistanceThrough[3];
 
-            NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-            RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
+                NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
 
-            if (NumberOfIntersections == 2) {
-                    VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-                    Loss = UnitParams->linear_loss.Value * VectAbs(DistanceThrough);
-                    Power -= Loss;
+                if (NumberOfIntersections == 2) {
+                        VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
+                        Loss = UnitParams->linear_loss.Value * VectAbs(DistanceThrough);
+                        Power -= Loss;
 
-            }
-            // printf("%f\n", UnitParams->transmit_power.Value);
+                }
+                // printf("%f\n", UnitParams->transmit_power.Value);
 
-            freeMatrix(Intersections, 2, 3);
-        }   
+                freeMatrix(Intersections, 2, 3);
+            }   
+        }
         return Power;
 }

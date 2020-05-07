@@ -149,6 +149,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         }
         static double NeighboursCoordinates[3];
         static double DifferenceVector[3];
+        static double AbsDistance;
 
         static double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS];
 
@@ -156,6 +157,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double ArrowCenterX;
         static double ArrowCenterY;
         static double angle;
+        
 
         // Moving the next block into a global variable as the obstacles are fixed in a simulation !!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -174,87 +176,110 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 i, Now);
                         VectDifference(DifferenceVector, ActualAgentsCoordinates,
                                 NeighboursCoordinates);
-
-                        // for (j = 0; j < obstacles.o_count; j++){
-
-                        //         double **Intersections;
-                        //         Intersections = malloc(sizeof(double *) * 2);
-                        //         Intersections[0] = malloc(sizeof(double) * 3);
-                        //         Intersections[1] = malloc(sizeof(double) * 3);
-
-                        //         int NumberOfIntersections;
-                        //         static double DistanceThrough[3];
-
-                        //         NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                        //         PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
-                        //         Polygons[j], obstacles.o[j].p_count);
-
-                        //         if (NumberOfIntersections == 2) {
-                        //                 VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-                        //                 Loss = Lineic_loss * VectAbs(DistanceThrough);
-                        //                 PhaseData[Now].Laplacian[WhichAgent][i] -= Loss;
-
-                        //         }
-
-                        //         freeMatrix(Intersections, 2, 3);
-                        // }
-
-                        //printf("%f\n", PhaseData[Now].Laplacian[WhichAgent][i]);
-
-
-                        //if condition about distance only
-                        if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
-                                
-                                ArrowCenterX =
-                                        (ActualAgentsCoordinates[0] +
-                                        NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;
-                                ArrowCenterY =
-                                        (ActualAgentsCoordinates[1] +
-                                        NeighboursCoordinates[1]) * 0.5 - VizParams->CenterY;
-
-                                DifferenceVector[2] = 0;
-                                angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
-
-                                DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
-                                        RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
-                                        RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
-                                                VizParams->MapSizeXY), RealToGlCoord_2D(30,
-                                                VizParams->MapSizeXY), angle, color);
+                        AbsDistance = VectAbs(DifferenceVector);
                         
+                        double *ToSort;
+                        ToSort = malloc(sizeof(double) * PhaseData[0].NumberOfAgents);
+                        for (int k = 0; k < PhaseData[0].NumberOfAgents; k++) {
+                                ToSort[k] = PhaseData[Now].Laplacian[WhichAgent][k];
+                        }
 
-                                for (j = 0; j < obstacles.o_count; j++){
+                        int *Indexes;
+                        Indexes = malloc(sizeof(int) * PhaseData[0].NumberOfAgents);
+                        
+                        ArgMaxSort(ToSort, PhaseData[0].NumberOfAgents, Indexes);
 
-                                        double **Intersections;
-                                        Intersections = malloc(sizeof(double *) * 2);
-                                        Intersections[0] = malloc(sizeof(double) * 3);
-                                        Intersections[1] = malloc(sizeof(double) * 3);
-
-                                        int NumberOfIntersections;
-
-                                        NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                                        PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
-                                        Polygons[j], obstacles.o[j].p_count);
-
-                                        if (NumberOfIntersections == 2){
-
-                                                DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
-                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
-                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
-
-                                                DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
-                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
-                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
-
-                                                // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
-                                                // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
-                                                // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
-                                        }
-
-                                        freeMatrix(Intersections, 2, 3);
+                        bool IsLeading = false;
+                        for (int l = 0; l < Size_Neighbourhood + 1; l++) {
+                                if (i == Indexes[l]) {
+                                        IsLeading = true;
                                 }
-                        
+                        }
+                        free(Indexes);
+                        free(ToSort);
+
+                        if ((int)(Unit_params->communication_type.Value) == 0) {
+
+                                if (AbsDistance <= Unit_params->R_C.Value && IsLeading == true) {
+                                        
+                                        ArrowCenterX =
+                                                (ActualAgentsCoordinates[0] +
+                                                NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;
+                                        ArrowCenterY =
+                                                (ActualAgentsCoordinates[1] +
+                                                NeighboursCoordinates[1]) * 0.5 - VizParams->CenterY;
+
+                                        DifferenceVector[2] = 0;
+                                        angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
+
+                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(30,
+                                                        VizParams->MapSizeXY), angle, color);
+                                }
+                        }
+
+                        if ((int)(Unit_params->communication_type.Value) == 2 || (int)(Unit_params->communication_type.Value) == 1) {
+
+                                if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value && IsLeading == true) {
+                                        
+                                        ArrowCenterX =
+                                                (ActualAgentsCoordinates[0] +
+                                                NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;
+                                        ArrowCenterY =
+                                                (ActualAgentsCoordinates[1] +
+                                                NeighboursCoordinates[1]) * 0.5 - VizParams->CenterY;
+
+                                        DifferenceVector[2] = 0;
+                                        angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
+
+                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(30,
+                                                        VizParams->MapSizeXY), angle, color);
+                                
+
+                                        if ((int)(Unit_params->communication_type.Value) == 2) {
+
+                                                for (j = 0; j < obstacles.o_count; j++){
+
+                                                        double **Intersections;
+                                                        Intersections = malloc(sizeof(double *) * 2);
+                                                        Intersections[0] = malloc(sizeof(double) * 3);
+                                                        Intersections[1] = malloc(sizeof(double) * 3);
+
+                                                        int NumberOfIntersections;
+
+                                                        NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                                                        PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
+                                                        Polygons[j], obstacles.o[j].p_count);
+
+                                                        if (NumberOfIntersections == 2){
+
+                                                                DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
+                                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
+                                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                                                DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
+                                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
+                                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                                                // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                                                // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
+                                                                // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                                                // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
+                                                                // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
+                                                        }
+
+                                                        freeMatrix(Intersections, 2, 3);
+                                                }
+
+                                        }
+                                
+                                }
+
                         }
 
                 }              
