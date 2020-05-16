@@ -1,5 +1,5 @@
 # Preferred SPP velocity (Multiply it with 0.010000 to get its Value in m/s)
-V_Flock=400.000000
+V_Flock=500.000000
 # Maximum repulsion velocity (Multiply it with 0.010000 to get its Value in m/s)
 V_Rep=619.664000
 # Friction velocity slack (Multiply it with 0.010000 to get its Value in m/s)
@@ -33,7 +33,7 @@ A_Action_Function=400.000000
 # B Action Function (Multiply it with 0.010000 to get its Value in m)
 B_Action_Function=450.000000
 # Size of neighbourhood (-)
-Size_Neighbourhood=5.000000
+Size_Neighbourhood=6.000000
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)
 ArenaRadius=62500.000000
 # Friction coefficient (-)

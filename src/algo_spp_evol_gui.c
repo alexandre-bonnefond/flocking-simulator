@@ -183,7 +183,7 @@ char *GetModelSpecificStringToDisplay(phase_t * Phase,
             
             char *str;
             str = malloc(sizeof(char)*40);
-            sprintf(str, "Average received power = %f", Phase->Laplacian[SitParams->NumberOfAgents - 1][2]);
+            sprintf(str, "Number of clusters = %d", SitParams->NumberOfClusters);
             return str;
 }
 

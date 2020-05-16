@@ -45,6 +45,9 @@ void DrawShape(double CenterX, double CenterY, double width, double height,
 void DrawLine(double x1, double y1, double x2, double y2, double width,
         const float *color);
 
+void DrawDashedLine(double x1, double y1, double x2, double y2,
+        const float *color);
+
 /* Draws an empty tetragon with given vertices (?) 
  * (x1, y1) , (x2, y2) , (x3, y3) , (x4, y4) are the vertices of the tetragon
  * "width" is the width of the edges

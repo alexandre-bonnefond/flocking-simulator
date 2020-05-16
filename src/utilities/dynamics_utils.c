@@ -1425,6 +1425,145 @@ int HowManyCollisions(phase_t * ActualPhase,
 
 }
 
+int CountCluster(phase_t Phase, bool * Visited, unit_model_params_t * UnitParams) {
+
+    int i, j, k, incr;
+    int NumberOfAgentsInithCluster;
+    int NumberOfClusters = 0;
+    int Dimension = Phase.NumberOfAgents;
+    double **Adjacency;
+    int Labels[Dimension];
+
+    Adjacency = doubleMatrix(Dimension, Dimension);
+
+
+    if (UnitParams->communication_type.Value == 0) {
+        ConstructAdjacencyMatrix(Adjacency, &Phase, UnitParams->R_C.Value);
+    }
+
+    for (i = 0; i < Dimension; i++) {
+        Labels[i] = i;
+    }    
+
+    /* Calculating correlations only inside clusters */
+    for (i = 0; i < Dimension; i++) {
+
+        NumberOfAgentsInithCluster = 0;
+        incr = 0;
+
+        for (k = 0; k < Dimension; k++) {
+            Visited[k] = false;
+        }
+
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+            CreateClusters(i, Phase.Laplacian, Visited, 
+            Phase.NumberOfAgents, UnitParams);
+            for (k = 0; k < Dimension; k++) {
+                if (true == Visited[k]) {
+                    NumberOfAgentsInithCluster++;
+                }
+            }
+        }
+
+        else if (UnitParams->communication_type.Value == 0) {
+            CreateClusters(i, Adjacency, Visited, 
+            Phase.NumberOfAgents, UnitParams);
+            for (k = 0; k < Dimension; k++) {
+                if (true == Visited[k]) {
+                    NumberOfAgentsInithCluster++;
+                }
+            }
+        }
+
+        // if (UnitParams->communication_type.Value == 0) {
+        //     freeMatrix(Adjacency, Dimension, Dimension);
+        // }
+
+        int VisitedIndex[NumberOfAgentsInithCluster];
+        for (j = 0; j < Dimension; j++) {
+                if (true == Visited[j]) {
+                    VisitedIndex[incr] = j;
+                    incr++;
+                }
+        }
+
+        if (InnerSum(Labels, Dimension) != - Dimension) {
+
+            bool AddCluster = false;
+
+            for (j = 0; j < NumberOfAgentsInithCluster; j++) {
+                if (Labels[VisitedIndex[j]] != -1) {
+                    Labels[VisitedIndex[j]] = -1;
+                    AddCluster = true;
+                }
+
+            }
+            NumberOfClusters += (AddCluster == true ? 1 : 0);
+        }
+
+    }
+
+    freeMatrix(Adjacency, Dimension, Dimension);
+
+    return NumberOfClusters;
+}
+
+
+void ConstructAdjacencyMatrix(double **OutputAdjacency, phase_t * Phase,
+        const double CommunicationRange) {
+
+    int i, j;
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+    static double Difference[3];
+
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+
+        AgentsCoordinates = Phase->Coordinates[i];
+
+        /* The adjacency matrix is symmetric */
+        for (j = 0; j < i; j++) {
+
+            NeighboursCoordinates = Phase->Coordinates[j];
+            VectDifference(Difference, AgentsCoordinates,
+                    NeighboursCoordinates);
+
+            if (VectAbs(Difference) < CommunicationRange) {
+                OutputAdjacency[i][j] = OutputAdjacency[j][i] = 1;
+            } else {
+                OutputAdjacency[i][j] = OutputAdjacency[j][i] = 0;
+            }
+
+        }
+
+    }
+
+}
+
+void CreateClusters(const int i, double **InputAdjacency, bool * Visited,
+        const int NumberOfAgents, unit_model_params_t * UnitParams) {
+
+    int k;
+
+    Visited[i] = true;
+
+    for (k = 0; k < NumberOfAgents; k++) {
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+            if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value || InputAdjacency[k][i] >= UnitParams->sensitivity_thresh.Value) {
+                if (Visited[k] != true) {
+                    CreateClusters(k, InputAdjacency, Visited, NumberOfAgents, UnitParams);
+                }
+            }
+        }
+        else if (UnitParams->communication_type.Value == 0) {
+            if (InputAdjacency[i][k] == 1) {
+                if (Visited[k] != true) {
+                    CreateClusters(k, InputAdjacency, Visited, NumberOfAgents, UnitParams);
+                }
+            }
+        }
+    }
+}
 /* Swaps the states of two agents (ith and jth) */
 void SwapAgents(phase_t * Phase, const int i, const int j) {
 

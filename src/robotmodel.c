@@ -364,16 +364,16 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
 
         /* Fill the Laplacian Matrix in dBm */
-        for (i = 0; i < SitParams->NumberOfAgents; i++){
-            if ( j == TempPhase.RealIDs[i]){
+        for (i = 0; i < SitParams->NumberOfAgents; i++) {
+            if ( j == TempPhase.RealIDs[i]) {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.NumberOfAgents;
             }
-            else
-            {
+            else {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];
             }
-            
         }
+
+        
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
         RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent,

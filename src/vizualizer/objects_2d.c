@@ -69,6 +69,20 @@ void DrawLine(double x1, double y1, double x2, double y2, double width,
 
 }
 
+/* Draws a dashed line with given endpoint coordinates (in GL coords) */
+void DrawDashedLine(double x1, double y1, double x2, double y2,
+        const float *color) {
+
+
+        glColor3f(color[0], color[1], color[2]);
+        glEnable(GL_LINE_STIPPLE);
+        glLineStipple(4, 0x00FF);  /*  dashed  */
+        glBegin(GL_LINES);
+        glVertex2f((x1),(y1)); 
+        glVertex2f((x2),(y2)); 
+        glEnd();
+}
+
 /* Draws an empty tetragon with given vertices (?) */
 void DrawTetragon(double x1, double y1,
         double x2, double y2,

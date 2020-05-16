@@ -274,6 +274,9 @@ typedef struct {
      */
     double StartOfSteadyState;
 
+    /* Number of clusters */
+    int NumberOfClusters;
+
 } sit_parameters_t;
 
 /* Functions for setting parameters */

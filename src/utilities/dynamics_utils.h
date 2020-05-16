@@ -310,6 +310,17 @@ void PlaceAgentsOntoALine(phase_t * Phase, const int fromAgent,
 int HowManyCollisions(phase_t * ActualPhase, bool * AgentsInDanger,
         const bool CountCollisions, const double RadiusOfCopter);
 
+
+/* Count the number of clusters in the simulation */
+int CountCluster(phase_t Phase, bool * Visited, unit_model_params_t * UnitParams);
+
+
+void ConstructAdjacencyMatrix(double **OutputAdjacency, phase_t * Phase,
+        const double CommunicationRange);
+
+void CreateClusters(const int i, double **InputAdjacency, bool * Visited,
+        const int NumberOfAgents, unit_model_params_t * UnitParams);
+        
 /* Swaps the states of two agents (ith and jth)
  */
 void SwapAgents(phase_t * Phase, const int i, const int j);

@@ -31,6 +31,6 @@ Freq=2.400000
 # Sensitivity threshold (dBm)
 Sensitivity_thresh=-70.000000
 # Communication type (-)
-Communication_type=2.000000
+Communication_type=0.000000
 # Flocking type (-)
 Flocking_type=0.000000

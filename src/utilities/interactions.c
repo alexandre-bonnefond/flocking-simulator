@@ -219,7 +219,7 @@ void GradientBased(double *OutputVelocity,
             }
             
             SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
-            
+            // printf("%f\n", SigmaDistance);
             SigmaGrad(DifferenceVector, DifferenceVector, epsilon);
 
             PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * 

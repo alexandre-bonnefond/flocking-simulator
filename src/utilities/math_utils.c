@@ -187,7 +187,18 @@ void ArgMaxSort(double *InputVect, int Length, int * IndexVect) {
     }
 }
 
+/* Returns the sum of all components of a vector */
+int InnerSum(int *InputVector, int Dim) {
 
+    int i;
+    static double Sum;
+    Sum = 0.0;
+
+    for (i = 0; i < Dim; i++) {
+        Sum += InputVector[i];
+    }
+    return Sum;
+}
 
 /* Returns the Length of the input vector (3 dimensions) */
 double VectAbs(double *InputVector) {
@@ -720,6 +731,16 @@ double Sigmoid(const double x, const double gamma, const double r0) {
         return 0.0;
     } else if (x > r0 - gamma) {
         return 0.5 * (sin((M_PI * pow(gamma, -1.0)) * (x - r0) - M_PI_2) + 1.0);
+    } else {
+        return 1.0;
+    }
+}
+
+double SigmoidLike(const double x, const double R, const double d) {
+    if (x < R) {
+        return 0.0;
+    } else if (x < R + d) {
+        return sin((M_PI * pow(d, -1.0)) * (x - R) - M_PI_2) + 1.0;
     } else {
         return 1.0;
     }

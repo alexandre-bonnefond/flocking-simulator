@@ -38,7 +38,6 @@ FILE *f_ClusterRP_StDev;
 double **Adjacency;
 static int Dimension;
 bool *Visited;                  // for DFS algorithm
-bool AdjacencyAllocated = false;
 
 double TimeElapsedNearArena = 0.0;
 
@@ -85,7 +84,7 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
     fprintf(f_ClusterDependentParams,
             "time_(s)\tcluster_dependent_correlation_avg\tcluster_dependent_correlation_stdev\tcluster_dependent_correlation_min\tcluster_dependent_correlation_max\n");
     fprintf(f_ClusterParams,
-            "time_(s)\tmin_cluster_size\tmax_cluster_size\tagents_not_in_cluster\n");
+            "time_(s)\tmin_cluster_size\tmax_cluster_size\tagents_not_in_cluster\tnumber_of_clusters\n");
     fprintf(f_ClusterRP,
             "time_(s)\tcluster_dependent_received_power_avg\tcluster_dependent_received_power_stdev\tcluster_dependent_received_power_min\tcluster_dependent_received_power_max\n");
 
@@ -167,9 +166,18 @@ void CreateCluster(const int i, double **InputAdjacency,
     Visited[i] = true;
 
     for (k = 0; k < NumberOfAgents; k++) {
-        if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value) {
-            if (Visited[k] != true) {
-                CreateCluster(k, InputAdjacency, NumberOfAgents, UnitParams);
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+            if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value || InputAdjacency[k][i] >= UnitParams->sensitivity_thresh.Value) {
+                if (Visited[k] != true) {
+                    CreateCluster(k, InputAdjacency, NumberOfAgents, UnitParams);
+                }
+            }
+        }
+        else if (UnitParams->communication_type.Value == 0) {
+            if (InputAdjacency[i][k] == 1) {
+                if (Visited[k] != true) {
+                    CreateCluster(k, InputAdjacency, NumberOfAgents, UnitParams);
+                }
             }
         }
     }
@@ -191,6 +199,8 @@ double GetInteractionRange() {
 void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
         unit_model_params_t * UnitParams, stat_utils_t * StatUtils) {
 
+
+    Dimension = SitParams->NumberOfAgents;
     Visited = BooleanData(Dimension);
 
     int i, j;
@@ -203,6 +213,7 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     static int AgentsNotInCluster;
     static int MaxClusterSize;
     static int MinClusterSize;
+    static int NumberOfCluster;
 
     static double Avg_Corr, Avg_RP;
     static double StDev_Corr, StDev_RP;
@@ -220,6 +231,18 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     AgentsNotInCluster = 0;
     MaxClusterSize = 0;
     MinClusterSize = 0;
+    NumberOfCluster = 0;
+
+    if (UnitParams->communication_type.Value == 0) {
+        Adjacency = doubleMatrix(Dimension, Dimension);
+        ConstructAdjacency(Adjacency, Phase, UnitParams->R_C.Value);
+    }
+    
+
+    int Labels[SitParams->NumberOfAgents];
+    for (i = 0; i < SitParams->NumberOfAgents; i++) {
+        Labels[i] = i;
+    }    
 
     /* Calculating correlations only inside clusters */
     for (i = 0; i < SitParams->NumberOfAgents; i++) {
@@ -228,17 +251,53 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
         //NumberOfAgentsInCluster += 1;
         IsItInCluster = false;
 
+        int incr = 0;
         int k;
         for (k = 0; k < SitParams->NumberOfAgents; k++) {
             Visited[k] = false;
         }
 
-        CreateCluster(i, Phase->Laplacian, Phase->NumberOfAgents, UnitParams);
-        for (k = 0; k < SitParams->NumberOfAgents; k++) {
-            if (true == Visited[k]) {
-                NumberOfAgentsInithCluster++;
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+            CreateCluster(i, Phase->Laplacian, Phase->NumberOfAgents, UnitParams);
+            for (k = 0; k < SitParams->NumberOfAgents; k++) {
+                if (true == Visited[k]) {
+                    NumberOfAgentsInithCluster++;
+                }
             }
         }
+
+        else if (UnitParams->communication_type.Value == 0) {
+            CreateCluster(i, Adjacency, Phase->NumberOfAgents, UnitParams);
+            for (k = 0; k < SitParams->NumberOfAgents; k++) {
+                if (true == Visited[k]) {
+                    NumberOfAgentsInithCluster++;
+                }
+            }
+        }
+
+        int VisitedIndex[NumberOfAgentsInithCluster - 1];
+        for (j = 0; j < SitParams->NumberOfAgents; j++) {
+                if (true == Visited[j]) {
+                    VisitedIndex[incr] = j;
+                    incr++;
+                }
+        }
+
+        if (InnerSum(Labels, SitParams->NumberOfAgents) != - SitParams->NumberOfAgents) {
+
+            bool AddCluster = false;
+
+            for (j = 0; j < NumberOfAgentsInithCluster - 1; j++) {
+                if (Labels[VisitedIndex[j]] != -1) {
+                    Labels[VisitedIndex[j]] = -1;
+                    AddCluster = true;
+                }
+
+            }
+            NumberOfCluster += (AddCluster == true ? 1 : 0);
+
+        }
+        
 
         if (NumberOfAgentsInithCluster > 2) {
             IsItInCluster = true;
@@ -320,9 +379,9 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
 
         fprintf(f_ClusterDependentParams, "%lf\t%lf\t%lf\t%lf\t%lf\n",
                 StatUtils->ElapsedTime, Avg_Corr, sqrt(StDev_Corr), Min_Corr, Max_Corr);
-        fprintf(f_ClusterParams, "%lf\t%d\t%d\t%d\n",
+        fprintf(f_ClusterParams, "%lf\t%d\t%d\t%d\t%d\n",
                 StatUtils->ElapsedTime, MinClusterSize, MaxClusterSize,
-                AgentsNotInCluster);
+                AgentsNotInCluster, NumberOfCluster);
         fprintf(f_ClusterRP, "%lf\t%lf\t%lf\t%lf\t%lf\n",
                 StatUtils->ElapsedTime, Avg_RP, sqrt(StDev_RP), Min_RP, Max_RP);
 

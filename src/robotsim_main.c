@@ -101,6 +101,7 @@ bool ConditionsReset[2];
 bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
+int NumberOfCluster;
 
 int NumberOfModelSpecificColors;
 model_specific_color_t ModelSpecificColors[MAX_NUMBER_OF_COLORS];
@@ -272,7 +273,6 @@ void DisplayChart() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, size, 0, 1, -1, 1);
-
     glBegin(GL_LINE_STRIP);
     glVertex2f(0.0f, -50.0f);
     for(int i = 0; i < Now - 1; i++) {
@@ -841,6 +841,8 @@ void UpdatePositionsToDisplay() {
     static double AgentsCoords[3];
     TimeStepsToStore = (int) (((STORED_TIME) / ActualSitParams.DeltaT) - 1.0);
 
+    bool * Visited = BooleanData(ActualSitParams.NumberOfAgents);
+
     /* Opening output files, if necessary */
     static bool FilesOpened = false;
     static int n = 0;           /* Which File? */
@@ -937,8 +939,12 @@ void UpdatePositionsToDisplay() {
             TimeStep++;
 
         }
+        NumberOfCluster = CountCluster(ActualPhase, Visited, &ActualUnitParams);
+        ActualSitParams.NumberOfClusters = NumberOfCluster;
 
     }
+
+    
 
     /* Closing output trajectory and inner state files */
     if (false == PNGOutVid && true == FilesOpened) {

@@ -534,14 +534,15 @@ void CalculatePreferredVelocity(double *OutputVelocity,
      RepulsionLin(PotentialVelocity, Phase, V_Rep,
              Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
+    printf("%f\t", VectAbs(PotentialVelocity));
     // /* Attraction */
      AttractionLin(AttractionVelocity, Phase, V_Rep,
              Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
 
     /* Olfati Gradient based term for attraction//repulsion */
     GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-         R_0, 50000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
-
+         R_0, R_0 + 10000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
+    printf("%f\n", VectAbs(GradientVelocity));
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
             Slope_Frict, R_0 + R_0_Offset_Frict, WhichAgent, (int) Dim);

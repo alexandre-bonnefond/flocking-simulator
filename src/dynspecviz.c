@@ -157,6 +157,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double ArrowCenterX;
         static double ArrowCenterY;
         static double angle;
+        static double CenterX1, CenterX2, CenterY1, CenterY2; 
         
 
         // Moving the next block into a global variable as the obstacles are fixed in a simulation !!!!!!!!!!!!!!!!!!!!!!!!
@@ -218,9 +219,26 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                         VizParams->MapSizeXY), RealToGlCoord_2D(30,
                                                         VizParams->MapSizeXY), angle, color);
                                 }
+
+                                else if (AbsDistance <= Unit_params->R_C.Value) {
+
+                                        CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                        CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
+
+                                        CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                        CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
+
+                                        DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                                color);
+
+
+                                }
                         }
 
-                        if ((int)(Unit_params->communication_type.Value) == 2 || (int)(Unit_params->communication_type.Value) == 1) {
+                        else if ((int)(Unit_params->communication_type.Value) == 1) {
 
                                 if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value && IsLeading == true) {
                                         
@@ -239,45 +257,94 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
                                                         VizParams->MapSizeXY), RealToGlCoord_2D(30,
                                                         VizParams->MapSizeXY), angle, color);
-                                
+                                }
 
-                                        if ((int)(Unit_params->communication_type.Value) == 2) {
+                                else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
 
-                                                for (j = 0; j < obstacles.o_count; j++){
+                                        CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                        CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
 
-                                                        double **Intersections;
-                                                        Intersections = malloc(sizeof(double *) * 2);
-                                                        Intersections[0] = malloc(sizeof(double) * 3);
-                                                        Intersections[1] = malloc(sizeof(double) * 3);
+                                        CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                        CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
 
-                                                        int NumberOfIntersections;
+                                        DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                                color);
 
-                                                        NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                                                        PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
-                                                        Polygons[j], obstacles.o[j].p_count);
+                                }
+                        }
 
-                                                        if (NumberOfIntersections == 2){
+                        else if ((int)(Unit_params->communication_type.Value) == 2) {
 
-                                                                DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
-                                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
-                                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+                                if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value && IsLeading == true) {
+                                        
+                                        ArrowCenterX =
+                                                (ActualAgentsCoordinates[0] +
+                                                NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;
+                                        ArrowCenterY =
+                                                (ActualAgentsCoordinates[1] +
+                                                NeighboursCoordinates[1]) * 0.5 - VizParams->CenterY;
 
-                                                                DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
-                                                                VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
-                                                                VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+                                        DifferenceVector[2] = 0;
+                                        angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
 
-                                                                // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                                // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
-                                                                // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                                // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
-                                                                // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
-                                                        }
+                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(30,
+                                                        VizParams->MapSizeXY), angle, color);
 
-                                                        freeMatrix(Intersections, 2, 3);
+                                        for (j = 0; j < obstacles.o_count; j++){
+
+                                                double **Intersections;
+                                                Intersections = malloc(sizeof(double *) * 2);
+                                                Intersections[0] = malloc(sizeof(double) * 3);
+                                                Intersections[1] = malloc(sizeof(double) * 3);
+
+                                                int NumberOfIntersections;
+
+                                                NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                                                PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
+                                                Polygons[j], obstacles.o[j].p_count);
+
+                                                if (NumberOfIntersections == 2){
+
+                                                        DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                                        DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
+                                                        VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+
+                                                        // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                                        // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
+                                                        // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                                        // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
+                                                        // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
                                                 }
 
+                                                freeMatrix(Intersections, 2, 3);
                                         }
                                 
+                                }
+
+                                else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
+
+                                        CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                        CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
+
+                                        CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                        CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
+
+                                        DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                                color);
+
                                 }
 
                         }

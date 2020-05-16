@@ -57,6 +57,9 @@ void FillVect(double *VectToFill, const double x, const double y,
 /* Return a vector with the indexes corresponding to a sorted vector */
 void ArgMaxSort(double *InputVect, int Length, int * IndexVect);
 
+/* Returns the sum of all components of a vector */
+int InnerSum(int *InputVector, int Dim);
+
 /* Returns the Magnitude of the input vector (3 dimensions)
  */
 double VectAbs(double *InputVector);
@@ -219,6 +222,16 @@ double ClampScalar(const double x, const double x_min, const double x_max);
  *       r0---> x
  */
 double Sigmoid(const double x, const double gamma, const double r0);
+
+
+/*
+ * Sinusoidal sigmoid curve
+ *
+ *          ---- 1
+ *        /
+ * 0 ----     
+ */
+double SigmoidLike(const double x, const double R, const double d);
 
 /*
  * Linear-gain thresholded sigmoid v(x) curve
