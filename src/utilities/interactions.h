@@ -46,4 +46,12 @@ void GradientBased(double *OutputVelocity,
         const double d, const double r,
         const int WhichAgent, const int Dim_l);
 
+
+/* Target tracking function */
+void TargetTracking(double *OutputVelocity, double *TargetPosition,
+        phase_t * Phase, const double R_CoM, const double d_CoM,
+        const double R_trg, const double d_trg, 
+        const int SizeOfNeighbourhood, const int WhichAgent, 
+        const int Dim_l);
+        
 #endif

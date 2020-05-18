@@ -510,6 +510,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     NullVect(GradientVelocity, 3);
     static double SlipVelocity[3];
     NullVect(SlipVelocity, 3);
+    static double TargetTrackingVelocity[3];
+    NullVect(TargetTrackingVelocity, 3);
 
     static double ActualNeighboursCoordinates[3];
     NullVect(ActualNeighboursCoordinates, 3);
@@ -521,6 +523,10 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     static double DistanceFromObstVect[3];
     NullVect(DistanceFromObstVect, 3);
     static double NormalizedAgentsVelocity[3];
+    static double TargetPosition[3];
+    NullVect(TargetPosition, 3);
+    static double NormalizedTargetTracking[3];
+
 
     /* SPP term */
     FillVect(NormalizedAgentsVelocity, AgentsVelocity[0], AgentsVelocity[1],
@@ -530,19 +536,39 @@ void CalculatePreferredVelocity(double *OutputVelocity,
             V_Flock, (int) Dim);
 
     
-    /* Repulsion */
-     RepulsionLin(PotentialVelocity, Phase, V_Rep,
-             Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
-    printf("%f\t", VectAbs(PotentialVelocity));
-    // /* Attraction */
-     AttractionLin(AttractionVelocity, Phase, V_Rep,
-             Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
+    if (Flocking_type == 0) {
+        /* Repulsion */
+        RepulsionLin(PotentialVelocity, Phase, V_Rep,
+                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
-    /* Olfati Gradient based term for attraction//repulsion */
-    GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-         R_0, R_0 + 10000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
-    printf("%f\n", VectAbs(GradientVelocity));
+        /* Attraction */
+        AttractionLin(AttractionVelocity, Phase, V_Rep,
+                Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
+    }
+
+    else if (Flocking_type == 1) {
+        /* Olfati Gradient based term for attraction//repulsion */
+        GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+            R_0, R_0 + 10000, WhichAgent, (int) Dim);                        // a and b are scaled x100 as the simulation is in cm 
+    }
+
+    else if (Flocking_type == 2) {
+        /* Target tracking component (doesn't include repulsion so add it) */
+        RepulsionLin(PotentialVelocity, Phase, V_Rep,
+                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+
+        TargetTracking(TargetTrackingVelocity, TargetPosition, Phase, 
+                R_0 + 300, R_0 + 4000, 2000, 4000, 
+                Size_Neighbourhood, WhichAgent, (int)Dim);
+        MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 
+                V_Flock, (int)Dim);
+        UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
+        MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
+                MIN(V_Flock, VectAbs(TargetTrackingVelocity)), (int)Dim);
+
+    }
+
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
             Slope_Frict, R_0 + R_0_Offset_Frict, WhichAgent, (int) Dim);
@@ -567,6 +593,11 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     else if (Flocking_type == 1) {
         VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+    }
+
+    else if (Flocking_type == 2) {
+        VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+        VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
     }
     
     VectSum(OutputVelocity, OutputVelocity, SlipVelocity);

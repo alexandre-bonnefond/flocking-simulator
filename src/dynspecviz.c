@@ -191,7 +191,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                         ArgMaxSort(ToSort, PhaseData[0].NumberOfAgents, Indexes);
 
                         bool IsLeading = false;
-                        for (int l = 0; l < Size_Neighbourhood + 1; l++) {
+                        for (int l = 0; l < Size_Neighbourhood; l++) {
                                 if (i == Indexes[l]) {
                                         IsLeading = true;
                                 }

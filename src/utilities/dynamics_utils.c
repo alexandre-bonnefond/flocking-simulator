@@ -286,6 +286,27 @@ void GetAgentSpecificCoM(double *CoMCoord, phase_t * Phase,
 
 }
 
+/* Calculates CoM of Neighbourhood */
+void GetNeighbourhoodSpecificCoM(double *CoMCoord, phase_t * Phase,
+        int SizeNeighbourhood) {
+
+    int i, j;
+    NullVect(CoMCoord, 3);
+
+    for (j = 0; j < SizeNeighbourhood; j++) {
+        for (i = 0; i < 3; i++) {
+            CoMCoord[i] += Phase->Coordinates[j][i];
+        }
+    }
+
+    for (i = 0; i < 3; i++) {
+
+        CoMCoord[i] = CoMCoord[i] * pow(SizeNeighbourhood, -1);
+
+    }
+
+}
+
 /* Calculates local CoM.
  * "ExceptWhichAgents" contains and array that determines e.g. target point agents...
  */

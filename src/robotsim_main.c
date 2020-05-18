@@ -272,7 +272,7 @@ void DisplayChart() {
     }
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, size, 0, 1, -1, 1);
+    glOrtho(0, size - 1000, 0, 1, -1, 1);
     glBegin(GL_LINE_STRIP);
     glVertex2f(0.0f, -50.0f);
     for(int i = 0; i < Now - 1; i++) {
@@ -280,7 +280,7 @@ void DisplayChart() {
     }
     glEnd();        
 
-    // glViewport(0, 0, window_width, window_height);
+    // glViewport(0, 0, 300, 1);
     
     // int window_width = glutGet(GLUT_WINDOW_WIDTH);
     // int window_height = glutGet(GLUT_WINDOW_HEIGHT);

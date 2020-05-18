@@ -132,7 +132,7 @@ void AttractionLin(double *OutputVelocity,
 
     double *AgentsCoordinates;
     double *NeighboursCoordinates;
-    //printf("nb agents = %d\n", Phase->NumberOfAgents);
+    // printf("nb agents = %d\n", Phase->NumberOfAgents);
     AgentsCoordinates = Phase->Coordinates[WhichAgent];
 
     static double DifferenceVector[3];
@@ -231,3 +231,49 @@ void GradientBased(double *OutputVelocity,
         }
         MultiplicateWithScalar(OutputVelocity, OutputVelocity, 100, (int) Dim_l); // x100 to have the speed in cm/s
 }
+
+/* Target tracking function */
+void TargetTracking(double *OutputVelocity, double *TargetPosition,
+        phase_t * Phase, const double R_CoM, const double d_CoM,
+        const double R_trg, const double d_trg, 
+        const int SizeOfNeighbourhood, const int WhichAgent, 
+        const int Dim_l) {
+
+
+        NullVect(OutputVelocity, 3);
+
+        double *AgentsCoordinates;
+        double TargetComponent[3];
+
+        AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+        /* CoM component */
+        static double CoMDifferenceVector[3];
+        double CoMCoef;
+        double CoMCoords[3];
+        double CoMComponent[3];
+
+        GetNeighbourhoodSpecificCoM(CoMCoords, Phase, SizeOfNeighbourhood);
+        VectDifference(CoMDifferenceVector, CoMCoords, AgentsCoordinates);
+        UnitVect(CoMComponent, CoMDifferenceVector);
+
+        CoMCoef = SigmoidLike(VectAbs(CoMDifferenceVector), R_CoM, d_CoM);
+
+        MultiplicateWithScalar(CoMComponent, CoMComponent, CoMCoef, Dim_l);
+
+        /* Trg component */
+        static double TrgDifferenceVector[3];
+        double TrgCoef;
+        double TrgComponent[3];
+
+        VectDifference(TrgDifferenceVector, TargetPosition, CoMCoords);
+        UnitVect(TrgComponent, TrgDifferenceVector);
+
+        TrgCoef = SigmoidLike(VectAbs(TrgDifferenceVector), R_trg, d_trg);
+
+        MultiplicateWithScalar(TrgComponent, TrgComponent, TrgCoef, Dim_l);
+
+        /* Add and normalize */
+        VectSum(OutputVelocity, CoMComponent, TrgComponent);
+
+        }

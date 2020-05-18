@@ -137,6 +137,10 @@ void GetLocalCoM(double *CoMCoord, phase_t * Phase, const int WhichAgent,
 void GetAgentSpecificCoM(double *CoMCoord, phase_t * Phase,
         int *ExceptWhichAgents);
 
+/* Calculates CoM of Neighbourhood */
+void GetNeighbourhoodSpecificCoM(double *CoMCoord, phase_t * Phase,
+        int SizeNeighbourhood);
+
 /* Calculating local CoM for specific agents
  * from a viewpoint of a specific agent denoted by its ID number ("AroundWhichAgent")
  *
