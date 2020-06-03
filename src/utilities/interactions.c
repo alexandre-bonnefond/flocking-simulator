@@ -205,31 +205,87 @@ void GradientBased(double *OutputVelocity,
         SigmaD = (1 / epsilon) * (sqrt(1 + epsilon * pow(d, 2)) - 1);
         
         AgentsCoordinates = Phase->Coordinates[WhichAgent];
+        // MultiplicateWithScalar(AgentsCoordinates, AgentsCoordinates, 0.01, Dim_l);
 
         static double DifferenceVector[3];
+        double GradVector[3];
         
-        for (i = 0; i < Phase->NumberOfAgents; i++) {
-            if (i == WhichAgent)
-                continue;
+        for (i = 1; i < Phase->NumberOfAgents; i++) {   // i = 0 is the WhichAgent
 
             NeighboursCoordinates = Phase->Coordinates[i];
+            // MultiplicateWithScalar(NeighboursCoordinates, NeighboursCoordinates, 0.01, Dim_l);
+
             VectDifference(DifferenceVector, NeighboursCoordinates, AgentsCoordinates);
             if (2 == Dim_l) {
                 DifferenceVector[2] = 0.0;
             }
+
+            SigmaGrad(GradVector, DifferenceVector, epsilon, Dim_l);
             
             SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
-            // printf("%f\n", SigmaDistance);
-            SigmaGrad(DifferenceVector, DifferenceVector, epsilon);
 
-            PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * 
-                ActionFunction(SigmaDistance - SigmaD, a, b);
-            MultiplicateWithScalar(DifferenceVector, DifferenceVector, PhiAlpha, Dim_l);
+            PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * ActionFunction(SigmaDistance - SigmaD, a, b);
+
+            MultiplicateWithScalar(DifferenceVector, GradVector, PhiAlpha, Dim_l);
             
             VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
             
         }
-        MultiplicateWithScalar(OutputVelocity, OutputVelocity, 100, (int) Dim_l); // x100 to have the speed in cm/s
+        // MultiplicateWithScalar(OutputVelocity, OutputVelocity, 8, Dim_l); // x100 to have the speed in cm/s
+}
+
+void AlignmentOlfati(double *OutputVelocity,
+        phase_t * Phase, const double h,
+        const double r, const int WhichAgent, 
+        const int Dim_l, const double epsilon) {
+
+        NullVect(OutputVelocity, 3);
+
+        int i;
+
+        double *AgentsCoordinates;
+        double *NeighboursCoordinates;
+
+        AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+        double *AgentsVelocity;
+        double *NeighboursVelocity;
+
+        AgentsVelocity = Phase->Velocities[WhichAgent];
+
+        static double SigmaDistance;
+        static double SigmaR;
+        static double aij;
+
+        SigmaR = (1 / epsilon) * (sqrt(1 + epsilon * pow(r, 2)) - 1);
+
+        static double DifferenceVector[3];
+        static double DifferenceVelocities[3];
+
+        for (i = 1; i < Phase->NumberOfAgents; i++) {   // i = 0 is the WhichAgent
+
+            NeighboursCoordinates = Phase->Coordinates[i];
+            NeighboursVelocity = Phase->Velocities[i];
+
+            VectDifference(DifferenceVector, NeighboursCoordinates, AgentsCoordinates);
+            if (2 == Dim_l) {
+                DifferenceVector[2] = 0.0;
+            }
+
+            VectDifference(DifferenceVelocities, NeighboursVelocity, AgentsVelocity);
+            if (2 == Dim_l) {
+                DifferenceVelocities[2] = 0.0;
+            }
+            
+            SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
+
+            aij = BumpFunction(SigmaDistance / SigmaR, h);
+
+            MultiplicateWithScalar(DifferenceVector, DifferenceVelocities, aij, Dim_l);
+            
+            VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+            
+        }
 }
 
 /* Target tracking function */

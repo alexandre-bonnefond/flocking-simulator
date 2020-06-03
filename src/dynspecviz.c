@@ -125,7 +125,7 @@ void DrawNetworkArrowBetweenPositions_2D(double *FromCoords, double *ToCoords,
 /* Drawing sensor range network */
 void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         unit_model_params_t * Unit_params,
-        const int WhichAgent,
+        const int WhichAgent, double ** Polygons,
         const int Now,
         vizmode_params_t * VizParams, const float *color) {
 
@@ -151,23 +151,10 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double DifferenceVector[3];
         static double AbsDistance;
 
-        static double Polygons[MAX_OBSTACLES][MAX_OBSTACLE_POINTS];
-
-
         static double ArrowCenterX;
         static double ArrowCenterY;
         static double angle;
         static double CenterX1, CenterX2, CenterY1, CenterY2; 
-        
-
-        // Moving the next block into a global variable as the obstacles are fixed in a simulation !!!!!!!!!!!!!!!!!!!!!!!!
-
-        for (i = 0; i < obstacles.o_count; i++){            
-                for (j = 0; j < obstacles.o[i].p_count; j++){
-                        Polygons[i][2*j] = obstacles.o[i].p[j][0];
-                        Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
-                }
-        }
 
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
 

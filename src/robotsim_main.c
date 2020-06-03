@@ -76,6 +76,9 @@ phase_t GPSDelayedPhase;
 /* For taking Wind into account */
 static double WindVelocityVector[2];
 
+/* For comm attenuation */
+double **Polygons;
+
 // Temporary...
 static bool HighRes = true;
 
@@ -102,6 +105,9 @@ bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
+double TargetPosition[3];
+double ** TargetsPosition;
+
 
 int NumberOfModelSpecificColors;
 model_specific_color_t ModelSpecificColors[MAX_NUMBER_OF_COLORS];
@@ -131,6 +137,10 @@ void Initialize() {
     /* Randomized Initial positions */
     InitCond(&PhaseData, ActualSitParams.InitialX, ActualSitParams.InitialY,
             ActualSitParams.InitialZ, ActualSitParams.Radius);
+    
+    NullVect(TargetPosition, 3);
+
+    TargetsPosition = doubleMatrix(20, 4);
 
     int i, j;
 
@@ -361,6 +371,15 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                 &ActualUnitParams, &ActualVizParams, &ActualColorConfig,
                 &ActualSitParams);
 
+        /* Draw target */
+        if (ActualUnitParams.flocking_type.Value == 2) {
+            DrawCopter_2D(TargetPosition[0] -
+                            ActualVizParams.CenterX,
+                            TargetPosition[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, 15000,
+                            ActualColorConfig.AgentsColor[0]);
+        }
+
         /* Draw Tails */
         if (true == ActualVizParams.DisplayTail) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
@@ -531,7 +550,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         if (ActualVizParams.DisplayCommNetwork == true) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
                 DrawSensorRangeNetwork_2D(PhaseData,
-                        &ActualUnitParams, i, Now,
+                        &ActualUnitParams, i, Polygons, Now,
                         &ActualVizParams, ActualColorConfig.CommNetWorkColor);
             }
         }
@@ -663,8 +682,8 @@ void UpdateMenu() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -878,12 +897,15 @@ void UpdatePositionsToDisplay() {
          */
         for (i = 0; i < ActualVizParams.VizSpeedUp; i++) {
             if (Now < TimeStepsToStore - 1) {
+                // StepTarget(TargetPosition, &ActualSitParams, &ActualVizParams,
+                // &ActualFlockingParams, TimeStep);
+
                 /* Calculating 1 step with the robot model */
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
                         PhaseData, &ActualUnitParams, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations);
+                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -907,7 +929,7 @@ void UpdatePositionsToDisplay() {
                         &ActualUnitParams, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations);
+                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -976,8 +998,8 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1142,8 +1164,8 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1425,8 +1447,8 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1448,9 +1470,7 @@ void HandleMouse(int button, int state, int x, int y) {
     static int Modder = 0;
     static double RotationAxis[3];
     Modder = glutGetModifiers();
-    // printf("%f %f\n", MouseCoordToReal_2D(x, ActualVizParams.MapSizeXY,
-    //                 ActualVizParams.Resolution), MouseCoordToReal_2D(y, ActualVizParams.MapSizeXY,
-    //                 ActualVizParams.Resolution));
+
     /* 2D visualization mode functions */
     if (ActualVizParams.TwoDimViz == true) {
         /* Scroll down - zoom in */
@@ -1481,7 +1501,7 @@ void HandleMouse(int button, int state, int x, int y) {
             ActualVizParams.CenterY +=
                     -MouseCoordToReal_2D(y, ActualVizParams.MapSizeXY,
                     ActualVizParams.Resolution);
-        }
+        }      
 
     } else {
 
@@ -1517,15 +1537,15 @@ void HandleMouse(int button, int state, int x, int y) {
 
     }
 
-    /* Call of modell-specific mouse handling function */
+    /* Call of model-specific mouse handling function */
     HandleSpecialMouseEvent(button, state, x, y, &ActualFlockingParams,
-            &ActualVizParams, Modder);
+            &ActualVizParams, TargetPosition, Modder);
 
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1755,6 +1775,16 @@ int main(int argc, char *argv[]) {
     /* Initializing positions, "conditions reset" variables and map properties */
     Initialize();
 
+    // Allocate obstacles positions inside Polygons object to be used in comm attenuation
+    Polygons = malloc(sizeof(double) * obstacles.o_count);
+    for (i = 0; i < obstacles.o_count; i++) {
+        Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
+        for (j = 0; j < obstacles.o[i].p_count; j++){
+            Polygons[i][2*j] = obstacles.o[i].p[j][0];
+            Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
+        }
+    }
+
     /* Informations presented to the user. */
     printf("Simulation started with %d", ActualSitParams.NumberOfAgents);
     if (ActualSitParams.NumberOfAgents > 1) {
@@ -1804,10 +1834,10 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        DisplayWindow(600, 400, ActualVizParams.Resolution + 65 + 400, 0);
-        StatWindow = glutCreateWindow("Actual received power");
-        glutDisplayFunc(DisplayChart);
-        glutMouseFunc(HandleMouse2);
+        // DisplayWindow(600, 400, ActualVizParams.Resolution + 65 + 400, 0);
+        // StatWindow = glutCreateWindow("Actual received power");
+        // glutDisplayFunc(DisplayChart);
+        // glutMouseFunc(HandleMouse2);
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
                 0);
@@ -2073,7 +2103,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations);
+                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2097,7 +2127,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations);
+                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,

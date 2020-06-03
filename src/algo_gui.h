@@ -90,6 +90,7 @@ void HandleSpecialMouseEvent(int button,
         int x,
         int y,
         flocking_model_params_t * FlockingParams,
-        vizmode_params_t * VizParams, const int Modifier);
+        vizmode_params_t * VizParams, 
+        double *CoordTarg, const int Modifier);
 
 #endif

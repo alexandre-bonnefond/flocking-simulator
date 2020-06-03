@@ -342,17 +342,17 @@ void NormalizeVector(double *OutputVector, double *InputVector, double value) {
 /* Compute the sigma norm of a vector */
 double SigmaNorm(double *InputVector, double epsilon) {
 
-    static double Abs;
+    double Abs;
     Abs = VectAbs(InputVector);
     return (1 / epsilon) * ((sqrt(1 + epsilon * pow(Abs, 2))) - 1);
 }
 
 /* Compute the sigma gradient */
-void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon) {
+void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon, const int Dim) {
 
     double value;
     value = 1 / (1 + epsilon * SigmaNorm(InputVector, epsilon));
-    NormalizeVector(OuptutVector, InputVector, value);
+    MultiplicateWithScalar(OuptutVector, InputVector, value, Dim);
 }
 
 /* Bump function */

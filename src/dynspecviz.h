@@ -63,7 +63,7 @@ void DrawNetworkArrowBetweenPositions_2D(double *FromCoords,
  */
 void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         unit_model_params_t * Unit_params,
-        const int WhichAgent,
+        const int WhichAgent, double ** Polygons,
         const int Now,
         vizmode_params_t * VizParams, const float *color);
 

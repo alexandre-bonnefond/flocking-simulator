@@ -130,7 +130,7 @@ void NormalizeVector(double *OutputVector, double *InputVector, double value);
 double SigmaNorm(double *InputVector, double epsilon);
 
 /* Compute the sigma gradient */
-void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon);
+void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon, const int Dim);
 
 /* Bump function which is a function that smoothly varies between 0 and 1 */
 double BumpFunction(double Input, double h);

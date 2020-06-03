@@ -211,7 +211,7 @@ void StepWind(unit_model_params_t * UnitParams, const double DeltaT,
 
 /* Force law contains specific features of a real robot
 */
-void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
+void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState, double *TargetPosition,
         phase_t * Phase, double *RealVelocity, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams, vizmode_params_t * VizParams,
         const double DeltaT, const int TimeStepReal, const int TimeStepLooped,
@@ -238,8 +238,8 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         /* Calculating target velocity */
         NullVect(TempTarget, 3);
 
-        CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 0,
-                FlockingParams, VizParams, UnitParams->t_del.Value,
+        CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 
+                TargetPosition, 0, FlockingParams, VizParams, UnitParams->t_del.Value,
                 TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value);
 
         for (i = 0; i < 3; i++) {
@@ -266,6 +266,23 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
 
 }
 
+void StepTarget(double * TargetPosition,
+        sit_parameters_t * SitParams, vizmode_params_t * VizParams,
+        flocking_model_params_t * FlockingParams, int TimeStepReal) {
+
+            TargetPosition[0] += V_Flock * SitParams->DeltaT * cos(3.14 + randomizeDouble(0, 13));
+            TargetPosition[1] += V_Flock * SitParams->DeltaT * sin(3.14 + randomizeDouble(0, 10));
+            TargetPosition[2] = 0; //V_Flock * cos(SitParams->DeltaT * TimeStepReal);
+
+            // TargetPosition[0] = 30000 *  cos(  TimeStepReal/1000 );
+            // TargetPosition[1] = 30000 *  sin( TimeStepReal/1000 );
+            // TargetPosition[2] = 0;
+
+
+        }
+
+
+
 /* Step positions and velocities and copy real IDs */
 void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         phase_t * PhaseData, unit_model_params_t * UnitParams,
@@ -273,7 +290,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
         bool * AgentsInDanger, double *WindVelocityVector,
-        double *Accelerations) {
+        double *Accelerations, double * TargetPosition, double **Polygons) {
 
     int i, j, k;
     static double CheckVelocityCache[3];
@@ -336,15 +353,15 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     static double ActualRealVelocity[3];
     NullVect(ActualRealVelocity, 3);
 
-    double **Polygons;
-    Polygons = malloc(sizeof(double) * obstacles.o_count);
-    for (i = 0; i < obstacles.o_count; i++) {
-        Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
-        for (j = 0; j < obstacles.o[i].p_count; j++){
-            Polygons[i][2*j] = obstacles.o[i].p[j][0];
-            Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
-        }
-    }
+    // double **Polygons;
+    // Polygons = malloc(sizeof(double) * obstacles.o_count);
+    // for (i = 0; i < obstacles.o_count; i++) {
+    //     Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
+    //     for (j = 0; j < obstacles.o[i].p_count; j++){
+    //         Polygons[i][2*j] = obstacles.o[i].p[j][0];
+    //         Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
+    //     }
+    // }
 
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
@@ -376,10 +393,10 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
-        RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent,
-                &TempPhase, ActualRealVelocity, UnitParams, FlockingParams,
-                VizParams, SitParams->DeltaT, TimeStepReal, TimeStepLooped, j,
-                WindVelocityVector);
+        RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
+                TargetPosition, &TempPhase, ActualRealVelocity, UnitParams, 
+                FlockingParams, VizParams, SitParams->DeltaT, TimeStepReal, 
+                TimeStepLooped, j, WindVelocityVector);
 
         NullVect(CheckVelocityCache, 3);
         VectSum(CheckVelocityCache, CheckVelocityCache, RealCoptForceVector);

@@ -81,6 +81,7 @@ void DrawDashedLine(double x1, double y1, double x2, double y2,
         glVertex2f((x1),(y1)); 
         glVertex2f((x2),(y2)); 
         glEnd();
+        glDisable(GL_LINE_STIPPLE);
 }
 
 /* Draws an empty tetragon with given vertices (?) */

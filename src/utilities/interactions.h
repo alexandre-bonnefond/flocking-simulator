@@ -46,6 +46,11 @@ void GradientBased(double *OutputVelocity,
         const double d, const double r,
         const int WhichAgent, const int Dim_l);
 
+void AlignmentOlfati(double *OutputVelocity,
+        phase_t * Phase, const double h,
+        const double r, const int WhichAgent, 
+        const int Dim_l, const double epsilon);
+
 
 /* Target tracking function */
 void TargetTracking(double *OutputVelocity, double *TargetPosition,

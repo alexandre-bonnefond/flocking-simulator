@@ -222,9 +222,10 @@ void HandleSpecialMouseEvent(int button,
         int x,
         int y,
         flocking_model_params_t * FlockingParams,
-        vizmode_params_t * VizParams, const int Modifier) {
+        vizmode_params_t * VizParams, 
+        double * CoordTarg, const int Modifier) {
 
-    if (VizParams->TwoDimViz && button == GLUT_LEFT && state == GLUT_DOWN) {
+    if (VizParams->TwoDimViz && button == GLUT_LEFT && state == GLUT_DOWN && Modifier != GLUT_ACTIVE_ALT) {
         CHANGE_PARAMETER(ArenaCenterX, MouseCoordToReal_2D(x,
                         VizParams->MapSizeXY,
                         VizParams->Resolution) + VizParams->CenterX);
@@ -235,4 +236,11 @@ void HandleSpecialMouseEvent(int button,
 
     SetupVertices(VizParams);
     CreateObstacleVertexSet(&obstacles, VizParams);
+
+    if (button == GLUT_LEFT && state == GLUT_DOWN && Modifier == GLUT_ACTIVE_ALT) {
+            FillVect(CoordTarg, MouseCoordToReal_2D(x, VizParams->MapSizeXY,
+                    VizParams->Resolution) + VizParams->CenterX, -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
+                    VizParams->Resolution) + VizParams->CenterY, 0);
+        }
+
 }

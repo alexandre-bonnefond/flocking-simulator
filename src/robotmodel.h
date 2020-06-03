@@ -24,6 +24,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+void StepTarget(double * TargetPosition,
+        sit_parameters_t * SitParams, vizmode_params_t * VizParams,
+        flocking_model_params_t * FlockingParams, int TimeStepReal);
+
 /* Step positions and velocities
  */
 void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
@@ -32,7 +37,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
         bool * AgentsInDanger, double *WindVelocityVector,
-        double *Accelerations);
+        double *Accelerations, double * TargetPosition, double **Polygons);
 
 /*  Initialization and killing
  */

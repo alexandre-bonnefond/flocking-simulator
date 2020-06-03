@@ -1,13 +1,13 @@
 # Preferred SPP velocity (Multiply it with 0.010000 to get its Value in m/s)
-V_Flock=500.000000
+V_Flock=400.000000
 # Maximum repulsion velocity (Multiply it with 0.010000 to get its Value in m/s)
 V_Rep=619.664000
 # Friction velocity slack (Multiply it with 0.010000 to get its Value in m/s)
 V_Frict=63.000000
 # Maximum velocity (Multiply it with 0.010000 to get its Value in m/s)
-V_Max=800.000000
+V_Max=700.000000
 # Equilibrium distance (Multiply it with 0.010000 to get its Value in m)
-R_0=6000.000000
+R_0=4000.000000
 # Friction range (Multiply it with 0.010000 to get its Value in m)
 R_0_Offset_Frict=8530.000000
 # Shill dist offset (Multiply it with 0.010000 to get its Value in m)
@@ -25,13 +25,13 @@ V_Shill=1362.174000
 # Acc limit of shill (Multiply it with 0.010000 to get its Value in m/s^2)
 Acc_Shill=5300.000000
 # Decay point (-)
-H_Bump=0.300000
+H_Bump=0.280000
 # Epsilon (-)
 Epsilon=0.100000
-# A Action Function (Multiply it with 0.010000 to get its Value in m)
-A_Action_Function=400.000000
-# B Action Function (Multiply it with 0.010000 to get its Value in m)
-B_Action_Function=450.000000
+# A Action Function (m)
+A_Action_Function=4.000000
+# B Action Function (m)
+B_Action_Function=5.000000
 # Size of neighbourhood (-)
 Size_Neighbourhood=6.000000
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)
