@@ -51,6 +51,10 @@ void AlignmentOlfati(double *OutputVelocity,
         const double r, const int WhichAgent, 
         const int Dim_l, const double epsilon);
 
+void TrackingOlfati(double *OutputVelocity, double *TargetPosition,
+        double *TargetVelocity, phase_t * Phase, const int WhichAgent, 
+        const int Dim_l);
+
 
 /* Target tracking function */
 void TargetTracking(double *OutputVelocity, double *TargetPosition,

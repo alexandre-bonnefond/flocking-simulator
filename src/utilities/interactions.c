@@ -288,6 +288,38 @@ void AlignmentOlfati(double *OutputVelocity,
         }
 }
 
+/* Olfati tracking */
+void TrackingOlfati(double *OutputVelocity, double *TargetPosition,
+        double *TargetVelocity, phase_t * Phase, const int WhichAgent, 
+        const int Dim_l) {
+
+        NullVect(OutputVelocity, 3);
+
+        double *AgentsCoordinates;
+        double *AgentsVelocity;
+
+        double PositionComponent[3];
+        double VelocityComponent[3];
+        double PositionDiff[3];
+        double VelocityDiff[3];
+
+
+
+        AgentsCoordinates = Phase->Coordinates[WhichAgent];
+        AgentsVelocity = Phase->Velocities[WhichAgent];
+
+        VectDifference(PositionDiff, AgentsCoordinates, TargetPosition);
+        // SigmaGrad(PositionComponent, PositionDiff, 1, Dim_l);
+        SigmaGrad(OutputVelocity, PositionDiff, 1, Dim_l);
+
+        // VectDifference(VelocityDiff, AgentsVelocity, TargetVelocity);
+
+        // VectSum(OutputVelocity, VelocityDiff, PositionComponent);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, -3, Dim_l);
+
+        }
+
+
 /* Target tracking function */
 void TargetTracking(double *OutputVelocity, double *TargetPosition,
         phase_t * Phase, const double R_CoM, const double d_CoM,

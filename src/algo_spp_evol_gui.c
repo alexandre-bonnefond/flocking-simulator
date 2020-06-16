@@ -8,6 +8,8 @@
 
 #include "algo_gui.h"
 #include "algo_spp_evol.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Edges of the arena */
 static double VerticesOfArena[12];
@@ -16,6 +18,7 @@ static double EdgesOfObstacle[MAX_OBSTACLES][MAX_OBSTACLE_POINTS * 2];
 /* Colors of model-specific objects */
 static float ArenaEdgeColor[3];
 static float ObstacleColor[3];
+
 
 /* For reseting Phases */
 void ModelSpecificReset(phase_t * Phase,
@@ -221,9 +224,13 @@ void HandleSpecialMouseEvent(int button,
         int state,
         int x,
         int y,
+        int *cnt,
         flocking_model_params_t * FlockingParams,
         vizmode_params_t * VizParams, 
-        double * CoordTarg, const int Modifier) {
+        double * CoordTarg, double *** TargetsArray,
+        const int Modifier) {
+
+    // static int count = 0;
 
     if (VizParams->TwoDimViz && button == GLUT_LEFT && state == GLUT_DOWN && Modifier != GLUT_ACTIVE_ALT) {
         CHANGE_PARAMETER(ArenaCenterX, MouseCoordToReal_2D(x,
@@ -241,6 +248,39 @@ void HandleSpecialMouseEvent(int button,
             FillVect(CoordTarg, MouseCoordToReal_2D(x, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterX, -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterY, 0);
+            // printf("%d\n", *cnt);
+            
+            if (*cnt == 0) {
+                
+                *TargetsArray = malloc( sizeof **TargetsArray );
+                (*TargetsArray)[*cnt] = malloc( sizeof ***TargetsArray * 4);
+                (*TargetsArray)[*cnt][0] = CoordTarg[0];
+                (*TargetsArray)[*cnt][1] = CoordTarg[1];
+                (*TargetsArray)[*cnt][2] = 0;
+                (*TargetsArray)[*cnt][3] = 1;
+
+                *cnt += 1;
+            }
+            else {
+                *TargetsArray = realloc(*TargetsArray, sizeof **TargetsArray * (*cnt + 1) );
+                (*TargetsArray)[*cnt] = malloc( sizeof ***TargetsArray * 4);
+                (*TargetsArray)[*cnt][0] = CoordTarg[0];
+                (*TargetsArray)[*cnt][1] = CoordTarg[1];
+                (*TargetsArray)[*cnt][2] = 0;
+                (*TargetsArray)[*cnt][3] = 1;
+                // (*TargetsArray)[*cnt - 1][3] = 0;
+
+                *cnt += 1;
+
+            }
+
+            // for (int j = 0; j < cnt; j++) {
+            //     for (int i = 0; i < 4; i++) {
+            //         printf("%f\t", (*TargetsArray)[j][i]);
+            //     }
+            //     printf("\n");
+            // }
         }
+
 
 }

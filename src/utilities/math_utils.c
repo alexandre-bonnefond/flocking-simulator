@@ -353,6 +353,7 @@ void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon, const 
     double value;
     value = 1 / (1 + epsilon * SigmaNorm(InputVector, epsilon));
     MultiplicateWithScalar(OuptutVector, InputVector, value, Dim);
+    // NormalizeVector(OuptutVector, InputVector, value);
 }
 
 /* Bump function */

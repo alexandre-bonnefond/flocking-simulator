@@ -106,7 +106,8 @@ bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
 double TargetPosition[3];
-double ** TargetsPosition;
+double **TargetsArray;
+int cnt = 0;
 
 
 int NumberOfModelSpecificColors;
@@ -139,8 +140,6 @@ void Initialize() {
             ActualSitParams.InitialZ, ActualSitParams.Radius);
     
     NullVect(TargetPosition, 3);
-
-    TargetsPosition = doubleMatrix(20, 4);
 
     int i, j;
 
@@ -373,11 +372,26 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
         /* Draw target */
         if (ActualUnitParams.flocking_type.Value == 2) {
-            DrawCopter_2D(TargetPosition[0] -
+
+            for (i = 0; i < cnt; i++) {
+                if (TargetsArray[i][3] == 1) {
+                    DrawCopter_2D(TargetsArray[i][0] -
                             ActualVizParams.CenterX,
-                            TargetPosition[1] - ActualVizParams.CenterY,
+                            TargetsArray[i][1] - ActualVizParams.CenterY,
                             ActualVizParams.MapSizeXY, 15000,
                             ActualColorConfig.AgentsColor[0]);
+                    
+                    char TargetLabel[3];
+                    sprintf(TargetLabel, "%d", i);
+                    DrawString(RealToGlCoord_2D(TargetsArray[i][0] - ActualVizParams.CenterX + 120.0,
+                        ActualVizParams.MapSizeXY),
+                        RealToGlCoord_2D(TargetsArray[i][1] - ActualVizParams.CenterY + 120.0,
+                        ActualVizParams.MapSizeXY), GLUT_BITMAP_TIMES_ROMAN_10,
+                        TargetLabel, ActualColorConfig.AgentsColor[0]);
+
+                }
+            }
+            
         }
 
         /* Draw Tails */
@@ -1236,6 +1250,9 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
         /* Reset number of collisions and elapsed time */
         Collisions = 0;
         TimeStep = 0;
+        cnt = 0;
+        // free(*TargetsArray);
+        // free(TargetsArray);
 
     } else if (key == GLUT_KEY_F11) {
 
@@ -1538,8 +1555,8 @@ void HandleMouse(int button, int state, int x, int y) {
     }
 
     /* Call of model-specific mouse handling function */
-    HandleSpecialMouseEvent(button, state, x, y, &ActualFlockingParams,
-            &ActualVizParams, TargetPosition, Modder);
+    HandleSpecialMouseEvent(button, state, x, y, &cnt, &ActualFlockingParams,
+            &ActualVizParams, TargetPosition, &TargetsArray, Modder);
 
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);

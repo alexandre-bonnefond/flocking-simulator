@@ -499,6 +499,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     double *AgentsVelocity;
     AgentsVelocity = Phase->Velocities[WhichAgent];
 
+    double velo[3];
+    NullVect(velo, 3);
+
     static double ArenaVelocity[3];
     NullVect(ArenaVelocity, 3);
     static double ObstacleVelocity[3];
@@ -515,6 +518,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     NullVect(TargetTrackingVelocity, 3);
     static double AlignOlfati[3];
     NullVect(AlignOlfati, 3);
+    static double TrackOlfati[3];
+    NullVect(TrackOlfati, 3);
 
     static double ActualNeighboursCoordinates[3];
     NullVect(ActualNeighboursCoordinates, 3);
@@ -553,12 +558,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     else if (Flocking_type == 1) {
         /* Olfati Gradient based term for attraction//repulsion */
         GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, 1.5 * R_0, WhichAgent, (int) Dim);
-        AlignmentOlfati(AlignOlfati, Phase, H_Bump, 1.5 * R_0, WhichAgent, (int) Dim, Epsilon);
-        // RepulsionLin(PotentialVelocity, Phase, V_Rep,
-        //         Slope_Rep, R_0, WhichAgent, (int) Dim, false);
-        // AttractionLin(AttractionVelocity, Phase, V_Rep,
-        //         Slope_Rep/30, R_0 + 50, WhichAgent, (int) Dim, false);
+            R_0, 3 * R_0, WhichAgent, (int) Dim);
+        AlignmentOlfati(AlignOlfati, Phase, H_Bump, 3 * R_0, WhichAgent, (int) Dim, Epsilon);
+        // TrackingOlfati(TrackOlfati, TargetPosition, velo, Phase, WhichAgent, (int) Dim);
                          
     }
 
@@ -580,7 +582,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     else if (Flocking_type == 3) {
        GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, 1.5 * R_0, WhichAgent, (int) Dim);
+            R_0, 3.0 * R_0, WhichAgent, (int) Dim);
         // NormalizeVector(GradientVelocity, GradientVelocity, V_Flock/2);//, (int)Dim);
 
     }
@@ -606,14 +608,15 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
         VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
-        printf("%f\t", VectAbs(PotentialVelocity));
-        printf("%f\t", VectAbs(AttractionVelocity));
-        printf("%f\n", VectAbs(SlipVelocity));
+        // printf("%f\t", VectAbs(PotentialVelocity));
+        // printf("%f\t", VectAbs(AttractionVelocity));
+        // printf("%f\n", VectAbs(SlipVelocity));
     }
 
     else if (Flocking_type == 1) {
         VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
         VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
+        // VectSum(OutputVelocity, OutputVelocity, TrackOlfati);
     }
 
     else if (Flocking_type == 2) {
@@ -628,8 +631,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     else if (Flocking_type == 3) {
         VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
-        printf("%f\t", VectAbs(GradientVelocity));
-        printf("%f\n", VectAbs(SlipVelocity));
+        // printf("%f\t", VectAbs(GradientVelocity));
+        // printf("%f\n", VectAbs(SlipVelocity));
     }
     
     // VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
