@@ -1251,8 +1251,10 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
         Collisions = 0;
         TimeStep = 0;
         cnt = 0;
-        // free(*TargetsArray);
-        // free(TargetsArray);
+        for (i = 0; i < cnt; i ++) {
+            free(TargetsArray[i]);
+        }
+        free(TargetsArray);
 
     } else if (key == GLUT_KEY_F11) {
 

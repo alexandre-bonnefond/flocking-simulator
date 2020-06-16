@@ -248,7 +248,6 @@ void HandleSpecialMouseEvent(int button,
             FillVect(CoordTarg, MouseCoordToReal_2D(x, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterX, -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterY, 0);
-            // printf("%d\n", *cnt);
             
             if (*cnt == 0) {
                 
