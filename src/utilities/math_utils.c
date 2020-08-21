@@ -342,7 +342,7 @@ void NormalizeVector(double *OutputVector, double *InputVector, double value) {
 /* Compute the sigma norm of a vector */
 double SigmaNorm(double *InputVector, double epsilon) {
 
-    double Abs;
+    static double Abs;
     Abs = VectAbs(InputVector);
     return (1 / epsilon) * ((sqrt(1 + epsilon * pow(Abs, 2))) - 1);
 }
@@ -350,7 +350,7 @@ double SigmaNorm(double *InputVector, double epsilon) {
 /* Compute the sigma gradient */
 void SigmaGrad(double *OuptutVector, double *InputVector, double epsilon, const int Dim) {
 
-    double value;
+    static double value;
     value = 1 / (1 + epsilon * SigmaNorm(InputVector, epsilon));
     MultiplicateWithScalar(OuptutVector, InputVector, value, Dim);
     // NormalizeVector(OuptutVector, InputVector, value);

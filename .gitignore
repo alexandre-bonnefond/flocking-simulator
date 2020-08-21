@@ -2,7 +2,7 @@
 *.out
 
 # ignore all files in the following directories
-output_default/
+output_default*/
 config/
 parameters/
 obstacles/

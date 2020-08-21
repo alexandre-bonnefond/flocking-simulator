@@ -244,7 +244,7 @@ void DrawMenuItemsOfFlockingModel(const flocking_model_params_t *
 
     for (i = 0; i < FlockingParams->NumberOfParameters; i++) {
         if (FlockingParams->Params[i].InMenu == true) {
-            place = fromDeci(key, 20, i + 1);
+            place = fromDeci(key, 24, i + 1);
             DrawMenuItemOfFlockingModel(key[0], &FlockingParams->Params[i],
                     0.8 - i * HEIGHT_OF_MENU_ITEM - Offset, color);
         }

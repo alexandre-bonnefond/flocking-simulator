@@ -106,8 +106,8 @@ bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
 double TargetPosition[3];
-double **TargetsArray;
-int cnt = 0;
+double **TargetsArray; // = NULL;
+int cnt = 0;                    // Which target is on
 
 
 int NumberOfModelSpecificColors;
@@ -239,7 +239,7 @@ void DisplayMenu() {
                 ActualColorConfig.MenuSelectionColor);
     } else {
         DrawMenuSelection(-0.95,
-                HEIGHT_OF_MENU_ITEM * 0.5 + 0.9 -
+                HEIGHT_OF_MENU_ITEM * 0.5 + 0.87 -
                 ActualVizParams.WhichParamIsSelected * HEIGHT_OF_MENU_ITEM,
                 0.05, ActualColorConfig.MenuSelectionColor);
     }
@@ -916,10 +916,10 @@ void UpdatePositionsToDisplay() {
 
                 /* Calculating 1 step with the robot model */
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
-                        PhaseData, &ActualUnitParams, &ActualFlockingParams,
+                        PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -940,10 +940,10 @@ void UpdatePositionsToDisplay() {
                         (int) ((STORED_TIME / ActualSitParams.DeltaT) - 1.0),
                         (int) (20.0 / ActualSitParams.DeltaT));
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase, PhaseData,
-                        &ActualUnitParams, &ActualFlockingParams,
+                        &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -1247,7 +1247,7 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
             }
         }
 
-        /* Reset number of collisions and elapsed time */
+        /* Reset number of collisions and elapsed time and Targets Array */
         Collisions = 0;
         TimeStep = 0;
         cnt = 0;
@@ -1845,7 +1845,7 @@ int main(int argc, char *argv[]) {
         /* Starting of GL loop */
         glutInit(&argc, argv);
 
-        DisplayWindow(400, ActualVizParams.Resolution,
+        DisplayWindow(400, ActualVizParams.Resolution + 150,
                 ActualVizParams.Resolution + 65, 0);
         MenuWindowID = glutCreateWindow("Parameters of actual model");
         glutDisplayFunc(DisplayMenu);
@@ -2116,13 +2116,13 @@ int main(int argc, char *argv[]) {
             if (Now < TimeStepsToStore) {
 
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
-                        PhaseData, &ActualUnitParams, &ActualFlockingParams,
+                        PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now,
                         (int) (ActualStatUtils.ElapsedTime /
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2140,13 +2140,13 @@ int main(int argc, char *argv[]) {
                         (int) (20.0 / ActualSitParams.DeltaT));
 
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
-                        PhaseData, &ActualUnitParams, &ActualFlockingParams,
+                        PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now,
                         (int) (ActualStatUtils.ElapsedTime /
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetPosition, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2441,7 +2441,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (FALSE != ActualSaveModes.SaveModelSpecifics) {
-            CloseModelSpecificStats(&ActualStatUtils);
+            CloseModelSpecificStats(&ActualStatUtils, &ActualUnitParams);
         }
 
     }

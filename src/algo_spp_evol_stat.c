@@ -376,7 +376,7 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     }
 
     if (TIMELINE == StatUtils->SaveMode) {
-
+        printf("%d", NumberOfCluster);
         fprintf(f_ClusterDependentParams, "%lf\t%lf\t%lf\t%lf\t%lf\n",
                 StatUtils->ElapsedTime, Avg_Corr, sqrt(StDev_Corr), Min_Corr, Max_Corr);
         fprintf(f_ClusterParams, "%lf\t%d\t%d\t%d\t%d\n",
@@ -534,7 +534,7 @@ void SaveModelSpecificStats(phase_t * Phase,
 }
 
 /* For closing stat files */
-void CloseModelSpecificStats(stat_utils_t * StatUtils) {
+void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * UnitParams) {
 
     if (STAT == StatUtils->SaveMode || STEADYSTAT == StatUtils->SaveMode) {
         double ElapsedTime = StatUtils->ElapsedTime;
@@ -613,7 +613,9 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils) {
     fclose(f_ClusterParams);
     fclose(f_ClusterRP);
 
-    freeMatrix(Adjacency, Dimension, Dimension);
+    if (UnitParams->communication_type.Value == 0) {
+        freeMatrix(Adjacency, Dimension, Dimension);
+    }
     free(Visited);
 
 }

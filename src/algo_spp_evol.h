@@ -23,10 +23,11 @@ obstacles_t obstacles;
 double V_Flock;
 double V_Max;
 
-/* Parameters of repulsion */
+/* Parameters of repulsion & attraction */
 double V_Rep;
 double R_0;
 double Slope_Rep;
+double Slope_Att;
 
 /* Parameters of friction */
 double C_Frict;

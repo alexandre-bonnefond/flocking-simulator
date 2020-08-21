@@ -50,6 +50,6 @@ void SaveModelSpecificStats(phase_t * Phase, stat_utils_t * StatUtils,
 
 /* For closing stat files 
  */
-void CloseModelSpecificStats(stat_utils_t * StatUtils);
+void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * UnitPrams);
 
 #endif

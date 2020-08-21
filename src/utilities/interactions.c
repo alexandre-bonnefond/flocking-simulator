@@ -219,7 +219,7 @@ void GradientBased(double *OutputVelocity,
             if (2 == Dim_l) {
                 DifferenceVector[2] = 0.0;
             }
-
+            
             SigmaGrad(GradVector, DifferenceVector, epsilon, Dim_l);
             
             SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
