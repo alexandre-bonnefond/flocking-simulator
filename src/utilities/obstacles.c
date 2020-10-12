@@ -97,7 +97,7 @@ static int obstacle_callback(void *user, const char *section, const char *name,
     return 0;
 }
 
-int ParseObstacleFile(const char *name, obstacles_t * obstacles) {
+int ParseObstacleFile(const char *name, obstacles_t * obstacles, int Verbose) {
     obstacle_callback_data_t data = {
         .obstacles = obstacles,
         .angle = 0,
@@ -114,8 +114,9 @@ int ParseObstacleFile(const char *name, obstacles_t * obstacles) {
         printf("%s: parse error on line %d\n", name, result);
         return 0;
     }
-
-    printf("Parsed %d obstacles.\n", obstacles->o_count);
+    if (Verbose != 0) {
+        printf("Parsed %d obstacles.\n", obstacles->o_count);
+    }    
 
     /* calculate center of obstacles */
     for (i = 0; i < obstacles->o_count; i++) {

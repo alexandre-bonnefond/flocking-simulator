@@ -37,6 +37,6 @@ typedef struct {
  *
  * \return             number of obstacles parsed successfully
  */
-int ParseObstacleFile(const char *name, obstacles_t * obstacles);
+int ParseObstacleFile(const char *name, obstacles_t * obstacles, int Verbose);
 
 #endif

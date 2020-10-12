@@ -17,7 +17,11 @@
 #include "vizmode.h"
 #include "sensors.h"
 #include "algo.h"
+
+#ifndef SERVER_MODE
 #include "algo_gui.h"
+#endif
+
 #include "vizmode.h"
 #include "utilities/debug_utils.h"
 #include <math.h>
@@ -36,8 +40,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
-        bool * AgentsInDanger, double *WindVelocityVector,
-        double *Accelerations, double ** TargetsArray, double **Polygons);
+        bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations,
+        double ** TargetsArray, double **Polygons, int Verbose);
 
 /*  Initialization and killing
  */

@@ -908,8 +908,8 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
         InsertAgentsVelocity(Phase, RandomPlaceVector, i);
 
     }
-
-    NullVect(ActualAgentsVelocity, 3);
+    FillVect(ActualAgentsVelocity, 1000, 3000, 0);
+    //NullVect(ActualAgentsVelocity, 3);
     StepCount = 0;
 
     for (i = fromAgent; i < toAgent; i++) {
@@ -918,6 +918,8 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
 
             isArrangementCorrect = true;
 
+            // RandomPlaceVector[0] = randomizeDoubleSeed(0, 2.0 * M_PI, 3*i);
+            // temp = randomizeDoubleSeed(0, SizeOfRing, i + 1);
             RandomPlaceVector[0] = randomizeDouble(0, 2.0 * M_PI);
             temp = randomizeDouble(0, SizeOfRing);
             RandomPlaceVector[1] = YCenter + temp * cos(RandomPlaceVector[0]);
@@ -925,6 +927,9 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
             RandomPlaceVector[2] =
                     randomizeDouble(ZCenter - ZSize / 2.0,
                     ZCenter + ZSize / 2.0);
+            // RandomPlaceVector[2] =
+            //         randomizeDoubleSeed(ZCenter - ZSize / 2.0,
+            //         ZCenter + ZSize / 2.0, i + 1);
 
             for (j = 0; j < Phase->NumberOfAgents; j++) {
 
@@ -947,7 +952,7 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
             StepCount++;
 
             if (StepCount > MaxStep) {
-                fprintf(stderr, "Please, increase the initial area sizes!\n");
+                fprintf(stderr, "Please, increase the initial area sizes!!\n");
                 exit(-1);
             }
 
@@ -1768,6 +1773,7 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
         
         int j;
         double Power;
+        // bool StopScan = false;
 
         if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
@@ -1779,7 +1785,20 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                 log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
         }
         if (UnitParams->communication_type.Value == 2) {
-            for (j = 0; j < obstacles.o_count; j++){
+            for (j = 0; j < obstacles.o_count; j++){  // very slow if the number of obstacles is  high
+
+                double CenterObst[3];
+                CenterObst[0] = obstacles.o[j].center[0];
+                CenterObst[1] = obstacles.o[j].center[1];
+                CenterObst[2] = 0;
+
+                if (obstacles.o_count > 70) {
+                    double DistObs;
+                    DistObs = DistanceOfTwoPoints2D(RefCoords, CenterObst);
+                    if (DistObs > 25000){
+                        continue;
+                    }
+                }
 
                 double **Intersections;
                 Intersections = malloc(sizeof(double *) * 2);
@@ -1797,6 +1816,7 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                         VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
                         Loss = UnitParams->linear_loss.Value * VectAbs(DistanceThrough);
                         Power -= Loss;
+                        break;
 
                 }
                 // printf("%f\n", UnitParams->transmit_power.Value);

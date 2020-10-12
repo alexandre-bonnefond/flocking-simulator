@@ -15,7 +15,7 @@ R_0_Shill=30.000000
 # Slope of repulsion (1/s)
 Slope_Rep=0.130000
 # Slope of attraction (1/s)
-Slope_Att=0.0060000
+Slope_Att=0.006000
 # Slope of friction (1/s)
 Slope_Frict=3.200000
 # Acc limit of Friction (Multiply it with 0.010000 to get its Value in m/s^2)

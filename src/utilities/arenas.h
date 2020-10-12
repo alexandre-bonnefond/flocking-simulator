@@ -45,7 +45,7 @@ typedef struct {
  * \return             number of arenas parsed successfully
  */
 int ParseArenaFile(const char *name, arenas_t * arenas,
-        bool define_circle_and_square);
+        bool define_circle_and_square, int Verbose);
 
 /* More-or-less general interaction with specific types of arena */
 void Shill_Wall(double *OutputVelocity, phase_t * Phase,

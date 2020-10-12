@@ -18,6 +18,10 @@
 
 /* Randomizer functions */
 
+/* Returns a random double value between minValue and maxValue with seed (uniform distribution)
+ */
+double randomizeDoubleSeed(const double minValue, const double maxValue, const int seed);
+
 /* Returns a random double value between minValue and maxValue (uniform distribution)
  */
 double randomizeDouble(const double minValue, const double maxValue);

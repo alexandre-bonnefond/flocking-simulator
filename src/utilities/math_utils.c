@@ -17,8 +17,22 @@
 /* Randomizer functions */
 
 /* Returns a random double between minValue and maxValue (uniform distribution) */
-double randomizeDouble(const double MinValue, const double MaxValue) {
+double randomizeDoubleSeed(const double MinValue, const double MaxValue, const int seed) {
+    srand(seed);
+    if (MinValue > MaxValue) {
 
+        fprintf(stderr,
+                "The maximal value has to be larger than the minimal value... \n");
+        exit(-3);
+
+    }
+
+    return MinValue + (double) rand() * (MaxValue - MinValue) / RAND_MAX;
+
+}
+
+/* Returns a random double between minValue and maxValue (uniform distribution) */
+double randomizeDouble(const double MinValue, const double MaxValue) {
     if (MinValue > MaxValue) {
 
         fprintf(stderr,
@@ -1038,7 +1052,6 @@ double IntersectionOfLineSegmentAndLine2D(double *Intersection,
 /* Also returns the number of valid points, and two NULLs if no intersection */
 /* The two output vectors come in the order: the further in the direction of "DirectionOfLine", and the other */
 /* You don't have to create an empty vector for the intersection you don't care about, just simply give a NULL instead */
-
 int PointsOnLineAtAGivenDistanceFromOrigo3D(double *intersection1,
         double *intersection2, double radius,
         double *PointOnLine, double *DirectionOfLine) {

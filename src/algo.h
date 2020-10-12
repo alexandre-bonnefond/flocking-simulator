@@ -31,7 +31,7 @@ void InitializeFlockingParams(flocking_model_params_t * FlockingParams);
  * model-specific objects.
  */
 void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
-        sit_parameters_t * SitParams);
+        sit_parameters_t * SitParams, int Verbose);
 
 /* Refreshing values of outer variables (e. g. "number of caught agents" in the chasing algorithm)
  * in every timestep

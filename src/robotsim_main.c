@@ -34,14 +34,18 @@
 #include "robotmodel.h"
 
 /* Tools for OpenGL visualization and GUI */
+#ifndef SERVER_MODE
 #include "objects_menu.h"
 #include "colors.h"
 #include "vizualizer/objects_3d.h"
 #include "vizualizer/objects_2d.h"
 #include "algo_gui.h"
-#include "algo_stat.h"
 #include "dynspecviz.h"
+#endif
+
+/* Stats */
 #include "stat.h"
+#include "algo_stat.h"
 
 /* Tools for image output */
 #ifdef PNG_OUT
@@ -90,6 +94,8 @@ static bool HighRes = true;
 #define DISTANCE_FROM_CENTER_XY_LIMIT 4000      // Minimum distance from center on XY plane
 
 int MenuWindowID, VizWindowID, StatWindow; /* IDs of windows */
+int Verbose = 1;                        /* Printing config files on terminal or not */
+
 color_config_t ActualColorConfig;       /* contains color setups */
 vizmode_params_t ActualVizParams;       /* contains mode setup (e.g. CoM-following toggle, etc.) */
 stat_utils_t ActualStatUtils;   /* for statistical calculations... */
@@ -150,7 +156,7 @@ void Initialize() {
         }
     }
 
-    InitializePhase(&ActualPhase, &ActualFlockingParams, &ActualSitParams);
+    InitializePhase(&ActualPhase, &ActualFlockingParams, &ActualSitParams, Verbose);
 
     /* Waiting... */
     Wait(PhaseData, 5.0 + ActualUnitParams.t_del.Value, ActualSitParams.DeltaT);
@@ -198,15 +204,17 @@ void Initialize() {
     /* Setting up resolution */
     //TODO: Read it from file!
     ActualVizParams.Resolution = (true == HighRes ? 750 : 600);
-
+    #ifndef SERVER_MODE
     /* Calling model-specific vizmode Initialization */
     InitializeVizParams(&ActualVizParams);
+    #endif
 
     /* Match the steady state timestamps in the 2 corresponding structures. */
     ActualStatUtils.StartOfSteadyState = ActualSitParams.StartOfSteadyState;
 
 }
 
+#ifndef SERVER_MODE
 /* Displaying "menu" window */
 char VizSpeedUpName[19] = "Visualization Speed";
 void DisplayMenu() {
@@ -919,7 +927,7 @@ void UpdatePositionsToDisplay() {
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -943,7 +951,7 @@ void UpdatePositionsToDisplay() {
                         &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -1473,7 +1481,6 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
 
 }
 
-
 void HandleMouse2(int button, int state, int x, int y) {
 
     static int Modder = 0;
@@ -1574,7 +1581,7 @@ void HandleMouse(int button, int state, int x, int y) {
 void HandleMouseMotion(int x, int y) {
 
 }
-
+#endif
 /* print help */
 void print_help(void) {
     printf("This is robotsim created at ELTE Department of Biological Physics.\n"
@@ -1613,6 +1620,14 @@ int main(int argc, char *argv[]) {
             return 0;
         }
     }
+
+    /* Printing set up files or not */
+    for (i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-verb") == 0) {
+            Verbose = atoi(argv[i + 1]);
+        }
+    }
+    //printf("%d", Verbose);
 
 
     /* Initializing output directories */
@@ -1655,7 +1670,9 @@ int main(int argc, char *argv[]) {
     FILE *SitParamsFile =
             CheckInputFile(ParamsFileName, argc, argv, CurrentDirectory,
             ParamsFileName, "-i");
-    printf("Using initparams: %s\n", ParamsFileName);
+    if (Verbose != 0) {
+        printf("Using initparams: %s\n", ParamsFileName);
+    }    
     if (SitParamsFile == NULL) {
         fprintf(stderr, "  Could not open file for reading!\n");
         exit(-1);
@@ -1671,7 +1688,7 @@ int main(int argc, char *argv[]) {
     if (ActualSitParams.LengthToStore < 10.0) {
         ActualSitParams.LengthToStore = 10.0;
     }
-
+    #ifndef SERVER_MODE
     /* Initializing colors */
     if (ActualVizParams.VizEnabled == true) {
 
@@ -1681,7 +1698,9 @@ int main(int argc, char *argv[]) {
         FILE *ColorsFile =
                 CheckInputFile(ParamsFileName, argc, argv, CurrentDirectory,
                 ParamsFileName, "-c");
-        printf("Using colors: %s\n", ParamsFileName);
+        if (Verbose != 0) {
+            printf("Using colors: %s\n", ParamsFileName);
+        }        
         if (ColorsFile == NULL) {
             fprintf(stderr, "  Could not open file for reading!\n");
             exit(-1);
@@ -1697,6 +1716,7 @@ int main(int argc, char *argv[]) {
         fclose(ColorsFile);
 
     }
+    #endif
 
     /* Setting up structures containing the parameters of the "unit" model.
      * By "unit model", we mean the set
@@ -1736,7 +1756,7 @@ int main(int argc, char *argv[]) {
 
     if (!FillParameterSetsFromFile(ActualFlockingParamSets, ActualUnitParamSets,
                     argc, &NumberOfFlockingParamSets, &NumberOfUnitParamSets,
-                    argv, CurrentDirectory, ParamsFileName))
+                    argv, CurrentDirectory, ParamsFileName, Verbose))
         return 0;
 
     /* Setting up structures conatining the parameters of the flocking model
@@ -1805,16 +1825,20 @@ int main(int argc, char *argv[]) {
     }
 
     /* Informations presented to the user. */
-    printf("Simulation started with %d", ActualSitParams.NumberOfAgents);
-    if (ActualSitParams.NumberOfAgents > 1) {
-        printf(" agents\n");
-    } else {
-        printf(" agent\n");
+    if (Verbose != 0) {
+        printf("Simulation started with %d", ActualSitParams.NumberOfAgents);   
+        if (ActualSitParams.NumberOfAgents > 1) {
+            printf(" agents\n");
+        } else {
+            printf(" agent\n");
+        }
     }
-    printf("Sizes of the starting area: %1.0f cm x %1.0f cm x %1.0f cm\n",
+    if (Verbose != 0) {
+        printf("Sizes of the starting area: %1.0f cm x %1.0f cm x %1.0f cm\n",
             ActualSitParams.InitialX, ActualSitParams.InitialY,
             ActualSitParams.InitialZ);
-
+    }
+    
     /* Starting main loop of GL environment */
 
         /************************************************************/
@@ -1841,7 +1865,7 @@ int main(int argc, char *argv[]) {
         iluInit();
         ilutRenderer(ILUT_OPENGL);
 #endif
-
+#ifndef SERVER_MODE
         /* Starting of GL loop */
         glutInit(&argc, argv);
 
@@ -1871,7 +1895,7 @@ int main(int argc, char *argv[]) {
         glutPassiveMotionFunc(HandleMouseMotion);
 
         glutMainLoop();
-
+#endif
         /*************************************************************/
 
     } else {
@@ -1885,7 +1909,6 @@ int main(int argc, char *argv[]) {
         double *StatData;
         ConditionsReset[0] = true;
         ConditionsReset[1] = true;
-
         /* Allocating and initializing average and sum stats containers */
         ResetStatistics(&ActualStatistics);
 
@@ -1898,7 +1921,9 @@ int main(int argc, char *argv[]) {
         FILE *OutputModeFile =
                 CheckInputFile(OutputModeFileName, argc, argv, CurrentDirectory,
                 OutputModeFileName, "-outputconf");
-        printf("Using output config: %s\n", OutputModeFileName);
+        if (Verbose != 0) {
+            printf("Using output config: %s\n", OutputModeFileName);
+        }        
         if (OutputModeFile) {
             ReadOutputModes(&(ActualSaveModes), OutputModeFile);
         } else {
@@ -2114,7 +2139,7 @@ int main(int argc, char *argv[]) {
                 && ActualVizParams.ExperimentOver == false) {
 
             if (Now < TimeStepsToStore) {
-
+                
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now,
@@ -2122,7 +2147,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2146,7 +2171,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,

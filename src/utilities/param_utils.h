@@ -351,6 +351,7 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
         int argc,
         int *NumberOfFlockingModelParamSets,
         int *NumberOfUnitModelParamSets,
-        char *argv[], char *CurrentDirectory, char *ParamsFileName);
+        char *argv[], char *CurrentDirectory, char *ParamsFileName,
+        int Verbose);
 
 #endif

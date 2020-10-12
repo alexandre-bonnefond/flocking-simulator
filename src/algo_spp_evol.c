@@ -242,7 +242,7 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
     CREATE_FLOCKING_PARAM(ArenaRadius,
         .Name = "Arena Radius",
         .UnitOfMeas = "m",
-        .Value = 5000.0,
+        .Value = 62500.0,
         .Digits = 1,
         .SizeOfStep = 10.0,
         .Mult = 0.01,
@@ -314,7 +314,7 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
 /* *INDENT-ON* */
 
 void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
-        sit_parameters_t * SitParams) {
+        sit_parameters_t * SitParams, int Verbose) {
 
     char ArenaFilePath[512];
     char ObstaclesFilePath[512];
@@ -328,8 +328,10 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
         if (strcmp(FlockingParams->Inputs[i], "-arena") == 0)
             strcpy(ArenaFilePath, FlockingParams->Inputs[i + 1]);
     }
-    printf("Using arena file: %s\n", ArenaFilePath);
-    ParseArenaFile(ArenaFilePath, &Arenas, 1);
+    if (Verbose != 0) {
+        printf("Using arena file: %s\n", ArenaFilePath);
+    }    
+    ParseArenaFile(ArenaFilePath, &Arenas, 1, Verbose);
 
     /* Load obstacles from obstacle file */
     obstacles.o_count = 0;
@@ -340,8 +342,10 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
         if (strcmp(FlockingParams->Inputs[i], "-obst") == 0)
             strcpy(ObstaclesFilePath, FlockingParams->Inputs[i + 1]);
     }
-    printf("Using obstacle file: %s\n", ObstaclesFilePath);
-    ParseObstacleFile(ObstaclesFilePath, &obstacles);
+    if (Verbose != 0) {
+        printf("Using obstacle file: %s\n", ObstaclesFilePath);
+    }        
+    ParseObstacleFile(ObstaclesFilePath, &obstacles, Verbose);
 
     /* randomize phase within 2D grid arena */
     // Here we assume 1s delay in V_Flock*2
@@ -349,7 +353,7 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
             ArenaCenterX, ArenaCenterY, 0,
             0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
 
-    PlaceAgentsInsideARing(Phase, 15000, 0, Phase->NumberOfAgents,
+    PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
              ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
     /* reset z coordinate in two dimensions */
@@ -525,8 +529,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     NullVect(PotentialVelocity, 3);
     static double AttractionVelocity[3];
     NullVect(AttractionVelocity, 3);
-    static double GradientVelocity[3];
-    NullVect(GradientVelocity, 3);
+    static double GradientAcceleration[3];
+    NullVect(GradientAcceleration, 3);
     static double SlipVelocity[3];
     NullVect(SlipVelocity, 3);
     static double TargetTrackingVelocity[3];
@@ -546,8 +550,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     static double DistanceFromObstVect[3];
     NullVect(DistanceFromObstVect, 3);
     static double NormalizedAgentsVelocity[3];
-    // static double TargetPosition[3];
-    // NullVect(TargetPosition, 3);
+    static double TargetPosition[3];
+    NullVect(TargetPosition, 3);
     static double NormalizedTargetTracking[3];
 
 
@@ -573,15 +577,16 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     else if (Flocking_type == 1) {
         /* Olfati Gradient based term for attraction//repulsion */
-        GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, 2 * R_0, WhichAgent, (int) Dim);
-        UnitVect(GradientVelocity, GradientVelocity);
-        MultiplicateWithScalar(GradientVelocity, GradientVelocity, 200, (int)Dim);
+        GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+            R_0, 3 * R_0, WhichAgent, (int) Dim);
+        // UnitVect(GradientVelocity, GradientVelocity);
+        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
         // GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
         // MultiplicateWithScalar(GradientVelocity, GradientVelocity, 100, (int) Dim);
         // GradientBased(GradientVelocity, Phase, .1, 400, 450, 0.3,
         //  R_0, 50000, WhichAgent, (int) Dim);
         AlignmentOlfati(AlignOlfati, Phase, H_Bump, 2 * R_0, WhichAgent, (int) Dim, Epsilon);
+        // MultiplicateWithScalar(AlignOlfati, AlignOlfati, 5, (int)Dim);
         // TrackingOlfati(TrackOlfati, TargetPosition, velo, Phase, WhichAgent, (int) Dim);
                          
     }
@@ -636,9 +641,10 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     }
 
     else if (Flocking_type == 1) {
-        VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+        VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
         // VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
         VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
     }
 
     
@@ -682,11 +688,10 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     }
 
     else if (Flocking_type == 3) {
-        VectSum(OutputVelocity, OutputVelocity, GradientVelocity);
+        VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     }
     
-    // VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);
 

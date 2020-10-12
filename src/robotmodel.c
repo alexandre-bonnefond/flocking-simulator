@@ -117,6 +117,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     NullVect(RealPosition, 3);
     static double GPSPositionToAdd[3];
     NullVect(GPSPositionToAdd, 3);
+    // printf("%d\n", NumberOfNeighbours);
     for (i = 1; i < NumberOfNeighbours; i++) {
         //printf("id of neighbours is %d\n", LocalActualPhaseToCreate->RealIDs[i]);
         GetAgentsCoordinates(RealPosition, DelayedPhase,
@@ -129,6 +130,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     }
 
     GetAgentsCoordinates(RealPosition, Phase, WhichAgent);
+
     /* Adding term of GPS errors (XY) */
     GetAgentsCoordinates(GPSPositionToAdd, GPSPhase, WhichAgent);       // WhichAgent = RealIDs[0] = 0
     GetAgentsVelocity(GPSVelocityToAdd, GPSPhase, WhichAgent);
@@ -224,16 +226,15 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
      * The units in the array "Phase" ara ordered by the distance from "WhichAgent"th unit.
      * Therefore, Position and velocity of "WhichAgent"th unit is stored in Phase[0] - Phase[5].
      */
-
+    
     static double PreviousVelocity[3];
     GetAgentsVelocity(PreviousVelocity, Phase, 0);
 
     static double TempTarget[3];
-
     for (i = 0; i < Phase->NumberOfInnerStates; i++) {
         OutputInnerState[i] = Phase->InnerStates[0][i];
     }
-
+    // printf("%f\t%f\t%f\n", PreviousVelocity[0], RealVelocity[0], PreferredVelocities[WhichAgent][0]);
     if (TimeStepLooped % ((int) (UnitParams->t_GPS.Value / DeltaT)) == 0) {
 
         /* Calculating target velocity */
@@ -250,6 +251,7 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         }
 
     }
+    // printf("%f\t%d\n", PreferredVelocities[0][0], TimeStepReal);
 
     for (i = 0; i < 2; i++) {
 
@@ -290,8 +292,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
-        bool * AgentsInDanger, double *WindVelocityVector,
-        double *Accelerations, double ** TargetsArray, double **Polygons) {
+        bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations, 
+        double ** TargetsArray, double **Polygons, int Verbose) {
 
     int i, j, k;
     static double CheckVelocityCache[3];
@@ -460,20 +462,22 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             InsertAgentsVelocity(&SteppedPhase, CheckVelocityCache, j);
         }
     }
-
+    #ifndef SERVER_MODE
     /* Redistribution of agents when pressing F12 */
     if (ConditionsReset[0] == true) {
+        // printf("0\n");
         DestroyPhase(&SteppedPhase, FlockingParams, SitParams);
         RandomizePhase(&SteppedPhase, SitParams->InitialX, SitParams->InitialY,
                 SitParams->InitialZ, VizParams->CenterX, VizParams->CenterY,
                 VizParams->CenterZ, 0, SitParams->NumberOfAgents,
                 SitParams->Radius);
-        InitializePhase(&SteppedPhase, FlockingParams, SitParams);
+        InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
         ModelSpecificReset(&SteppedPhase, SitParams->InitialX,
                 SitParams->InitialY, SitParams->InitialZ, VizParams,
                 FlockingParams, SitParams->Radius);
         ConditionsReset[0] = false;
     } else if (ConditionsReset[1] == true) {
+        // printf("1\n");
         if (VizParams->MapSizeXY < SitParams->InitialX
                 || VizParams->MapSizeXY < SitParams->InitialY) {
             DestroyPhase(&SteppedPhase, FlockingParams, SitParams);
@@ -481,7 +485,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                     SitParams->InitialY, SitParams->InitialZ,
                     VizParams->CenterX, VizParams->CenterY, VizParams->CenterZ,
                     0, SitParams->NumberOfAgents, SitParams->Radius);
-            InitializePhase(&SteppedPhase, FlockingParams, SitParams);
+            InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
             ModelSpecificReset(&SteppedPhase,
                     SitParams->InitialX, SitParams->InitialY,
                     SitParams->InitialZ, VizParams, FlockingParams,
@@ -492,14 +496,14 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                     VizParams->MapSizeXY, VizParams->MapSizeZ,
                     VizParams->CenterX, VizParams->CenterY, VizParams->CenterZ,
                     0, SitParams->NumberOfAgents, SitParams->Radius);
-            InitializePhase(&SteppedPhase, FlockingParams, SitParams);
+            InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
             ModelSpecificReset(&SteppedPhase, VizParams->MapSizeXY,
                     VizParams->MapSizeXY, VizParams->MapSizeZ, VizParams,
                     FlockingParams, SitParams->Radius);
         }
         ConditionsReset[1] = false;
     }
-
+    #endif
     /* Insert Phase into PhaseData... */
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
         for (i = 0; i < 3; i++) {

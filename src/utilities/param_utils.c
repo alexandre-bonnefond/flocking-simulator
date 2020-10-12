@@ -730,7 +730,8 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
         int argc,
         int *NumberOfFlockingModelParamSets,
         int *NumberOfUnitModelParamSets,
-        char *argv[], char *CurrentDirectory, char *ParamsFileName) {
+        char *argv[], char *CurrentDirectory, char *ParamsFileName,
+        int Verbose) {
 
     FILE *ParamsFile;
     int i, j;
@@ -743,7 +744,9 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
     if (0 == (*NumberOfUnitModelParamSets)) {
         strcpy(ParamsFileName, CurrentDirectory);
         strcat(ParamsFileName, "/parameters/unitparams.dat\0");
-        printf("Using unitparams: %s\n", ParamsFileName);
+        if (Verbose != 0) {
+            printf("Using unitparams: %s\n", ParamsFileName);
+        }        
         ParamsFile = fopen(ParamsFileName, "r");
         if (ParamsFile) {
             strcpy(UnitParamSets[*NumberOfUnitModelParamSets].FileName,
@@ -765,7 +768,9 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
         if (strcmp(argv[i + 1], ParamsFileName) == 0)
             continue;
         if (strcmp(argv[i], "-u") == 0) {
-            printf("Using unitparams: %s\n", argv[i + 1]);
+            if (Verbose != 0) {
+                printf("Using unitparams: %s\n", argv[i + 1]);
+            }            
             ParamsFile = fopen(argv[i + 1], "r");
             if (ParamsFile) {
                 strcpy(UnitParamSets[*NumberOfUnitModelParamSets].FileName,
@@ -791,7 +796,9 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
     if (0 == (*NumberOfFlockingModelParamSets)) {
         strcpy(ParamsFileName, CurrentDirectory);
         strcat(ParamsFileName, "/parameters/flockingparams.dat\0");
-        printf("Using flockingparams: %s\n", ParamsFileName);
+        if (Verbose != 0) {
+            printf("Using flockingparams: %s\n", ParamsFileName);
+        }        
         ParamsFile = fopen(ParamsFileName, "r");
         if (ParamsFile) {
             strcpy(FlockingParamSets[*NumberOfFlockingModelParamSets].FileName,
@@ -812,7 +819,9 @@ bool FillParameterSetsFromFile(flocking_model_params_t * FlockingParamSets,
         if (strcmp(argv[i + 1], ParamsFileName) == 0)
             continue;
         if (strcmp(argv[i], "-f") == 0) {
-            printf("Using flockingparams: %s\n", argv[i + 1]);
+            if (Verbose != 0) {
+                printf("Using flockingparams: %s\n", argv[i + 1]);
+            }            
             ParamsFile = fopen(argv[i + 1], "r");
             if (ParamsFile) {
                 strcpy(FlockingParamSets

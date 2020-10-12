@@ -61,7 +61,7 @@ static int ArenaCallback(void *user, const char *section, const char *name,
 }
 
 int ParseArenaFile(const char *name, arenas_t * arenas,
-        bool define_circle_and_square) {
+        bool define_circle_and_square, int Verbose) {
     int result;
     memset(arenas, 0, sizeof(arenas_t));
     if (define_circle_and_square) {
@@ -86,7 +86,9 @@ int ParseArenaFile(const char *name, arenas_t * arenas,
     result = IniParse(name, ArenaCallback, arenas);
     if (result)
         printf("Error occured while reading row %d of arena file! \n", result);
-    printf("Parsed %d arenas\n", arenas->a_count);
+    if (Verbose != 0) {
+        printf("Parsed %d arenas\n", arenas->a_count);
+    }    
     return arenas->a_count;
 }
 
