@@ -372,10 +372,10 @@ void DrawSensorRangeNetwork_3D(phase_t * PhaseData,
                     i, Now);
             VectDifference(DifferenceVector, ActualAgentsCoordinates,
                     NeighboursCoordinates);
+        //     if (VectAbs(DifferenceVector) < SensorRangeToDisplay) {
             if (VectAbs(DifferenceVector) < SensorRangeToDisplay &&
-                        PhaseData[Now].Laplacian[WhichAgent][i] >=
-                        pow(10, PowerThreshold / 10) * 1000) {
-
+                        PhaseData[Now].Laplacian[WhichAgent][i] >= PowerThreshold) {
+                
                 glColor3f(color[0], color[1], color[2]);
 
                 glBegin(GL_LINES);

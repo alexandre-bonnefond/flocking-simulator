@@ -14,7 +14,7 @@ CANCEL_FLAGS := -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-v
 
 ##############
 
-# Optim mode, only for server use (without vizualisation)
+# Optim mode, only for server use (without vizualisation) make optim server=true
 ifeq ($(SERVER_MODE), true)
  GCC := gcc src/robotsim_main.c src/utilities/datastructs.c src/utilities/dynamics_utils.c src/utilities/math_utils.c \
   src/utilities/file_utils.c src/utilities/param_utils.c src/sensors.c src/robotmodel.c src/utilities/arenas.c src/stat.c \

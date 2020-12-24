@@ -2490,9 +2490,9 @@ int main(int argc, char *argv[]) {
     freePhase(&GPSPhase);
     freePhase(&GPSDelayedPhase);
 
-    for (i = 0; i < 1 + TimeStepsToStore; i++) {
-        freePhase(&(PhaseData[i]));
-    }
+    // for (i = 0; i < 1 + TimeStepsToStore; i++) {
+    //     freePhase(&(PhaseData[i]));
+    // }
     free(PhaseData);
 
     return 1;

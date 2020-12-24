@@ -304,7 +304,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(CheckDifferenceCache, 3);
     static double UnitVectDifference[3];
     NullVect(UnitVectDifference, 3);
-
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
 
@@ -462,19 +461,19 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             InsertAgentsVelocity(&SteppedPhase, CheckVelocityCache, j);
         }
     }
-    #ifndef SERVER_MODE
     /* Redistribution of agents when pressing F12 */
     if (ConditionsReset[0] == true) {
         // printf("0\n");
+
         DestroyPhase(&SteppedPhase, FlockingParams, SitParams);
         RandomizePhase(&SteppedPhase, SitParams->InitialX, SitParams->InitialY,
                 SitParams->InitialZ, VizParams->CenterX, VizParams->CenterY,
                 VizParams->CenterZ, 0, SitParams->NumberOfAgents,
                 SitParams->Radius);
         InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
-        ModelSpecificReset(&SteppedPhase, SitParams->InitialX,
-                SitParams->InitialY, SitParams->InitialZ, VizParams,
-                FlockingParams, SitParams->Radius);
+        // ModelSpecificReset(&SteppedPhase, SitParams->InitialX,
+        //         SitParams->InitialY, SitParams->InitialZ, VizParams,
+        //         FlockingParams, SitParams->Radius);
         ConditionsReset[0] = false;
     } else if (ConditionsReset[1] == true) {
         // printf("1\n");
@@ -486,10 +485,10 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                     VizParams->CenterX, VizParams->CenterY, VizParams->CenterZ,
                     0, SitParams->NumberOfAgents, SitParams->Radius);
             InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
-            ModelSpecificReset(&SteppedPhase,
-                    SitParams->InitialX, SitParams->InitialY,
-                    SitParams->InitialZ, VizParams, FlockingParams,
-                    SitParams->Radius);
+            // ModelSpecificReset(&SteppedPhase,
+            //         SitParams->InitialX, SitParams->InitialY,
+            //         SitParams->InitialZ, VizParams, FlockingParams,
+            //         SitParams->Radius);
         } else {
             DestroyPhase(&SteppedPhase, FlockingParams, SitParams);
             RandomizePhase(&SteppedPhase, VizParams->MapSizeXY,
@@ -497,13 +496,12 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                     VizParams->CenterX, VizParams->CenterY, VizParams->CenterZ,
                     0, SitParams->NumberOfAgents, SitParams->Radius);
             InitializePhase(&SteppedPhase, FlockingParams, SitParams, Verbose);
-            ModelSpecificReset(&SteppedPhase, VizParams->MapSizeXY,
-                    VizParams->MapSizeXY, VizParams->MapSizeZ, VizParams,
-                    FlockingParams, SitParams->Radius);
+            // ModelSpecificReset(&SteppedPhase, VizParams->MapSizeXY,
+            //         VizParams->MapSizeXY, VizParams->MapSizeZ, VizParams,
+            //         FlockingParams, SitParams->Radius);
         }
         ConditionsReset[1] = false;
     }
-    #endif
     /* Insert Phase into PhaseData... */
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
         for (i = 0; i < 3; i++) {

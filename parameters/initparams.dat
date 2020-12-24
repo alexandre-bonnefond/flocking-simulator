@@ -22,4 +22,4 @@ LengthToStore=15.0
 #
 # Default speed of visualization
 VizSpeedUp=40
-StartOfSteadyState=0
+StartOfSteadyState=10

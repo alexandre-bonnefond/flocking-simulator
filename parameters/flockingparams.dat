@@ -31,9 +31,9 @@ H_Bump=0.280000
 # Epsilon (-)
 Epsilon=0.100000
 # A Action Function (m)
-A_Action_Function=4.000000
+A_Action_Function=10.000000
 # B Action Function (m)
-B_Action_Function=5.000000
+B_Action_Function=37.000000
 # Size of neighbourhood (-)
 Size_Neighbourhood=6.000000
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)

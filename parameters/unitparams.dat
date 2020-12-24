@@ -11,11 +11,9 @@ t_del=0.200000
 t_GPS=0.200000
 # Parameters of inner noises (cm^2 / s^2)
 Sigma_GPS_XY=50.000000
-#Sigma_GPS_XY=0.000000
 Sigma_GPS_Z=0.000000
 # Parameters of outer noises (cm^2 / s^3)
 Sigma_outer_XY=2000.000000
-#Sigma_outer_XY=0.000000
 Sigma_outer_Z=0.000000
 Wind_Magn_Avg=0.000000
 Wind_StDev=0.000000

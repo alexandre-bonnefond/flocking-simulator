@@ -137,7 +137,7 @@ void AttractionLin(double *OutputVelocity,
 
     static double DifferenceVector[3];
     static double DistanceFromNeighbour;
-    /* Repulsive interaction term */
+    /* Attractive interaction term */
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         if (i == WhichAgent)
             continue;
