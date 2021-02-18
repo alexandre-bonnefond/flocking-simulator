@@ -28,11 +28,21 @@ void RepulsionLin(double *OutputVelocity,
         const double R_0_l, const int WhichAgent, const int Dim_l,
         const bool normalize);
 
+void RepulsionPowLin(double *OutputVelocity,
+        phase_t * Phase, const double ActualTime, const double V_Rep_l, const double p_l,
+        const double RP_max, const int WhichAgent, const int Dim_l,
+        const bool normalize);
+        
 /* attraction */
 
 void AttractionLin(double *OutputVelocity,
         phase_t * Phase, const double V_Rep_l, const double p_l,
         const double R_0_l, const int WhichAgent, const int Dim_l,
+        const bool normalize);
+
+void AttractionPowLin(double *OutputVelocity,
+        phase_t * Phase, const double ActualTime, const double V_Rep_l, const double p_l,
+        const double RP_min, const int WhichAgent, const int Dim_l,
         const bool normalize);
 
 

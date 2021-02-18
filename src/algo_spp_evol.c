@@ -74,6 +74,31 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Min = 0.0,
         .Max = 2e222
     );
+
+    /* Max Power before doing repulsion */
+    CREATE_FLOCKING_PARAM(RP_MAX,
+        .Name = "Power before Rep",
+        .UnitOfMeas = "dBm",
+        .Value = -50.0,
+        .Digits = 2,
+        .SizeOfStep = 1,
+        .Mult = 1,
+        .Min = -55.0,
+        .Max = 0.0
+    );
+
+    /* Min Power before doing attraction */
+    CREATE_FLOCKING_PARAM(RP_MIN,
+        .Name = "Power before Att",
+        .UnitOfMeas = "dBm",
+        .Value = -55.0,
+        .Digits = 2,
+        .SizeOfStep = 1,
+        .Mult = 1,
+        .Min = -70.0,
+        .Max = -50.0
+    );
+
     /* Distance of friction relative to repulsion below which we only allow
        friction velocity slack and above which we use the linsqrt breaking
        curve to determine maximal allowed velocity difference */
@@ -513,10 +538,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     AgentsCoordinates = Phase->Coordinates[WhichAgent];
     double *AgentsVelocity;
     AgentsVelocity = Phase->Velocities[WhichAgent];
-
     double velo[3];
     NullVect(velo, 3);
-
     static int ActualTargetID;
 
     if (WhichTarget == 0) { ActualTargetID = 0; }
@@ -553,7 +576,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     static double TargetPosition[3];
     NullVect(TargetPosition, 3);
     static double NormalizedTargetTracking[3];
-
+    static double test1[3];
+    static double test2[3];
 
 
     /* SPP term */
@@ -567,13 +591,29 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     if (Flocking_type == 0) {
         /* Repulsion */
-        RepulsionLin(PotentialVelocity, Phase, V_Rep,
+        RepulsionLin(test1, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
         /* Attraction */
-        AttractionLin(AttractionVelocity, Phase, V_Rep,
+        AttractionLin(test2, Phase, V_Rep,
                 Slope_Att, R_0 + 45, WhichAgent, (int) Dim, false);
+        
+        /* Repulsion */
+
+        RepulsionPowLin(PotentialVelocity, Phase, ActualTime, V_Rep,
+                300, RP_MAX, WhichAgent, (int) Dim, false);
+
+        /* Attraction */
+        AttractionPowLin(AttractionVelocity, Phase, ActualTime, V_Rep,
+                30, RP_MIN, WhichAgent, (int) Dim, false);
+
+        GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+            R_0, 3 * R_0, WhichAgent, (int) Dim);
+        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
+        
+        // printf("%f\t%f\t%f\t%f\t%f\n", VectAbs(test1), VectAbs(PotentialVelocity), VectAbs(test2), VectAbs(AttractionVelocity), VectAbs(GradientAcceleration));
     }
+
 
     else if (Flocking_type == 1) {
         /* Olfati Gradient based term for attraction//repulsion */

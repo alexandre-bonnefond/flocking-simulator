@@ -18,13 +18,13 @@ CANCEL_FLAGS := -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-v
 ifeq ($(SERVER_MODE), true)
  GCC := gcc src/robotsim_main.c src/utilities/datastructs.c src/utilities/dynamics_utils.c src/utilities/math_utils.c \
   src/utilities/file_utils.c src/utilities/param_utils.c src/sensors.c src/robotmodel.c src/utilities/arenas.c src/stat.c \
-  src/utilities/output_utils.c src/utilities/debug_utils.c
+  src/utilities/output_utils.c src/utilities/debug_utils.c src/utilities/stack.c src/utilities/data_struct.c
  GCC += $(DEFAULT_FLAGS) $(ERROR_FLAGS) $(CANCEL_FLAGS) -DSERVER_MODE -o robotflocksim_main_server
 else
  GCC := gcc src/robotsim_main.c src/utilities/datastructs.c src/utilities/dynamics_utils.c src/utilities/math_utils.c \
   src/utilities/file_utils.c src/utilities/param_utils.c src/sensors.c src/robotmodel.c src/colors.c src/vizualizer/objects_2d.c \
   src/objects_menu.c src/utilities/arenas.c src/vizualizer/objects_3d.c src/stat.c src/dynspecviz.c src/utilities/output_utils.c \
-  src/utilities/debug_utils.c
+  src/utilities/debug_utils.c src/utilities/stack.c src/utilities/data_struct.c
  GCC += $(DEFAULT_FLAGS) $(VIZUALIZER_FLAGS) $(ERROR_FLAGS) $(CANCEL_FLAGS) -o robotflocksim_main -pg
 endif
 

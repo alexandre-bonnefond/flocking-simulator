@@ -124,10 +124,14 @@ void DrawMenuItemsOfUnitModel(const unit_model_params_t * UnitParams,
             0.8 - HEIGHT_OF_MENU_ITEM * 15 - Offset, color);
     DrawMenuItemOfUnitModel('h', &UnitParams->sensitivity_thresh, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM * 16 - Offset, color);
-    DrawMenuItemOfUnitModel('i', &UnitParams->communication_type, 1, 1.0,
+    DrawMenuItemOfUnitModel('i', &UnitParams->smoothing, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM * 17 - Offset, color);
-    DrawMenuItemOfUnitModel('j', &UnitParams->flocking_type, 1, 1.0,
+    DrawMenuItemOfUnitModel('j', &UnitParams->depthEMA, 2, 1.0,
             0.8 - HEIGHT_OF_MENU_ITEM * 18 - Offset, color);
+    DrawMenuItemOfUnitModel('k', &UnitParams->communication_type, 1, 1.0,
+            0.8 - HEIGHT_OF_MENU_ITEM * 19 - Offset, color);
+    DrawMenuItemOfUnitModel('l', &UnitParams->flocking_type, 1, 1.0,
+            0.8 - HEIGHT_OF_MENU_ITEM * 20 - Offset, color);
 
 }
 

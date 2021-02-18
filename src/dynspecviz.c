@@ -135,12 +135,10 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
         float * RedColor;
         RedColor = Red;
-
         double *ActualAgentsCoordinates;
         ActualAgentsCoordinates = PhaseData[Now].Coordinates[WhichAgent];
         GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
                 WhichAgent, Now);
-
         bool DrawCircles = false;
         if (DrawCircles == true){
                 DrawCircle(RealToGlCoord_2D(ActualAgentsCoordinates[0] - VizParams->CenterX , VizParams->MapSizeXY),

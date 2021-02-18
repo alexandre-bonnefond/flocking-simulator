@@ -137,6 +137,8 @@ typedef struct {
     unit_param_double_t transmit_power;
     unit_param_double_t freq;
     unit_param_double_t sensitivity_thresh;
+    unit_param_double_t smoothing;
+    unit_param_double_t depthEMA;
 
     /* Hyperparameters */
     unit_param_double_t communication_type;
@@ -276,6 +278,9 @@ typedef struct {
 
     /* Number of clusters */
     int NumberOfClusters;
+
+    /* Resolution for the CBP */
+    int Resolution;
 
 } sit_parameters_t;
 

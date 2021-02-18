@@ -107,7 +107,6 @@ void RepulsionLin(double *OutputVelocity,
 
         MultiplicateWithScalar(DifferenceVector, DifferenceVector,
                 SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
-
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 
@@ -134,13 +133,14 @@ void AttractionLin(double *OutputVelocity,
     double *NeighboursCoordinates;
     // printf("nb agents = %d\n", Phase->NumberOfAgents);
     AgentsCoordinates = Phase->Coordinates[WhichAgent];
-
+    
     static double DifferenceVector[3];
     static double DistanceFromNeighbour;
     /* Attractive interaction term */
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         if (i == WhichAgent)
             continue;
+        
         NeighboursCoordinates = Phase->Coordinates[i];
         VectDifference(DifferenceVector, AgentsCoordinates,
                 NeighboursCoordinates);
@@ -157,7 +157,109 @@ void AttractionLin(double *OutputVelocity,
 
         MultiplicateWithScalar(DifferenceVector, DifferenceVector,
                 SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
+        VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+    }
 
+    /* divide result by number of interacting units */
+    if (normalize && n > 1) {
+        double length = VectAbs(OutputVelocity) / n;
+        UnitVect(OutputVelocity, OutputVelocity);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, length, Dim_l);
+    }
+    //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
+}
+
+void RepulsionPowLin(double *OutputVelocity,
+        phase_t * Phase, const double ActualTime, const double V_Rep_l, const double p_l,
+        const double RP_max, const int WhichAgent, const int Dim_l,
+        const bool normalize) {
+
+    NullVect(OutputVelocity, 3);
+
+    int i;
+    int n = 0;
+
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+
+    AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+    // for (i = 0; i < 3; i++){
+    //     for (j = 0; j < 3; j++){
+    //         printf("%f\t", Phase->EMA[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n\n\n\n");
+
+    static double DifferenceVector[3];
+    // printf("%d\n", Phase->NumberOfAgents);
+    /* Repulsive interaction term */
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+        if (i == WhichAgent)
+            continue;
+        // printf("%f\t%d\t%d\n", Phase->EMA[WhichAgent][i], Phase->RealIDs[WhichAgent], Phase->RealIDs[i]);
+        NeighboursCoordinates = Phase->Coordinates[i];
+        VectDifference(DifferenceVector, NeighboursCoordinates,
+            AgentsCoordinates);
+        if (2 == Dim_l) {
+            DifferenceVector[2] = 0.0;
+        }
+        /* Check if we interact at all */
+        if (Phase->EMA[WhichAgent][i] <= RP_max)
+            continue;
+        n += 1;
+
+        UnitVect(DifferenceVector, DifferenceVector);
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector,
+                SigmoidLin(Phase->EMA[WhichAgent][i], p_l, V_Rep_l, RP_max), Dim_l);
+        VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+    }
+
+    /* divide result by number of interacting units */
+    if (normalize && n > 1) {
+        double length = VectAbs(OutputVelocity) / n;
+        UnitVect(OutputVelocity, OutputVelocity);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, length, Dim_l);
+    }
+    //printf("Number of Repulsive neighbours: %d Norm of repulsive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
+}
+
+void AttractionPowLin(double *OutputVelocity,
+        phase_t * Phase, const double ActualTime, const double V_Rep_l, const double p_l,
+        const double RP_min, const int WhichAgent, const int Dim_l,
+        const bool normalize) {
+
+    NullVect(OutputVelocity, 3);
+
+    int i;
+    int n = 0;
+
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+    // printf("nb agents = %d\n", Phase->NumberOfAgents);
+    AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+    static double DifferenceVector[3];
+    /* Attractive interaction term */
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+        if (i == WhichAgent)
+            continue;
+        NeighboursCoordinates = Phase->Coordinates[i];
+        VectDifference(DifferenceVector, NeighboursCoordinates,
+            AgentsCoordinates);
+        if (2 == Dim_l) {
+            DifferenceVector[2] = 0.0;
+        }
+        // printf("%f\t%d\t%d\n", Phase->EMA[WhichAgent][i], Phase->RealIDs[WhichAgent], Phase->RealIDs[i]);
+        /* Check if we interact at all */
+        if (Phase->EMA[WhichAgent][i] >= RP_min)
+            continue;
+        n += 1;
+
+        UnitVect(DifferenceVector, DifferenceVector);
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector,
+                SigmoidLin(Phase->EMA[WhichAgent][i], p_l, V_Rep_l, RP_min), Dim_l);
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 
@@ -227,7 +329,6 @@ void GradientBased(double *OutputVelocity,
             PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * ActionFunction(SigmaDistance - SigmaD, a, b);
 
             MultiplicateWithScalar(DifferenceVector, GradVector, PhiAlpha, Dim_l);
-            
             VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
             
         }

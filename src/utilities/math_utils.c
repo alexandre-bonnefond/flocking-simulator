@@ -11,6 +11,7 @@
 #include "math_utils.h"
 #include "datastructs.h"
 
+
 #define MAX(a,b) ((a>b)?a:b)
 #define MIN(a,b) ((a<b)?a:b)
 
@@ -732,6 +733,12 @@ void PowerFuncMatrix(double **Res, double **Mat, const int N,
 
 /* Other useful tools */
 
+double EMA(double x_current, double x_previous, double smoothing, int width) {
+    double multiplier = smoothing / (1 + width);
+    return x_current * multiplier + x_previous * (1 - multiplier);
+}
+
+
 double ClampScalar(const double x, const double x_min, const double x_max) {
     if (x <= x_min)
         return x_min;
@@ -1422,3 +1429,85 @@ bool TwoPointsOnSameSideOfAPoint(double *Point1, double *Point2,
     return (ScalarProduct(Temp1, Temp2, 3) >= 0);
 }
 
+double polygonArea(double *X, double *Y, int n)
+{
+    // Initialze area
+    double area = 0.0;
+ 
+    // Calculate value of shoelace formula
+    int j = n - 1;
+    for (int i = 0; i < n; i++)
+    {
+        area += (X[j] + X[i]) * (Y[j] - Y[i]);
+        j = i;  // j is previous vertex to i
+    }
+    // Return absolute value
+    return fabs(area / 2.0);
+}
+
+
+// Returns a node pointer to the first node in a stack containing
+// the list of points in the convex hull
+node *convex_hull(point_xy *points, int n)
+{
+    // Initiate global point's x and y values,
+    // initiate hull pointer
+    p0.x = 0;
+    p0.y = 0;
+    node* hull = NULL;
+    int i;
+    point_xy temp_pnt;
+    // If the given amount of points is less than 3,
+    // generating a convex hull is impossible
+    if (n < 3)
+    {
+        return hull;
+    }
+
+    // Find the coordinate with the smallest y-value. Ties are broken
+    // by comparing the x-value.
+    int ymin, min;
+    ymin = points[0].y;
+    min = 0;
+    for(i = 1; i < n; ++i)
+    {
+        int y = points[i].y;
+        if ((y < ymin) || (ymin == y && points[i].x < points[min].x))
+        {
+            ymin = points[i].y;
+            min = i;
+        }
+    }
+    
+    // Place the point with the smallest y-value in the beginning.
+    // This will be used to compare against the other points and sort
+    // by polar angle.
+    swap(&points[0], &points[min]);
+    p0 = points[0];
+
+    // Use the built-in quicksort function beginning with the 2nd element.
+    // The compare function can be found in data_struct.c 
+    qsort(&points[1], n-1, sizeof(point_xy), compare);
+
+    // Push the first three points into the output stack to compare 
+    // orientation.
+    stack_push(&hull, &points[0]);
+    stack_push(&hull, &points[1]);
+    stack_push(&hull, &points[2]);
+    for(i = 3; i < n; ++i)
+    {
+        // While the orientation isn't valid, pop points from the stack 
+        while(orientation(stack_next_to_top(hull), stack_peek(hull), &points[i]) != 2)
+        {
+            stack_pop(&hull);
+        }
+        // Push the current point onto the stack
+        temp_pnt = points[i];
+        stack_push(&hull, &points[i]);
+        // stack_push(&hull, &temp_pnt);
+    }
+    printf("%f\n", temp_pnt.x);
+
+    // Return the convex hull
+    return hull;
+}

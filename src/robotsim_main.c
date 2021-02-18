@@ -83,6 +83,12 @@ static double WindVelocityVector[2];
 /* For comm attenuation */
 double **Polygons;
 
+/* Convex hull */
+// node *Hull;
+
+/* Resolution for the CBP (communication based perception) */
+// int Resolution = 25;
+
 // Temporary...
 static bool HighRes = true;
 
@@ -259,97 +265,33 @@ void DisplayMenu() {
 
 /* Display some stats on a chart */
 void DisplayChart() {
-
+    int i,j;
+    int Resolution;
+    Resolution = ActualSitParams.Resolution;
+    float yellow[3];
+    yellow[0] = 1; yellow[1]= 1; yellow[2] = 0;
+    float green[3];
+    green[0] = 0; green[1]= 1; green[2] = 0;
+    double xsize = 0, ysize = 0;
+    double step = 2.0 / Resolution;
     glClearColor(ActualColorConfig.EraseColor[0],
-            ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2],
-            1.0f);
+            ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
-    
-    static int ii = 0;
+    DrawSquare(Resolution);
+    for (i = 0; i < Resolution; i++) {
+        xsize = 0;
 
-    int size = (int) (((STORED_TIME) / ActualSitParams.DeltaT) - 1.0);
-
-    struct point graph[size];
-
-    double max = -2e222;
-    double min = 2e222;
-
-    for (int i = 0; i < size; i++) {
-        graph[i].x = i;
-        graph[i].y = cos(i);
-        // graph[i].y = PhaseData[i].Laplacian[2][3] + cos(ii);
-
-        if (graph[i].y < min) {
-            min = graph[i].y;
+        for (j = 0; j < Resolution; j++) {
+            if (ActualPhase.CBP[i][j] == 1) {
+                // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
+                DrawFullCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, green);
+                // glFlush();
+            }
+            xsize += step;
         }
-        if (graph[i].y > max) {
-            max =  graph[i].y;
-        }
+        ysize += step;
     }
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, size - 1000, 0, 1, -1, 1);
-    glBegin(GL_LINE_STRIP);
-    glVertex2f(0.0f, -50.0f);
-    for(int i = 0; i < Now - 1; i++) {
-        glVertex2f(graph[i].x, graph[i].y); 
-    }
-    glEnd();        
-
-    // glViewport(0, 0, 300, 1);
-    
-    // int window_width = glutGet(GLUT_WINDOW_WIDTH);
-    // int window_height = glutGet(GLUT_WINDOW_HEIGHT);
-    // int MapeSize = size;
-
-    // static struct point box[4] = {{-20, -10}, {20, -10}, {20, 10}, {-20, 10}};
-    // glBufferData(GL_ARRAY_BUFFER, sizeof box, box, GL_STATIC_DRAW);
-
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glVertexPointer(2, GL_FLOAT, 0, box);
-    // glDrawArrays(GL_LINE_LOOP, 0, 4);
-    // glDisableClientState(GL_VERTEX_ARRAY);
-
-    // int size = (int) (((STORED_TIME) / ActualSitParams.DeltaT) - 1.0);
-    
-    // struct point graph[size];
-
-    // for(int i = 0; i < size; i++) {
-    //     float x = (i - size/2) / 100;
-    //     graph[i].x = x;
-    //     //graph[i].y = 20 * (sin(x + ii) + 1)/2 -10;
-    //     graph[i].y =  20 * (PhaseData[i].Laplacian[1][5] + 90) / (30) - 10;
-    //     printf("%f\n", graph[i].y);
-    // }
-
-    // glEnableClientState(GL_VERTEX_ARRAY);
-    // glVertexPointer(2, GL_FLOAT, 0, graph);
-    // glDrawArrays(GL_LINE_STRIP, 0, size);
-    // glDisableClientState(GL_VERTEX_ARRAY);
-    
-
-    
-    // gluOrtho2D(0, 600, 0, 400);
-    // glMatrixMode(GL_MODELVIEW);
-    // GLuint vbo;
-    // GLint attribute_coord2d;
-    // glGenBuffers(1, &vbo);
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof graph, graph, GL_STREAM_DRAW);
-
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    
-    // glEnableVertexAttribArray(attribute_coord2d);
-    // glVertexAttribPointer(attribute_coord2d, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // glDrawArrays(GL_LINE_STRIP, 0, 2000);
-    // glDisableVertexAttribArray(attribute_coord2d);
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // glFlush();
     glutSwapBuffers();
-    
-    ii++;
 }
 
 /* Displaying quadcopters */
@@ -377,6 +319,34 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         DrawModelSpecificObjects_2D(Phase, &ActualFlockingParams,
                 &ActualUnitParams, &ActualVizParams, &ActualColorConfig,
                 &ActualSitParams);
+
+
+        /* Setting up size of the coordinate system */
+        // LengthOfAxis = RealToGlCoord_2D(ArenaRadius, ActualVizParams.MapSizeXY);
+        // TicDensity = RealToGlCoord_2D(2000.0, ActualVizParams.MapSizeXY);
+        // HowManyTics = (int) LengthOfAxis / TicDensity;
+        // // HowManyTics = (int) HowManyTics *1.5;
+
+        // /* Drawing ground */
+        // glColor3f(ActualColorConfig.AxisColor[0],
+        //         ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
+        // glBegin(GL_LINES);
+        // for (i = -HowManyTics; i < HowManyTics; i++) {
+        //     // glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
+        //     // glVertex2d(i * TicDensity, LengthOfAxis);
+        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
+        //         RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
+        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
+        //         RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
+
+        // }
+        // for (i = -HowManyTics; i < HowManyTics; i++) {
+
+        //     glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
+        //     glVertex2d(LengthOfAxis, i * TicDensity);
+
+        // }
+        // glEnd();
 
         /* Draw target */
         if (ActualUnitParams.flocking_type.Value == 2) {
@@ -601,6 +571,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         /* Setting up size of the coordinate system */
         LengthOfAxis = RealToGlCoord_3D(100000.0, ActualVizParams.MapSizeXY);
         TicDensity = RealToGlCoord_3D(2000.0, ActualVizParams.MapSizeXY);
+
         HowManyTics = (int) LengthOfAxis / TicDensity;
         HowManyTics = (int) HowManyTics *1.5;
 
@@ -696,6 +667,13 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
     }
 
+}
+
+/* Update the PCB */
+void UpdatePCB() {
+    glutSetWindow(StatWindow);
+    glOrtho(-50.0, 50.0, -50.0, 50.0, -1.0, 1.0);
+    glutPostRedisplay();
 }
 
 /* Refreshing menu system */
@@ -796,7 +774,6 @@ void DisplayTrajs() {
         DrawString(0.4, 0.95, GLUT_BITMAP_9_BY_15, FollowingLabel,
                 ActualColorConfig.MenuSelectionColor);
     }
-
     /* Drawing Length scale */
     if (ActualVizParams.TwoDimViz == true) {
 
@@ -927,7 +904,9 @@ void UpdatePositionsToDisplay() {
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
+                // stack_print(Hull);
+                // printf("\n");
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -936,7 +915,7 @@ void UpdatePositionsToDisplay() {
                 /* Inserting output phase of the "step" function into the
                  * globally-allocated PhaseData and InnerStatesTimeLine
                  */
-                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
+                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
 
             } else {
@@ -951,7 +930,7 @@ void UpdatePositionsToDisplay() {
                         &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -963,7 +942,7 @@ void UpdatePositionsToDisplay() {
                  */
                 Now = (int) ((20.0 / ActualSitParams.DeltaT) - 1.0);
 
-                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
+                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
 
             }
@@ -1073,7 +1052,7 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
 
     }
     /* Displayed parameterset can be changed by pressing 'm' */
-    else if (key == 'm') {
+    else if (key == 'z') {
         ActualVizParams.UnitParamsDisplayed =
                 !ActualVizParams.UnitParamsDisplayed;
         ActualVizParams.FlockingParamsDisplayed =
@@ -1158,10 +1137,10 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
         /* Generating integer from hexadecimal string */
         char key_temp[1];
         key_temp[0] = key;
-        int keyint = strtol(key_temp, NULL, 20);
+        int keyint = strtol(key_temp, NULL, 23);
         if (ActualVizParams.UnitParamsDisplayed == true) {
 
-            if (keyint <= 19 && keyint > 0) {
+            if (keyint <= 21 && keyint > 0) {
                 ActualVizParams.WhichParamIsSelected = keyint;
             }
 
@@ -1627,7 +1606,6 @@ int main(int argc, char *argv[]) {
             Verbose = atoi(argv[i + 1]);
         }
     }
-    //printf("%d", Verbose);
 
 
     /* Initializing output directories */
@@ -1790,11 +1768,11 @@ int main(int argc, char *argv[]) {
     /* Allocating phasespace for actual and delayed timestep */
     /* Creating inner states */
     AllocatePhase(&ActualPhase, ActualSitParams.NumberOfAgents,
-            ActualFlockingParams.NumberOfInnerStates);
+            ActualFlockingParams.NumberOfInnerStates, ActualSitParams.Resolution);
 
     /* Allocating phasespace for GPS signals */
-    AllocatePhase(&GPSPhase, ActualSitParams.NumberOfAgents, 0);
-    AllocatePhase(&GPSDelayedPhase, ActualSitParams.NumberOfAgents, 0);
+    AllocatePhase(&GPSPhase, ActualSitParams.NumberOfAgents, 0, ActualSitParams.Resolution);
+    AllocatePhase(&GPSDelayedPhase, ActualSitParams.NumberOfAgents, 0, ActualSitParams.Resolution);
 
     /* Allocating a matrix containing all necessary phase data (real) */
     int TimeStepsToStore =
@@ -1802,7 +1780,7 @@ int main(int argc, char *argv[]) {
     PhaseData = (phase_t *) calloc(1 + TimeStepsToStore, sizeof(phase_t));
     for (i = 0; i < 1 + TimeStepsToStore; i++) {
         AllocatePhase(&(PhaseData[i]), ActualSitParams.NumberOfAgents,
-                ActualPhase.NumberOfInnerStates);
+                ActualPhase.NumberOfInnerStates, ActualSitParams.Resolution);
     }
     AgentsInDanger = BooleanData(ActualSitParams.NumberOfAgents);
     InitializePreferredVelocities(&ActualPhase, &ActualFlockingParams,
@@ -1869,7 +1847,7 @@ int main(int argc, char *argv[]) {
         /* Starting of GL loop */
         glutInit(&argc, argv);
 
-        DisplayWindow(400, ActualVizParams.Resolution + 150,
+        DisplayWindow(400, ActualVizParams.Resolution + 250,
                 ActualVizParams.Resolution + 65, 0);
         MenuWindowID = glutCreateWindow("Parameters of actual model");
         glutDisplayFunc(DisplayMenu);
@@ -1877,10 +1855,11 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        // DisplayWindow(600, 400, ActualVizParams.Resolution + 65 + 400, 0);
-        // StatWindow = glutCreateWindow("Actual received power");
+        // DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
+        // StatWindow = glutCreateWindow("Obstacle Probability Map");
+        // glutIdleFunc(UpdatePCB);
         // glutDisplayFunc(DisplayChart);
-        // glutMouseFunc(HandleMouse2);
+        
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
                 0);
@@ -2147,13 +2126,13 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
                         ActualStatUtils.ElapsedTime,
                         ActualStatUtils.OutputDirectory);
-                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
+                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
 
             } else {
@@ -2171,7 +2150,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2180,7 +2159,7 @@ int main(int argc, char *argv[]) {
 
                 Now = (int) ((20.0 / ActualSitParams.DeltaT) - 1.0);
 
-                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1);
+                InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
 
             }
@@ -2483,16 +2462,16 @@ int main(int argc, char *argv[]) {
             free(ActualColorConfig.AgentsColor[i]);
         }
     }
-
+    // stack_free(&Hull);
     free(ActualColorConfig.AgentsColor);
     free(AgentsInDanger);
-    freePhase(&ActualPhase);
-    freePhase(&GPSPhase);
-    freePhase(&GPSDelayedPhase);
+    freePhase(&ActualPhase, ActualSitParams.Resolution);
+    freePhase(&GPSPhase, ActualSitParams.Resolution);
+    freePhase(&GPSDelayedPhase, ActualSitParams.Resolution);
 
-    // for (i = 0; i < 1 + TimeStepsToStore; i++) {
-    //     freePhase(&(PhaseData[i]));
-    // }
+    for (i = 0; i < 1 + TimeStepsToStore; i++) {
+        freePhase(&(PhaseData[i]), ActualSitParams.Resolution);
+    }
     free(PhaseData);
 
     return 1;

@@ -12,7 +12,6 @@
 #include "utilities/arenas.h"
 #include "utilities/interactions.h"
 #include "utilities/obstacles.h"
-
 /* Arenas structure */
 arenas_t Arenas;
 
@@ -28,6 +27,8 @@ double V_Rep;
 double R_0;
 double Slope_Rep;
 double Slope_Att;
+double RP_MAX;
+double RP_MIN;
 
 /* Parameters of friction */
 double C_Frict;

@@ -45,6 +45,8 @@ void DrawShape(double CenterX, double CenterY, double width, double height,
 void DrawLine(double x1, double y1, double x2, double y2, double width,
         const float *color);
 
+void DrawSquare(int Resolution);
+
 void DrawDashedLine(double x1, double y1, double x2, double y2,
         const float *color);
 

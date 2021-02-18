@@ -41,18 +41,20 @@ typedef struct {
     double **Velocities;
     double **InnerStates;
     double **Laplacian;
+    double **EMA;
     double *ReceivedPower;
     int *RealIDs;
     int NumberOfInnerStates;
     int NumberOfAgents;
-
+    double **CBP; 
 } phase_t;
 
 /* Simple tools for allocating phase space and cleaning memory
  */
 void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
-        const int NumberOfInnerStates);
-void freePhase(phase_t * Phase);
+        const int NumberOfInnerStates, const int Resolution);
+        
+void freePhase(phase_t * Phase, const int Resolution);
 
 /* Insert specific agent's coordinates and velocity (denoted by "Agent") into
  * an existing phase space denoted by "Phase".
@@ -220,7 +222,7 @@ void GetAgentsVelocityFromTimeLine(double *Velocity, phase_t * PhaseData,
 /* Inserting positions and velocities into timeline
  */
 void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
-        const int WhichStep);
+        const int WhichStep, int Resolution);
 
 /* Inserting inner states into inner state timeline
  */
@@ -246,6 +248,13 @@ void InitCond(phase_t ** PhaseData,
 
 /* Waiting - filling up timelines with initial conditions */
 void Wait(phase_t * PhaseData, const double TimeToWait, const double h);
+
+/* Figure out where we are in the grid for the CBP */
+void WhereInGrid(phase_t * Phase, const int Resolution, 
+        const int WhichAgent,
+        const double ArenaCenterX, 
+        const double ArenaCenterY, 
+        const double ArenaSize);
 
 /* Setting up random conditions (with zero velocities)
  */
@@ -327,21 +336,22 @@ void CreateClusters(const int i, double **InputAdjacency, bool * Visited,
         
 /* Swaps the states of two agents (ith and jth)
  */
-void SwapAgents(phase_t * Phase, const int i, const int j);
+void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent);
 
 /* Orders agents by distance from a given position
  */
 void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition);
 
 /* Orders agents by Received Power */
-void OrderAgentsByPower(phase_t * Phase, int SizeToSort);
+void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent);
 
 /* Packing of nearby agents to the first blocks of the phase space
  * Returns the number of agents which are closer than R_C and whose packets
  * are not lost
  */
 int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
-        const double Range, const double power_thresh, const int communication_mode);
+        const double Range, const double power_thresh, const int communication_mode, 
+        const int TrueAgent, const double packet_loss);
 
 /* Calculate the received power of an agent given its interdistance */
 double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,

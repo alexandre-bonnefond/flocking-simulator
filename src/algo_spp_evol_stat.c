@@ -376,7 +376,7 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
     }
 
     if (TIMELINE == StatUtils->SaveMode) {
-        printf("%d", NumberOfCluster);
+        // printf("%d", NumberOfCluster);
         fprintf(f_ClusterDependentParams, "%lf\t%lf\t%lf\t%lf\t%lf\n",
                 StatUtils->ElapsedTime, Avg_Corr, sqrt(StDev_Corr), Min_Corr, Max_Corr);
         fprintf(f_ClusterParams, "%lf\t%d\t%d\t%d\t%d\n",

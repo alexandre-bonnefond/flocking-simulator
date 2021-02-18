@@ -12,35 +12,37 @@ double LinearLoss = 0.008;
 */
 
 void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
-        const int NumberOfInnerStates) {
+        const int NumberOfInnerStates, const int Resolution) {
     int i;
 
     Phase->NumberOfAgents = NumberOfAgents;
     Phase->Coordinates = doubleMatrix(NumberOfAgents, 3);
     Phase->Velocities = doubleMatrix(NumberOfAgents, 3);
     Phase->Laplacian = doubleMatrix(NumberOfAgents, NumberOfAgents);
+    Phase->EMA = doubleMatrix(NumberOfAgents, NumberOfAgents);
     Phase->ReceivedPower = doubleVector(NumberOfAgents);
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
+    Phase->CBP = doubleMatrix(Resolution, Resolution);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
         Phase->RealIDs[i] = i;
     }
-    // NullVect(Phase->ReceivedPower, NumberOfAgents);
-    // NullMatrix(Phase->Laplacian, NumberOfAgents, NumberOfAgents);
 }
 
-void freePhase(phase_t * Phase) {
+void freePhase(phase_t * Phase, const int Resolution) {
 
     freeMatrix(Phase->Coordinates, Phase->NumberOfAgents, 3);
     freeMatrix(Phase->Velocities, Phase->NumberOfAgents, 3);
     freeMatrix(Phase->Laplacian, Phase->NumberOfAgents, Phase->NumberOfAgents);
+    freeMatrix(Phase->EMA, Phase->NumberOfAgents, Phase->NumberOfAgents);
     freeMatrix(Phase->InnerStates, Phase->NumberOfAgents,
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
     free(Phase->ReceivedPower);
+    freeMatrix(Phase->CBP, Resolution, Resolution);
 }
 
 /* Inserts the "WhichAgent"th agent's position and velocity into "Phase" */
@@ -712,7 +714,7 @@ void GetAgentsVelocityFromTimeLine(double *Velocity, phase_t * PhaseData,
 
 /* Inserts the actual position, velocity and Laplacian of the agents into "PhaseData" */
 void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
-        const int WhichStep) {
+        const int WhichStep, int Resolution) {
 
     int i, j;
     for (j = 0; j < Phase->NumberOfAgents; j++) {
@@ -720,8 +722,19 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
             PhaseData[WhichStep].Coordinates[j][i] = Phase->Coordinates[j][i];
             PhaseData[WhichStep].Velocities[j][i] = Phase->Velocities[j][i];
         }
-        PhaseData[WhichStep].Laplacian[j] = Phase->Laplacian[j];
+        for (i = 0; i < Phase->NumberOfAgents; i++) {
+            PhaseData[WhichStep].Laplacian[j][i] = Phase->Laplacian[j][i];
+            PhaseData[WhichStep].EMA[j][i] = Phase->EMA[j][i];
+        }
+        // PhaseData[WhichStep].Laplacian[j] = Phase->Laplacian[j];
+        // PhaseData[WhichStep].EMA[j] = Phase->EMA[j];
     }
+    for (i = 0; i < Resolution; i++) {
+        for (j = 0; j < Resolution; j++) {
+            PhaseData[WhichStep].CBP[i][j] = Phase->CBP[i][j];
+        }
+    }
+    // PhaseData[WhichStep].CBP = Phase->CBP;
 }
 
 /* Inserting inner states into inner state timeline */
@@ -756,8 +769,12 @@ void ShiftDataLine(phase_t * PhaseData, const int HowManyRows,
                         PhaseData[HowManyRows - HowManyRowsToSave +
                         i].Velocities[j][k];
             }
-            PhaseData[i].Laplacian[j] = PhaseData[HowManyRows
-            - HowManyRowsToSave + i].Laplacian[j];
+            for (k = 0; k < PhaseData[0].NumberOfAgents; k++) {
+                PhaseData[i].Laplacian[j][k] = PhaseData[HowManyRows
+                - HowManyRowsToSave + i].Laplacian[j][k];
+            }
+            // PhaseData[i].Laplacian[j] = PhaseData[HowManyRows
+            // - HowManyRowsToSave + i].Laplacian[j];
         }
     }
 
@@ -801,6 +818,52 @@ void Wait(phase_t * PhaseData, const double TimeToWait, const double h) {
         }
     }
 
+}
+
+void WhereInGrid(phase_t * Phase, const int Resolution, 
+        const int WhichAgent,
+        const double ArenaCenterX, 
+        const double ArenaCenterY, 
+        const double ArenaSize) {
+
+        static double TopLeft[3];
+        static double TopRight[3];
+        static double BottomLeft[3];
+        static double BottomRight[3];
+
+        double SquareSize;
+        double x, y;
+        static double AgentsCoords[3];
+        int i = 0, j = 0;
+        bool SkipNext = false; 
+        int k;
+        for (k = 0; k < 3; k++) {
+            AgentsCoords[k] = Phase->Coordinates[WhichAgent][k];
+        }
+        FillVect(TopLeft, ArenaCenterX - ArenaSize, ArenaCenterY + ArenaSize, 0);
+        FillVect(TopRight, ArenaCenterX + ArenaSize, ArenaCenterY + ArenaSize, 0);
+        FillVect(BottomLeft, ArenaCenterX - ArenaSize, ArenaCenterY - ArenaSize, 0);
+        FillVect(BottomRight, ArenaCenterX + ArenaSize, ArenaCenterY - ArenaSize, 0);
+
+        SquareSize = 2 * ArenaSize / Resolution;
+
+        for (x = TopLeft[0]; x < TopRight[0]; x += SquareSize) {
+            j = 0;
+            for (y = TopLeft[1]; y > BottomLeft[1]; y -= SquareSize) {
+                if (AgentsCoords[0] > x && AgentsCoords[0] < x + SquareSize) {
+                    if (AgentsCoords[1] < y && AgentsCoords[1] > y - SquareSize) {
+                        if (Phase->CBP[j][i] != 1) {
+                            Phase->CBP[j][i] = 1;
+                            SkipNext = true;
+                            break;
+                        }
+                    }
+                }
+                j++;
+            }
+            if (SkipNext == true) { break; }
+            i++;
+        }
 }
 
 /* Randomizing phase of agents (with zero velocities) */
@@ -1591,11 +1654,12 @@ void CreateClusters(const int i, double **InputAdjacency, bool * Visited,
     }
 }
 /* Swaps the states of two agents (ith and jth) */
-void SwapAgents(phase_t * Phase, const int i, const int j) {
+void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) {
 
     double *temp_pointer;
     int id;
     double power;
+    double ema;
 
     /* Positions and velocities */
     temp_pointer = Phase->Coordinates[i];
@@ -1618,7 +1682,12 @@ void SwapAgents(phase_t * Phase, const int i, const int j) {
     /* Received power */
     power = Phase->ReceivedPower[i];
     Phase->ReceivedPower[i] = Phase->ReceivedPower[j];
-    Phase->ReceivedPower[j] = power; 
+    Phase->ReceivedPower[j] = power;
+
+    /* EMA */
+    ema = Phase->EMA[TrueAgent][i];
+    Phase->EMA[TrueAgent][i] = Phase->EMA[TrueAgent][j];
+    Phase->EMA[TrueAgent][j] = ema; 
 }
 
 /* Orders agents by distance from a given position */
@@ -1650,7 +1719,7 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
         while (j > 0 && Dist2 > Dist1) {
 
             /* Swapping velocities, positions, inner states and real IDs */
-            SwapAgents(Phase, j - 1, j);
+            SwapAgents(Phase, j - 1, j, 0);
 
             j--;
 
@@ -1668,7 +1737,7 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
 
 /* Orders agents by Received Power */
 /* Warning! Simple insertion sort! */
-void OrderAgentsByPower(phase_t * Phase, int SizeToSort) {
+void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent) {
 
     static double RP1;
     static double RP2;
@@ -1686,7 +1755,7 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort) {
         while (j > 0 && RP2 < RP1) {
 
             /* Swapping velocities, positions, received power, inner states and real IDs */
-            SwapAgents(Phase, j - 1, j);
+            SwapAgents(Phase, j - 1, j, WhichAgent);
 
             j--;
 
@@ -1700,13 +1769,15 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort) {
 /* Packing of nearby agents to the first blocks of the phase space */
 int SelectNearbyVisibleAgents(phase_t * Phase,
         double *ReferencePosition,
-        double Range, double power_thresh, int communication_mode) {
+        double Range, double power_thresh, int communication_mode, 
+        const int TrueAgent, const double packet_loss) {
 
     static double DistFromRef[3];
     NullVect(DistFromRef, 3);
 
     static double Dist = 0.0;
-
+    static double Pow;
+    bool packet_loss_rand;
     int i;
     int NumberOfNearbyAgents = 1;
     for (i = Phase->NumberOfAgents - 1; i >= NumberOfNearbyAgents; i--) {
@@ -1714,36 +1785,37 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         GetAgentsCoordinates(DistFromRef, Phase, i);
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
         Dist = VectAbs(DistFromRef);
-
+        Pow = Phase->ReceivedPower[i];
+        packet_loss_rand = (randomizeDouble(0, 1) < Pow * Pow * packet_loss);
         switch (communication_mode)
         {
         case 0:
             if (Dist != 0 && Dist <= Range) {
-                SwapAgents(Phase, i, NumberOfNearbyAgents);
+                SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
                 NumberOfNearbyAgents++;
                 i++;
             } else if (Dist == 0) {
-                SwapAgents(Phase, i, 0);
+                SwapAgents(Phase, i, 0, TrueAgent);
                 i++;
             }
             break;
         case 1:
-            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
-                SwapAgents(Phase, i, NumberOfNearbyAgents);
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh && !packet_loss_rand) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
                 NumberOfNearbyAgents++;
                 i++;
             } else if (Dist == 0) {
-                SwapAgents(Phase, i, 0);
+                SwapAgents(Phase, i, 0, TrueAgent);
                 i++;
             }
             break;
         case 2:
-            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh) {
-                SwapAgents(Phase, i, NumberOfNearbyAgents);
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh && !packet_loss_rand) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
                 NumberOfNearbyAgents++;
                 i++;
             } else if (Dist == 0) {
-                SwapAgents(Phase, i, 0);
+                SwapAgents(Phase, i, 0, TrueAgent);
                 i++;
             }
             break;
@@ -1794,10 +1866,11 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                 }
 
                 double **Intersections;
-                Intersections = malloc(sizeof(double *) * 2);
-                Intersections[0] = malloc(sizeof(double) * 3);
-                Intersections[1] = malloc(sizeof(double) * 3);
-
+                Intersections = doubleMatrix(2, 3);
+                // Intersections = malloc(sizeof(double *) * 2);
+                // Intersections[0] = malloc(sizeof(double) * 3);
+                // Intersections[1] = malloc(sizeof(double) * 3);
+                
                 int NumberOfIntersections;
                 // double dist_obst;
                 // double Loss;
@@ -1823,6 +1896,7 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
             if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                 log10((UnitParams->ref_distance.Value - dist_obst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));
+            // printf("%f\n", Power);
             }
             else
             {
@@ -1841,45 +1915,5 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                     log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
             }
         }
-        // if (UnitParams->communication_type.Value == 2) {
-        //     for (j = 0; j < obstacles.o_count; j++){  // very slow if the number of obstacles is  high
-
-        //         double CenterObst[3];
-        //         CenterObst[0] = obstacles.o[j].center[0];
-        //         CenterObst[1] = obstacles.o[j].center[1];
-        //         CenterObst[2] = 0;
-
-        //         if (obstacles.o_count > 70) {
-        //             double DistObs;
-        //             DistObs = DistanceOfTwoPoints2D(RefCoords, CenterObst);
-        //             if (DistObs > 25000){
-        //                 continue;
-        //             }
-        //         }
-
-        //         double **Intersections;
-        //         Intersections = malloc(sizeof(double *) * 2);
-        //         Intersections[0] = malloc(sizeof(double) * 3);
-        //         Intersections[1] = malloc(sizeof(double) * 3);
-
-        //         int NumberOfIntersections;
-        //         double Loss;
-        //         static double DistanceThrough[3];
-
-        //         NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-        //         RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
-
-        //         if (NumberOfIntersections == 2) {
-        //                 VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-        //                 Loss = UnitParams->linear_loss.Value * VectAbs(DistanceThrough);
-        //                 Power -= Loss;
-        //                 break;
-
-        //         }
-        //         // printf("%f\n", UnitParams->transmit_power.Value);
-
-        //         freeMatrix(Intersections, 2, 3);
-        //     }   
-        // }
         return Power;
 }

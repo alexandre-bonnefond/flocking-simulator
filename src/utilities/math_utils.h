@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "stack.h"
 
 /* Randomizer functions */
 
@@ -216,6 +217,8 @@ void PowerFuncMatrix(double **Res, double **Mat, const int N,
 
 /* Other useful tools */
 
+double EMA(double x_current, double x_previous, double smoothing, int width);
+
 double ClampScalar(const double x, const double x_min, const double x_max);
 
 /*
@@ -384,4 +387,11 @@ x-1      |             and not if              |
 bool TwoPointsOnSameSideOfAPoint(double *Point1, double *Point2,
         double *ReferencePoint);
 
+/* Return the area of a polygon */
+double polygonArea(double *X, double *Y, int n);
+
+// Returns a node pointer to the first node in a stack containing
+// the list of points in the convex hull
+node*
+convex_hull(point_xy* points, int n);
 #endif

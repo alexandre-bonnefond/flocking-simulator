@@ -150,13 +150,29 @@ void ChangeUnitModelParameter(unit_model_params_t * params, int WhichParam,
         break;
     case 18:
     {
+        params->smoothing.Value += StepSize;
+        if (params->smoothing.Value <= 2.0) {
+            params->smoothing.Value = 2.0;
+        }
+    }
+        break;
+    case 19:
+    {
+        params->depthEMA.Value += StepSize * 10;
+        if (params->depthEMA.Value <= 1.0) {
+            params->depthEMA.Value = 1.0;
+        }
+    }
+        break;
+    case 20:
+    {
         params->communication_type.Value += StepSize;
         if (params->communication_type.Value < 0.0) {
             params->communication_type.Value = 0.0;
         }
     }
         break;
-    case 19:
+    case 21:
     {
         params->flocking_type.Value += StepSize;
         if (params->flocking_type.Value < 0.0) {
@@ -189,6 +205,8 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.UnitOfMeas, "dBm");
     sprintf(UnitParams->freq.UnitOfMeas, "GHz");
     sprintf(UnitParams->sensitivity_thresh.UnitOfMeas, "dBm");
+    sprintf(UnitParams->smoothing.UnitOfMeas, "-");
+    sprintf(UnitParams->depthEMA.UnitOfMeas, "-");
     sprintf(UnitParams->communication_type.UnitOfMeas, "-");
     sprintf(UnitParams->flocking_type.UnitOfMeas, "-");
 
@@ -210,6 +228,8 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.Name, "Transmit Power");
     sprintf(UnitParams->freq.Name, "Frequency");
     sprintf(UnitParams->sensitivity_thresh.Name, "Sensitivity Threshold");
+    sprintf(UnitParams->smoothing.Name, "EMA Smoothing");
+    sprintf(UnitParams->depthEMA.Name, "Depth of the EMA");
     sprintf(UnitParams->communication_type.Name, "Type of communication");
     sprintf(UnitParams->flocking_type.Name, "Type of flocking");
 }
@@ -242,6 +262,8 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         UnitParams->transmit_power.Value = 10.0;
         UnitParams->freq.Value = 2.6;
         UnitParams->sensitivity_thresh.Value = -10.0;
+        UnitParams->smoothing.Value = 2.0;
+        UnitParams->depthEMA.Value = 1.0;
         UnitParams->communication_type.Value = 0.0;
         UnitParams->flocking_type.Value = 0.0;
 
@@ -337,6 +359,12 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
             } else if (strcmp(ReadedName, "Sensitivity_thresh") == 0) {
                 UnitParams->sensitivity_thresh.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "EMA_Smoothing") == 0) {
+                UnitParams->smoothing.Value = atof(ReadedValue);
+                NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "EMA_Depth") == 0) {
+                UnitParams->depthEMA.Value = atof(ReadedValue);
+                NumberOfReadedNames++;                   
             } else if (strcmp(ReadedName, "Communication_type") == 0) {
                 UnitParams->communication_type.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
@@ -348,9 +376,9 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
     }
 
     //Checking the existance of parameters...
-    if (NumberOfReadedNames < 20) {
+    if (NumberOfReadedNames < 21) {
 
-        printf("19 paramers are necessary in \n'%s' \n\nRequired format (example):\n\n", recover_fileName(InputFile));
+        printf("21 paramers are necessary in \n'%s' \n\nRequired format (example):\n\n", recover_fileName(InputFile));
         printf("tau_PID_XY=1\n");
         printf("tau_PID_Z=1\n");
         printf("a_max=600\n");
@@ -370,6 +398,8 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         printf("Transmit_Power=10\n");
         printf("Freq=2.6\n");
         printf("Sensitivity_thresh=-10\n");
+        printf("EMA_Smoothing=2\n");
+        printf("EMA_Depth=1");
         printf("Communication_type=0\n");
         printf("Flocking_type=0\n");
 
@@ -431,6 +461,12 @@ void SaveUnitModelParamsToFile(FILE * OutputFile_Unit,
     fprintf(OutputFile_Unit, "# Sensitivity threshold (dBm)\n");
     fprintf(OutputFile_Unit, "Sensitivity_thresh=%lf\n",
             UnitParams->sensitivity_thresh.Value);
+    fprintf(OutputFile_Unit, "# Smoothing EMA (-)\n");
+    fprintf(OutputFile_Unit, "EMA_Smoothing=%lf\n",
+            UnitParams->smoothing.Value);
+    fprintf(OutputFile_Unit, "# Depth EMA (-)\n");
+    fprintf(OutputFile_Unit, "EMA_Depth=%lf\n",
+            UnitParams->depthEMA.Value);
     fprintf(OutputFile_Unit, "# Communication type (-)\n");
     fprintf(OutputFile_Unit, "Communication_type=%lf\n",
             UnitParams->communication_type.Value);
@@ -504,6 +540,9 @@ sit_parameters_t GetSituationParamsFromFile(FILE * InputFile) {
             } else if (strcmp(ReadedName, "StartOfSteadyState") == 0) {
                 temp_sit_parameters.StartOfSteadyState = atof(ReadedValue);
                 NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "Resolution") == 0) {
+                temp_sit_parameters.Resolution = atof(ReadedValue);
+                NumberOfReadedNames++;
             }
 
         }
@@ -511,9 +550,9 @@ sit_parameters_t GetSituationParamsFromFile(FILE * InputFile) {
     }
 
     /*Checking existence of parameters */
-    if (NumberOfReadedNames < 10) {
+    if (NumberOfReadedNames < 11) {
 
-        printf("Presence of 10 paramers are necessary in \n '%s'.\n\nRequired format (example):\n\n", recover_fileName(InputFile));
+        printf("Presence of 11 paramers are necessary in \n '%s'.\n\nRequired format (example):\n\n", recover_fileName(InputFile));
         printf("NumberOfAgents=10\n");
         printf("Length=1000\n");
         printf("InitialX=1000\n");
@@ -524,6 +563,7 @@ sit_parameters_t GetSituationParamsFromFile(FILE * InputFile) {
         printf("LengthToStore=1.0\n");
         printf("VizSpeedUp=10\n");
         printf("StartOfSteadyState=10\n");
+        printf("Resolution=10\n");
 
         exit(-1);
 

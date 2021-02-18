@@ -18,6 +18,8 @@ double *ChangedInnerStateOfActualAgent;
 
 
 static int NumberOfNeighbours = 0;      /* Number of units observed by the actual agent */
+const double packet_loss_power = -65.0;
+const double packet_loss_ratio = .3;
 
 /* For passing debug information to CalculatePreferredVelocity function */
 agent_debug_info_t DebugInfo;
@@ -27,6 +29,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         phase_t * GPSPhase,
         phase_t * GPSDelayedPhase,
         phase_t * Phase,
+        int TimeStepReal,
         phase_t * DelayedPhase,
         obstacles_t obstacles,
         double **Polygons,
@@ -37,13 +40,13 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     int i, j;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
-
+    double DepthEMA = UnitParams->depthEMA.Value;
     /* Setting up order by distance from actual unit */
 
     for (i = 0; i < Phase->NumberOfAgents; i++) {
 
         LocalActualPhaseToCreate->RealIDs[i] = Phase->RealIDs[i];
-        LocalActualPhaseToCreate->ReceivedPower[i] = Phase->ReceivedPower[i];
+        // LocalActualPhaseToCreate->ReceivedPower[i] = Phase->ReceivedPower[i];
         
         for (j = 0; j < 3; j++) {
             LocalActualPhaseToCreate->Coordinates[i][j] =
@@ -74,6 +77,18 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
         LocalActualPhaseToCreate->ReceivedPower[i] = ReceivedPowerLog(ActualAgentsPosition, 
                             NeighbourPosition, obstacles, Polygons, UnitParams, Distance);
+        
+        if (TimeStepReal < DepthEMA) 
+        {
+            LocalActualPhaseToCreate->EMA[WhichAgent][i] += LocalActualPhaseToCreate->ReceivedPower[i]/DepthEMA;
+        }
+        else
+        {
+            // printf("%d\t%d\t%d\t%f\t%f\n",WhichAgent, i, Phase->RealIDs[i], LocalActualPhaseToCreate->ReceivedPower[i], Phase->EMA[WhichAgent][i]);
+            LocalActualPhaseToCreate->EMA[WhichAgent][i] = EMA(LocalActualPhaseToCreate->ReceivedPower[i], 
+            Phase->EMA[WhichAgent][i], UnitParams->smoothing.Value, DepthEMA);
+            // printf("%f\n", LocalActualPhaseToCreate->EMA[WhichAgent][i]);
+        }      
     }
 
     if (OrderByDistance) {
@@ -81,11 +96,13 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         NumberOfNeighbours =
                 SelectNearbyVisibleAgents(LocalActualPhaseToCreate,
                 ActualAgentsPosition, UnitParams->R_C.Value, 
-                UnitParams->sensitivity_thresh.Value, (int)(UnitParams->communication_type.Value));
+                UnitParams->sensitivity_thresh.Value, (int)(UnitParams->communication_type.Value), WhichAgent,
+                packet_loss_ratio / packet_loss_power /
+                packet_loss_power);
 
         
         if ((int)UnitParams->communication_type.Value == 1 || (int)UnitParams->communication_type.Value == 2) {
-            OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours);
+            OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours, WhichAgent);
         }
         else if ((int)UnitParams->communication_type.Value == 0) {
             OrderAgentsByDistance(LocalActualPhaseToCreate, ActualAgentsPosition);
@@ -95,15 +112,18 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             NumberOfNeighbours = Size_Neighbourhood;
         }
 
-        // for (int k = 0; k < NumberOfNeighbours; k++) {
-        //     printf("%f %d\n", LocalActualPhaseToCreate->ReceivedPower[k], LocalActualPhaseToCreate->RealIDs[k]);
-        // }
-        // printf("\n");prinf("%f\n\n", TargetsArray);
-
     } else {
-        SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0);
+        SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0, WhichAgent);
         NumberOfNeighbours = 1;
     }
+
+    // for (i = 0; i < 3; i++){
+    //     for (j = 0; j < 3; j++){
+    //         printf("%f\t", LocalActualPhaseToCreate->EMA[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n");
 
     /* Setting up delay and GPS inaccuracy for positions and velocities */
 
@@ -234,9 +254,8 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
     for (i = 0; i < Phase->NumberOfInnerStates; i++) {
         OutputInnerState[i] = Phase->InnerStates[0][i];
     }
-    // printf("%f\t%f\t%f\n", PreviousVelocity[0], RealVelocity[0], PreferredVelocities[WhichAgent][0]);
+    
     if (TimeStepLooped % ((int) (UnitParams->t_GPS.Value / DeltaT)) == 0) {
-
         /* Calculating target velocity */
         NullVect(TempTarget, 3);
 
@@ -293,8 +312,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
         bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations, 
-        double ** TargetsArray, double **Polygons, int Verbose) {
-
+        double ** TargetsArray, double **Polygons, int Verbose) {// node **Hull, int Verbose) {
+            
     int i, j, k;
     static double CheckVelocityCache[3];
     NullVect(CheckVelocityCache, 3);
@@ -306,6 +325,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(UnitVectDifference, 3);
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
+
+    // point_xy* points = malloc(LocalActualPhase.NumberOfAgents * sizeof(point_xy));
+    // point_xy points[LocalActualPhase.NumberOfAgents];
 
     /* Getting phase of actual TimeStepfrom PhaseData */
     LocalActualPhase = PhaseData[TimeStepLooped];
@@ -376,22 +398,34 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
-                &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams, 
+                TimeStepReal, &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams, 
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
                 SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-
-        /* Fill the Laplacian Matrix in dBm */
+        
+        /* Fill the Laplacian and EMA Matrices in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
             if ( j == TempPhase.RealIDs[i]) {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.NumberOfAgents;
+                // OutputPhase->EMA[j][TempPhase.RealIDs[i]] = 0;
             }
             else {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];
-            }
+                OutputPhase->EMA[j][TempPhase.RealIDs[i]] = TempPhase.EMA[j][i];
+        
+            }           
         }
-                
+        /* Swapping the EMA line at the begining of the matrix (quick fix to improve...) */
+        TempPhase.EMA[0] = TempPhase.EMA[j];
+        
+        /* CBP strategy */
+        WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
+
+        /* Fill the struct for the convex hull */
+        // points[j].x = LocalActualPhase.Coordinates[j][0];
+        // points[j].y = LocalActualPhase.Coordinates[j][1];
+         
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
         RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
@@ -409,13 +443,36 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
     }
 
+    // *Hull = convex_hull(points, LocalActualPhase.NumberOfAgents);
+    // int s;
+    // stack_print(*Hull);
+    // printf("\n");
+    // point_xy temp_point;
+    // temp_point.x = points->x;
+    // temp_point.y = points->y;
+    // s = stack_count(*Hull);
+
+    // // Free memory to avoid memory leaks
+    // free(points);
+    // points = NULL;
+
+    // stack_print(*Hull);
+    // printf("\n\n");
+
+    // for (i = 0; i < SitParams->Resolution; i++){
+    //     for (j = 0; j < SitParams->Resolution; j++){
+    //         printf("%f\t", OutputPhase->CBP[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n\n\n\n");
     
     //freeMatrix(Polygons, MAX_OBSTACLES, MAX_OBSTACLE_POINTS);
     /* Print the Laplacian */
     
     // for (i = 0; i < SitParams->NumberOfAgents; i++){
     //     for (j = 0; j < SitParams->NumberOfAgents; j++){
-    //         printf("%f\t", OutputPhase->Laplacian[i][j]);
+    //         printf("%f\t", OutputPhase->EMA[i][j]);
     //     }
     //     printf("\n");
     // }
@@ -534,9 +591,9 @@ void InitializePreferredVelocities(phase_t * Phase,
 
     /* Some helper dynamic arrays should be allocated here */
     AllocatePhase(&SteppedPhase, SitParams->NumberOfAgents,
-            Phase->NumberOfInnerStates);
+            Phase->NumberOfInnerStates, SitParams->Resolution);
     AllocatePhase(&TempPhase, SitParams->NumberOfAgents,
-            Phase->NumberOfInnerStates);
+            Phase->NumberOfInnerStates, SitParams->Resolution);
     ChangedInnerStateOfActualAgent =
             (double *) calloc(Phase->NumberOfInnerStates, sizeof(double));
 
@@ -555,8 +612,8 @@ void freePreferredVelocities(phase_t * Phase,
     free(Noises);
 
     /* Freeing memory owned by helper arrays */
-    freePhase(&SteppedPhase);
-    freePhase(&TempPhase);
+    freePhase(&SteppedPhase, SitParams->Resolution);
+    freePhase(&TempPhase, SitParams->Resolution);
 
     if (Phase->NumberOfInnerStates != 0) {
         free(ChangedInnerStateOfActualAgent);
