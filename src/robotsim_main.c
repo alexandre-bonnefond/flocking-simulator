@@ -84,7 +84,7 @@ static double WindVelocityVector[2];
 double **Polygons;
 
 /* Convex hull */
-// node *Hull;
+node *Hull;
 
 /* Resolution for the CBP (communication based perception) */
 // int Resolution = 25;
@@ -904,7 +904,7 @@ void UpdatePositionsToDisplay() {
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
                 // stack_print(Hull);
                 // printf("\n");
 
@@ -930,7 +930,7 @@ void UpdatePositionsToDisplay() {
                         &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2126,7 +2126,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2150,7 +2150,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, Verbose);// &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2462,7 +2462,7 @@ int main(int argc, char *argv[]) {
             free(ActualColorConfig.AgentsColor[i]);
         }
     }
-    // stack_free(&Hull);
+    stack_free(&Hull);
     free(ActualColorConfig.AgentsColor);
     free(AgentsInDanger);
     freePhase(&ActualPhase, ActualSitParams.Resolution);

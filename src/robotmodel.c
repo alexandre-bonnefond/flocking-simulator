@@ -312,7 +312,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
         bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations, 
-        double ** TargetsArray, double **Polygons, int Verbose) {// node **Hull, int Verbose) {
+        double ** TargetsArray, double **Polygons, node **Hull, int Verbose) {
             
     int i, j, k;
     static double CheckVelocityCache[3];
@@ -452,7 +452,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     // temp_point.y = points->y;
     // s = stack_count(*Hull);
 
-    // // Free memory to avoid memory leaks
+    // Free memory to avoid memory leaks
     // free(points);
     // points = NULL;
 

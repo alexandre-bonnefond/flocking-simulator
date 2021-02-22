@@ -1506,7 +1506,7 @@ node *convex_hull(point_xy *points, int n)
         stack_push(&hull, &points[i]);
         // stack_push(&hull, &temp_pnt);
     }
-    printf("%f\n", temp_pnt.x);
+    // printf("%f\n", temp_pnt.x);
 
     // Return the convex hull
     return hull;

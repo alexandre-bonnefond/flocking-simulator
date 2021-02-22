@@ -726,15 +726,12 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
             PhaseData[WhichStep].Laplacian[j][i] = Phase->Laplacian[j][i];
             PhaseData[WhichStep].EMA[j][i] = Phase->EMA[j][i];
         }
-        // PhaseData[WhichStep].Laplacian[j] = Phase->Laplacian[j];
-        // PhaseData[WhichStep].EMA[j] = Phase->EMA[j];
     }
     for (i = 0; i < Resolution; i++) {
         for (j = 0; j < Resolution; j++) {
             PhaseData[WhichStep].CBP[i][j] = Phase->CBP[i][j];
         }
     }
-    // PhaseData[WhichStep].CBP = Phase->CBP;
 }
 
 /* Inserting inner states into inner state timeline */
