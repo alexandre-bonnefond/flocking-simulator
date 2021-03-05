@@ -27,6 +27,7 @@ typedef struct {
     double Data_CollisionRatio_Sum;
     double Data_Velocity_Sum[8];
     double Data_CoM_Sum[3];
+    double Data_HullArea_Sum[4];
 
     /* stDevs */
     double Data_Acceleration_StDev[4];
@@ -37,6 +38,7 @@ typedef struct {
     double Data_CollisionRatio_StDev;
     double Data_CoM_StDev[3];
     double Data_Velocity_StDev[8];
+    double Data_HullArea_StDev[4];
 
 } statistics_t;
 
@@ -111,6 +113,11 @@ double *StatOfVelocity(phase_t * Phase);
  * velocity scalar products
  */
 double *StatOfCorrelation(phase_t * Phase);
+
+/* Returns an array that contains the average, deviation, minimum and maximum of
+ * the Hull area
+ */
+double *StatOfHullArea(node *HullArea);
 
 /* Returns an array that contains the average, deviation, minimum and maximum of
  * accelerations

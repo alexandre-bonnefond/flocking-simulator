@@ -39,6 +39,7 @@ typedef struct {
     save_mode_t SaveCollisionRatio;
     save_mode_t SaveAcceleration;
     save_mode_t SaveReceivedPowers;
+    save_mode_t SaveHullArea;
 
     /* Model-specific parameters */
     save_mode_t SaveModelSpecifics;

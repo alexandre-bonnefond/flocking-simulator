@@ -17,6 +17,13 @@
 #include <ctype.h>
 #include "stack.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923
+#endif
+
 /* Randomizer functions */
 
 /* Returns a random double value between minValue and maxValue with seed (uniform distribution)
@@ -392,6 +399,5 @@ double polygonArea(double *X, double *Y, int n);
 
 // Returns a node pointer to the first node in a stack containing
 // the list of points in the convex hull
-node*
-convex_hull(point_xy* points, int n);
+node *convex_hull(point_xy* points, int n);
 #endif

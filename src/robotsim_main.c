@@ -86,9 +86,6 @@ double **Polygons;
 /* Convex hull */
 node *Hull;
 
-/* Resolution for the CBP (communication based perception) */
-// int Resolution = 25;
-
 // Temporary...
 static bool HighRes = true;
 
@@ -192,6 +189,8 @@ void Initialize() {
 
     /* Communication network display is OFF */
     ActualVizParams.DisplayCommNetwork = false;
+    /* Hull display is OFF */
+    ActualVizParams.DisplayHull = false;
 
     /* Tail display is OFF. */
     ActualVizParams.DisplayTail = false;
@@ -301,7 +300,8 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
     static double AgentsCoordinates_Temp[3];
     static double AgentsGPSCoordinates[3];
     static double AgentsVelocity[3];
-    int i, h, z;
+    int i, h, z, g;
+    int HullLength;
 
     static float GhostColor[3];
     static float TempColor[3];
@@ -319,6 +319,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         DrawModelSpecificObjects_2D(Phase, &ActualFlockingParams,
                 &ActualUnitParams, &ActualVizParams, &ActualColorConfig,
                 &ActualSitParams);
+        
 
 
         /* Setting up size of the coordinate system */
@@ -545,6 +546,28 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                         &ActualUnitParams, i, Polygons, Now,
                         &ActualVizParams, ActualColorConfig.CommNetWorkColor);
             }
+        }
+
+        if (ActualVizParams.DisplayHull == true) {
+            HullLength = stack_count(Hull);
+            glColor3f(ActualColorConfig.CommNetWorkColor[0], ActualColorConfig.CommNetWorkColor[1], ActualColorConfig.CommNetWorkColor[2]);
+            double HullX[HullLength];
+            double HullY[HullLength];
+            double HullSurf;
+            glBegin(GL_LINE_STRIP);
+            for (g = 0; g < HullLength; g++) {
+                HullX[g] = Hull->data->x;
+                HullY[g] = Hull->data->y;
+                glVertex3f(RealToGlCoord_2D(Hull->data->x - ActualVizParams.CenterX, ActualVizParams.MapSizeXY), 
+                    RealToGlCoord_2D(Hull->data->y - ActualVizParams.CenterY, ActualVizParams.MapSizeXY), 0);
+                Hull = Hull->next;
+            }
+            glVertex3f(RealToGlCoord_2D(HullX[0] - ActualVizParams.CenterX, ActualVizParams.MapSizeXY), 
+                    RealToGlCoord_2D(HullY[0] - ActualVizParams.CenterY, ActualVizParams.MapSizeXY), 0);
+            glEnd();
+
+            HullSurf = polygonArea(HullX, HullY, HullLength);
+            // printf("%0.2f\n", HullSurf/10000);
         }
 
         /* 3D viz mode */
@@ -1319,6 +1342,11 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     } else if (key == GLUT_KEY_F7) {
         ActualVizParams.DisplayCommNetwork =
                 !ActualVizParams.DisplayCommNetwork;
+        
+        /* F1 toggles Hull display */
+    } else if (key == GLUT_KEY_F1) {
+        ActualVizParams.DisplayHull = !ActualVizParams.DisplayHull;
+
         /* F5 Saves the parameters */
     } else if (key == GLUT_KEY_F5) {
 
@@ -1912,10 +1940,10 @@ int main(int argc, char *argv[]) {
         ActualStatUtils.SaveMode = ActualSaveModes.SaveModelSpecifics;
 
         /* Opening output files */
-        FILE *f_Correlation, *f_CoM, *f_Velocity,
+        FILE *f_Correlation, *f_CoM, *f_Velocity, *f_HullArea,
                 *f_DistanceBetweenNeighbours, *f_DistanceBetweenUnits,
                 *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions;
-        FILE *f_Correlation_StDev, *f_CoM_StDev, *f_Velocity_StDev,
+        FILE *f_Correlation_StDev, *f_CoM_StDev, *f_Velocity_StDev, *f_HullArea_StDev,
                 *f_CollisionRatio_StDev, *f_DistanceBetweenUnits_StDev,
                 *f_Acceleration_StDev, *f_ReceivedPowers_StDev, *f_DistanceBetweenNeighbours_StDev;
 
@@ -2048,6 +2076,25 @@ int main(int argc, char *argv[]) {
                         "time_(s)\tavg_of_velocity_correlation\tstdev_of_normalized_velocity_scalar_product\tmin_of_normalized_velocity_scalar_product\tmax_of_normalized_velocity_scalar_product\n\n");
             }
         }
+
+        if (FALSE != ActualSaveModes.SaveHullArea) {
+            strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+            strcat(OutputFileName, "/hull_area.dat\0");
+            f_HullArea = fopen(OutputFileName, "w");
+            fprintf(f_HullArea,
+                    "time_(s)\tavg_of_hull_area\tstdev_of_hull_area\tmin_of_hull_area\tmax_of_hull_area\n\n");
+            if (STAT == ActualSaveModes.SaveHullArea
+                    || STEADYSTAT == ActualSaveModes.SaveHullArea) {
+                strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+                strcat(OutputFileName, "/hull_area_stdev.dat\0");
+                f_HullArea_StDev = fopen(OutputFileName, "w");
+                fprintf(f_HullArea_StDev,
+                        "This file contains standard deviations. Check out \"hull_area.dat\" for more details!\n");
+                fprintf(f_HullArea_StDev,
+                        "time_(s)\tavg_of_hull_area\tstdev_of_hull_area\tmin_of_hull_area\tmax_of_hull_area\n\n");
+            }
+        }
+
 
         if (FALSE != ActualSaveModes.SaveCollisionRatio) {
             strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -2244,6 +2291,26 @@ int main(int argc, char *argv[]) {
             }
             }
 
+            if (FALSE != ActualSaveModes.SaveHullArea) {
+                StatData = StatOfHullArea(Hull);
+            }
+            switch (ActualSaveModes.SaveHullArea) {
+            case TIMELINE:{
+                fprintf(f_HullArea, "%lf\t%lf\t%lf\t%lf\t%lf\n",
+                        ActualStatUtils.ElapsedTime, StatData[0], StatData[1],
+                        StatData[2], StatData[3]);
+                break;
+            }
+            case STAT:{
+                UPDATE_STATISTICS(HullArea, 4);
+                break;
+            }
+            case STEADYSTAT:{
+                UPDATE_STATISTICS(HullArea, 4);
+                break;
+            }
+            }
+
             if (FALSE != ActualSaveModes.SaveVelocity) {
                 StatData = StatOfVelocity(&ActualPhase);
             }
@@ -2400,6 +2467,10 @@ int main(int argc, char *argv[]) {
         if (FALSE != ActualSaveModes.SaveCorrelation) {
             SAVE_STATISTICS(Correlation, 4);
             fclose(f_Correlation);
+        }
+        if (FALSE != ActualSaveModes.SaveHullArea) {
+            SAVE_STATISTICS(HullArea, 4);
+            fclose(f_HullArea);
         }
         if (FALSE != ActualSaveModes.SaveCollisionRatio) {
 

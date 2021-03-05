@@ -607,9 +607,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         AttractionPowLin(AttractionVelocity, Phase, ActualTime, V_Rep,
                 30, RP_MIN, WhichAgent, (int) Dim, false);
 
-        GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, 3 * R_0, WhichAgent, (int) Dim);
-        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
+        // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+        //     R_0, 3 * R_0, WhichAgent, (int) Dim);
+        // MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
         
         // printf("%f\t%f\t%f\t%f\t%f\n", VectAbs(test1), VectAbs(PotentialVelocity), VectAbs(test2), VectAbs(AttractionVelocity), VectAbs(GradientAcceleration));
     }

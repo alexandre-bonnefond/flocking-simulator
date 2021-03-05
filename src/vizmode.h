@@ -39,6 +39,8 @@ typedef struct {
     bool DisplayAgentLabels;
     /* Display Communication network */
     bool DisplayCommNetwork;
+    /* Display Convex Hull */
+    bool DisplayHull;
     /* Length of displayed tail */
     bool DisplayTail;
     int LengthOfTail;

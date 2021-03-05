@@ -1456,7 +1456,7 @@ node *convex_hull(point_xy *points, int n)
     p0.y = 0;
     node* hull = NULL;
     int i;
-    point_xy temp_pnt;
+    // point_xy temp_pnt;
     // If the given amount of points is less than 3,
     // generating a convex hull is impossible
     if (n < 3)
@@ -1502,7 +1502,7 @@ node *convex_hull(point_xy *points, int n)
             stack_pop(&hull);
         }
         // Push the current point onto the stack
-        temp_pnt = points[i];
+        // temp_pnt = points[i];
         stack_push(&hull, &points[i]);
         // stack_push(&hull, &temp_pnt);
     }

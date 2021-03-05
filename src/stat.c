@@ -309,6 +309,36 @@ double *StatOfCorrelation(phase_t * Phase) {
 }
 
 /* Returns an array that contains the average, deviation, minimum and maximum of
+ * the Hull area
+ */
+double *StatOfHullArea(node *Hull) {
+
+    int HullLength, g;
+    HullLength = stack_count(Hull);
+
+    double HullX[HullLength];
+    double HullY[HullLength];
+    double HullSurf;
+    static double StatData[4];
+    
+    for (g = 0; g < HullLength; g++) {
+        HullX[g] = Hull->data->x;
+        HullY[g] = Hull->data->y;
+        Hull = Hull->next;
+    }
+
+    HullSurf = polygonArea(HullX, HullY, HullLength);
+
+    StatData[0] = HullSurf;
+    StatData[1] = sqrt(HullSurf);
+    StatData[2] = HullSurf;
+    StatData[3] = HullSurf;
+
+    return StatData;
+
+}
+
+/* Returns an array that contains the average, deviation, minimum and maximum of
  * accelerations
  */
 double *StatOfAcceleration(double *Accelerations, const double NumberOfAgents) {

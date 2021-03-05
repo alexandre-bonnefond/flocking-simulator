@@ -325,9 +325,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(UnitVectDifference, 3);
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
-
-    // point_xy* points = malloc(LocalActualPhase.NumberOfAgents * sizeof(point_xy));
-    // point_xy points[LocalActualPhase.NumberOfAgents];
+    // point_xy points[SitParams->NumberOfAgents];
+    point_xy *points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
 
     /* Getting phase of actual TimeStepfrom PhaseData */
     LocalActualPhase = PhaseData[TimeStepLooped];
@@ -403,6 +402,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
+
+        points[j].x = LocalActualPhase.Coordinates[j][0];
+        points[j].y = LocalActualPhase.Coordinates[j][1];
         
         /* Fill the Laplacian and EMA Matrices in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
@@ -422,10 +424,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         /* CBP strategy */
         WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
 
-        /* Fill the struct for the convex hull */
-        // points[j].x = LocalActualPhase.Coordinates[j][0];
-        // points[j].y = LocalActualPhase.Coordinates[j][1];
-         
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
         RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
@@ -443,21 +441,12 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
     }
 
-    // *Hull = convex_hull(points, LocalActualPhase.NumberOfAgents);
-    // int s;
+    /* Compute the convex hull */
+    (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
     // stack_print(*Hull);
     // printf("\n");
-    // point_xy temp_point;
-    // temp_point.x = points->x;
-    // temp_point.y = points->y;
-    // s = stack_count(*Hull);
-
-    // Free memory to avoid memory leaks
     // free(points);
     // points = NULL;
-
-    // stack_print(*Hull);
-    // printf("\n\n");
 
     // for (i = 0; i < SitParams->Resolution; i++){
     //     for (j = 0; j < SitParams->Resolution; j++){
@@ -466,10 +455,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     //     printf("\n");
     // }
     // printf("\n\n\n\n");
-    
-    //freeMatrix(Polygons, MAX_OBSTACLES, MAX_OBSTACLE_POINTS);
+
     /* Print the Laplacian */
-    
     // for (i = 0; i < SitParams->NumberOfAgents; i++){
     //     for (j = 0; j < SitParams->NumberOfAgents; j++){
     //         printf("%f\t", OutputPhase->EMA[i][j]);

@@ -24,6 +24,7 @@ void SetDefaultOutputModes(output_modes_t * OutputModes) {
     OutputModes->SaveCollisions = FALSE;
     OutputModes->SaveAcceleration = FALSE;
     OutputModes->SaveReceivedPowers = FALSE;
+    OutputModes->SaveHullArea = FALSE;
 
     // Mode-specific order parameters (still not complete)
     OutputModes->SaveModelSpecifics = FALSE;
@@ -136,6 +137,9 @@ void ReadOutputModes(output_modes_t * OutputModes, FILE * InputFile) {
                         CheckSaveMode(ReadedValue, ReadedName);
             } else if (strcmp(ReadedName, "SaveModelSpecificStats") == 0) {
                 OutputModes->SaveModelSpecifics =
+                        CheckSaveMode(ReadedValue, ReadedName);
+            } else if (strcmp(ReadedName, "SaveHullArea") == 0) {
+                OutputModes->SaveHullArea =
                         CheckSaveMode(ReadedValue, ReadedName);
             }
 
