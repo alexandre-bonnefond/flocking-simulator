@@ -8,3 +8,5 @@ parameters/
 obstacles/
 .vscode/*
 
+robotflocksim_main
+gmon.out

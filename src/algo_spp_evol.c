@@ -591,21 +591,21 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     if (Flocking_type == 0) {
         /* Repulsion */
-        RepulsionLin(test1, Phase, V_Rep,
+        RepulsionLin(PotentialVelocity, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
         /* Attraction */
-        AttractionLin(test2, Phase, V_Rep,
+        AttractionLin(AttractionVelocity, Phase, V_Rep,
                 Slope_Att, R_0 + 45, WhichAgent, (int) Dim, false);
         
         /* Repulsion */
 
-        RepulsionPowLin(PotentialVelocity, Phase, ActualTime, V_Rep,
-                300, RP_MAX, WhichAgent, (int) Dim, false);
+        // RepulsionPowLin(PotentialVelocity, Phase, ActualTime, V_Rep,
+        //         300, RP_MAX, WhichAgent, (int) Dim, false);
 
-        /* Attraction */
-        AttractionPowLin(AttractionVelocity, Phase, ActualTime, V_Rep,
-                30, RP_MIN, WhichAgent, (int) Dim, false);
+        // /* Attraction */
+        // AttractionPowLin(AttractionVelocity, Phase, ActualTime, V_Rep,
+        //         30, RP_MIN, WhichAgent, (int) Dim, false);
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
         //     R_0, 3 * R_0, WhichAgent, (int) Dim);
