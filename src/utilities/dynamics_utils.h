@@ -359,5 +359,7 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                         double **Polygons,
                         unit_model_params_t * UnitParams,
                         const double Dist);
+
+double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams);
         
 #endif

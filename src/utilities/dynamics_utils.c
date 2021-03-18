@@ -5,7 +5,7 @@
 
 #include "dynamics_utils.h"
 
-double LinearLoss = 0.008;
+// double LinearLoss = 0.008;
 
 /*
     Tools for manipulating phase space
@@ -1880,7 +1880,6 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                         VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
                         dist_obst = VectAbs(DistanceThrough);
                         Loss = 40 * log10(dist_obst);
-                        // Loss = 7 * log10(dist_obst);
                         break;
                 }
                 else {
@@ -1912,5 +1911,33 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                     log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
             }
         }
+        return Power;
+}
+
+double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams) {
+    
+    double Power = 0;
+    if (UnitParams->communication_type.Value == 2) {
+        if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+            Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                log10((UnitParams->ref_distance.Value - DistObst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));
+            }
+            else
+            {
+                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                    log10((Dist - DistObst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
+            }
+    }
+    else {
+            if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                    log10(UnitParams->ref_distance.Value * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2));
+            }
+            else
+            {
+                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
+                    log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
+            }
+    }
         return Power;
 }

@@ -281,38 +281,38 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                         VizParams->MapSizeXY), RealToGlCoord_2D(30,
                                                         VizParams->MapSizeXY), angle, color);
 
-                                        for (j = 0; j < obstacles.o_count; j++){
+                                        // for (j = 0; j < obstacles.o_count; j++){
 
-                                                double **Intersections;
-                                                Intersections = malloc(sizeof(double *) * 2);
-                                                Intersections[0] = malloc(sizeof(double) * 3);
-                                                Intersections[1] = malloc(sizeof(double) * 3);
+                                        //         double **Intersections;
+                                        //         Intersections = malloc(sizeof(double *) * 2);
+                                        //         Intersections[0] = malloc(sizeof(double) * 3);
+                                        //         Intersections[1] = malloc(sizeof(double) * 3);
 
-                                                int NumberOfIntersections;
+                                        //         int NumberOfIntersections;
 
-                                                NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                                                PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
-                                                Polygons[j], obstacles.o[j].p_count);
+                                        //         NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                                        //         PhaseData[Now].Coordinates[WhichAgent], PhaseData[Now].Coordinates[i], 
+                                        //         Polygons[j], obstacles.o[j].p_count);
 
-                                                if (NumberOfIntersections == 2){
+                                        //         if (NumberOfIntersections == 2){
 
-                                                        DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
-                                                        VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
-                                                        VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+                                        //                 DrawCircle(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, 
+                                        //                 VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, 
+                                        //                 VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
 
-                                                        DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
-                                                        VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
-                                                        VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
+                                        //                 DrawCircle(RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, 
+                                        //                 VizParams->MapSizeXY), RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, 
+                                        //                 VizParams->MapSizeXY), RealToGlCoord_2D(1000, VizParams->MapSizeXY), RedColor);
 
-                                                        // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                        // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
-                                                        // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
-                                                        // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
-                                                        // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
-                                                }
+                                        //                 // DrawLine(RealToGlCoord_2D(Intersections[0][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                        //                 // RealToGlCoord_2D(Intersections[0][1] - VizParams->CenterY, VizParams->MapSizeXY),
+                                        //                 // RealToGlCoord_2D(Intersections[1][0] - VizParams->CenterX, VizParams->MapSizeXY),
+                                        //                 // RealToGlCoord_2D(Intersections[1][1] - VizParams->CenterY, VizParams->MapSizeXY), 
+                                        //                 // RealToGlCoord_2D(80, VizParams->MapSizeXY), RedColor);
+                                        //         }
 
-                                                freeMatrix(Intersections, 2, 3);
-                                        }
+                                        //         freeMatrix(Intersections, 2, 3);
+                                        // }
                                 
                                 }
 
