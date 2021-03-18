@@ -28,7 +28,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 void StepTarget(double * TargetPosition,
         sit_parameters_t * SitParams, vizmode_params_t * VizParams,
         flocking_model_params_t * FlockingParams, int TimeStepReal);

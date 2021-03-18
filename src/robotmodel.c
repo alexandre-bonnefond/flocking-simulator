@@ -15,7 +15,7 @@ phase_t SteppedPhase;
 phase_t TempPhase;
 
 double *ChangedInnerStateOfActualAgent;
-
+static int NearObstacles[5];
 
 static int NumberOfNeighbours = 0;      /* Number of units observed by the actual agent */
 const double packet_loss_power = -65.0;
@@ -31,13 +31,13 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         phase_t * Phase,
         int TimeStepReal,
         phase_t * DelayedPhase,
-        obstacles_t obstacles,
         double **Polygons,
+        node *Hull,
         const int WhichAgent,
         unit_model_params_t * UnitParams,
         const bool OrderByDistance) {
 
-    int i, j;
+    int i, j, k;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
     double DepthEMA = UnitParams->depthEMA.Value;
@@ -64,31 +64,92 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
     static double ActualAgentsPosition[3];
     GetAgentsCoordinates(ActualAgentsPosition, Phase, WhichAgent);
+    int HullLength;
+    HullLength = stack_count(Hull);
+    int cnt = 0;
+    if (Hull != NULL) {
+        double **HullPolygon;
+        double **ObstPolygon;
+        double *HullVertexSet;
+        HullVertexSet = malloc((HullLength * 2 + 2) * sizeof(double));
+        HullPolygon = doubleMatrix(HullLength, 3);
+        HullVertexSet[HullLength * 2] = Hull->data->x;
+        HullVertexSet[HullLength * 2 + 1] = Hull->data->y;
+        for (j = 0; j < HullLength; j++) {
+            HullPolygon[j][0] = Hull->data->x;
+            HullPolygon[j][1] = Hull->data->y;
+            HullPolygon[j][2] = 0;
+            HullVertexSet[j * 2] = Hull->data->x;
+            HullVertexSet[j* 2 + 1] = Hull->data->y;
+            Hull = Hull->next;
+        }
+        cnt = 0;
+        for (j = 0; j < obstacles.o_count; j++) {
+            ObstPolygon = doubleMatrix(obstacles.o[j].p_count, 2);
+            for (k = 0; k < obstacles.o[j].p_count; k++){
+                ObstPolygon[k][0] = obstacles.o[j].p[k][0];
+                ObstPolygon[k][1] = obstacles.o[j].p[k][1];   
+            }
+            if (cnt > 5) { break; }
+            if (IntersectingPolygons(HullPolygon, HullLength, ObstPolygon, obstacles.o[j].p_count) == true ||
+                IsInsidePolygon(obstacles.o[j].center, HullVertexSet, HullLength + 1)) {
+                    NearObstacles[cnt] = j;
+                    cnt++;
+            }
+        }
+    freeMatrix(ObstPolygon, obstacles.o[j].p_count, 2);
+    freeMatrix(HullPolygon, HullLength, 2);
+    free(HullVertexSet);
+    }
 
     for (i = 0; i < Phase->NumberOfAgents; i++) {
 
         static double NeighbourDistance[3];
         static double NeighbourPosition[3];
         double Distance = 0;
+        double dist_obst=0;
+        double Loss=0;
+        double Power=0;
 
         GetAgentsCoordinates(NeighbourPosition, Phase, i);
         VectDifference(NeighbourDistance, NeighbourPosition, ActualAgentsPosition);
         Distance = VectAbs(NeighbourDistance);
 
-        LocalActualPhaseToCreate->ReceivedPower[i] = ReceivedPowerLog(ActualAgentsPosition, 
-                            NeighbourPosition, obstacles, Polygons, UnitParams, Distance);
-        
-        if (TimeStepReal < DepthEMA) 
-        {
-            LocalActualPhaseToCreate->EMA[WhichAgent][i] += LocalActualPhaseToCreate->ReceivedPower[i]/DepthEMA;
+        for (j = 0; j < cnt; j++) {
+            double **Intersections;
+            Intersections = doubleMatrix(2, 3);
+            int NumberOfIntersections;
+            
+            static double DistanceThrough[3];
+
+            NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+            ActualAgentsPosition, NeighbourPosition, Polygons[NearObstacles[j]], obstacles.o[NearObstacles[j]].p_count);
+
+            if (NumberOfIntersections == 2) {
+                    VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
+                    dist_obst = VectAbs(DistanceThrough);
+                    Loss = 40 * log10(dist_obst);
+                    break;
+            }
+            else {
+                dist_obst = 0;
+                Loss = 0;
+            }
+            freeMatrix(Intersections, 2, 3);
         }
-        else
-        {
-            // printf("%d\t%d\t%d\t%f\t%f\n",WhichAgent, i, Phase->RealIDs[i], LocalActualPhaseToCreate->ReceivedPower[i], Phase->EMA[WhichAgent][i]);
-            LocalActualPhaseToCreate->EMA[WhichAgent][i] = EMA(LocalActualPhaseToCreate->ReceivedPower[i], 
-            Phase->EMA[WhichAgent][i], UnitParams->smoothing.Value, DepthEMA);
-            // printf("%f\n", LocalActualPhaseToCreate->EMA[WhichAgent][i]);
-        }      
+        LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);
+        
+        /* EMA calculation */
+
+        // if (TimeStepReal < DepthEMA) 
+        // {
+        //     LocalActualPhaseToCreate->EMA[WhichAgent][i] += LocalActualPhaseToCreate->ReceivedPower[i]/DepthEMA;
+        // }
+        // else
+        // {
+        //     LocalActualPhaseToCreate->EMA[WhichAgent][i] = EMA(LocalActualPhaseToCreate->ReceivedPower[i], 
+        //     Phase->EMA[WhichAgent][i], UnitParams->smoothing.Value, DepthEMA);
+        // }      
     }
 
     if (OrderByDistance) {
@@ -117,14 +178,6 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         NumberOfNeighbours = 1;
     }
 
-    // for (i = 0; i < 3; i++){
-    //     for (j = 0; j < 3; j++){
-    //         printf("%f\t", LocalActualPhaseToCreate->EMA[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-    // printf("\n");
-
     /* Setting up delay and GPS inaccuracy for positions and velocities */
 
     /* Velocities */
@@ -137,9 +190,8 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     NullVect(RealPosition, 3);
     static double GPSPositionToAdd[3];
     NullVect(GPSPositionToAdd, 3);
-    // printf("%d\n", NumberOfNeighbours);
+
     for (i = 1; i < NumberOfNeighbours; i++) {
-        //printf("id of neighbours is %d\n", LocalActualPhaseToCreate->RealIDs[i]);
         GetAgentsCoordinates(RealPosition, DelayedPhase,
                 LocalActualPhaseToCreate->RealIDs[i]);
         GetAgentsVelocity(RealVelocity, DelayedPhase,
@@ -325,7 +377,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(UnitVectDifference, 3);
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
-    // point_xy points[SitParams->NumberOfAgents];
     point_xy *points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
 
     /* Getting phase of actual TimeStepfrom PhaseData */
@@ -376,16 +427,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     static double ActualRealVelocity[3];
     NullVect(ActualRealVelocity, 3);
 
-    // double **Polygons;
-    // Polygons = malloc(sizeof(double) * obstacles.o_count);
-    // for (i = 0; i < obstacles.o_count; i++) {
-    //     Polygons[i] = malloc(sizeof(double) * obstacles.o[i].p_count * 2);
-    //     for (j = 0; j < obstacles.o[i].p_count; j++){
-    //         Polygons[i][2*j] = obstacles.o[i].p[j][0];
-    //         Polygons[i][2*j+1] = obstacles.o[i].p[j][1];
-    //     }
-    // }
-
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
         /* Constructing debug information about the actual agent */
@@ -397,8 +438,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
-                TimeStepReal, &LocalActualDelayedPhase, obstacles, Polygons, j, UnitParams, 
-                (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /   // 
+                TimeStepReal, &LocalActualDelayedPhase, Polygons, 
+                *Hull, j, UnitParams, 
+                (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /  
                 SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
