@@ -9,4 +9,5 @@ obstacles/
 .vscode/*
 
 robotflocksim_main
+robotflocksim_main_server
 gmon.out
