@@ -823,44 +823,24 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         const double ArenaCenterY, 
         const double ArenaSize) {
 
-        static double TopLeft[3];
-        static double TopRight[3];
-        static double BottomLeft[3];
-        static double BottomRight[3];
-
-        double SquareSize;
-        double x, y;
+        // Get agent's coordinates
         static double AgentsCoords[3];
-        int i = 0, j = 0;
-        bool SkipNext = false; 
-        int k;
-        for (k = 0; k < 3; k++) {
+        for (int k = 0; k < 3; k++) {
             AgentsCoords[k] = Phase->Coordinates[WhichAgent][k];
         }
-        FillVect(TopLeft, ArenaCenterX - ArenaSize, ArenaCenterY + ArenaSize, 0);
-        FillVect(TopRight, ArenaCenterX + ArenaSize, ArenaCenterY + ArenaSize, 0);
-        FillVect(BottomLeft, ArenaCenterX - ArenaSize, ArenaCenterY - ArenaSize, 0);
-        FillVect(BottomRight, ArenaCenterX + ArenaSize, ArenaCenterY - ArenaSize, 0);
 
-        SquareSize = 2 * ArenaSize / Resolution;
+        double SquareSize = 2 * ArenaSize / Resolution;
 
-        for (x = TopLeft[0]; x < TopRight[0]; x += SquareSize) {
-            j = 0;
-            for (y = TopLeft[1]; y > BottomLeft[1]; y -= SquareSize) {
-                if (AgentsCoords[0] > x && AgentsCoords[0] < x + SquareSize) {
-                    if (AgentsCoords[1] < y && AgentsCoords[1] > y - SquareSize) {
-                        if (Phase->CBP[j][i] != 1) {
-                            Phase->CBP[j][i] = 1;
-                            SkipNext = true;
-                            break;
-                        }
-                    }
-                }
-                j++;
-            }
-            if (SkipNext == true) { break; }
-            i++;
-        }
+        // Compute agent's coordinates in CBP space
+        int i_x = (int) (AgentsCoords[0] - (ArenaCenterX - ArenaSize)) / SquareSize;
+        int i_y = - (int) (AgentsCoords[1] - (ArenaCenterY + ArenaSize)) / SquareSize; // TODO check why a minus sign is needed
+        
+        // Avoid out of bounds access when agents are out of the arena
+        i_x = (i_x + Resolution) % Resolution;
+        i_y = (i_y + Resolution) % Resolution;
+
+        // Notify presence of the agent in the cell
+        Phase->CBP[i_y][i_x] = 1;
 }
 
 /* Randomizing phase of agents (with zero velocities) */

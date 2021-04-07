@@ -1022,8 +1022,8 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1883,10 +1883,10 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        // DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
-        // StatWindow = glutCreateWindow("Obstacle Probability Map");
-        // glutIdleFunc(UpdatePCB);
-        // glutDisplayFunc(DisplayChart);
+        DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
+        StatWindow = glutCreateWindow("Obstacle Probability Map");
+        glutIdleFunc(UpdatePCB);
+        glutDisplayFunc(DisplayChart);
         
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
