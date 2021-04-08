@@ -15,7 +15,7 @@ phase_t SteppedPhase;
 phase_t TempPhase;
 
 double *ChangedInnerStateOfActualAgent;
-static int NearObstacles[5];
+static int NearObstacles[6];
 
 static int NumberOfNeighbours = 0;      /* Number of units observed by the actual agent */
 const double packet_loss_power = -65.0;
@@ -90,7 +90,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                 ObstPolygon[k][0] = obstacles.o[j].p[k][0];
                 ObstPolygon[k][1] = obstacles.o[j].p[k][1];   
             }
-            if (cnt > 5) { break; }
+            if (cnt > 6) { break; }
             if (IntersectingPolygons(HullPolygon, HullLength, ObstPolygon, obstacles.o[j].p_count) == true ||
                 IsInsidePolygon(obstacles.o[j].center, HullVertexSet, HullLength + 1)) {
                     NearObstacles[cnt] = j;

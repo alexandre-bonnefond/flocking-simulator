@@ -3,9 +3,10 @@
 
 # ignore all files in the following directories
 output_default*/
-config/
-parameters/
-obstacles/
+output_folder/
+# config/
+# parameters/
+# obstacles/
 .vscode/*
 
 robotflocksim_main

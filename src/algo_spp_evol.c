@@ -596,7 +596,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
         /* Attraction */
         AttractionLin(AttractionVelocity, Phase, V_Rep,
-                Slope_Att, R_0 + 45, WhichAgent, (int) Dim, false);
+                Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
         
         /* Repulsion */
 
