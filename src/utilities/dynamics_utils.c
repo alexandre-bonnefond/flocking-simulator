@@ -836,11 +836,10 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         int i_y = - (int) (AgentsCoords[1] - (ArenaCenterY + ArenaSize)) / SquareSize; // TODO check why a minus sign is needed
         
         // Avoid out of bounds access when agents are out of the arena
-        i_x = (i_x + Resolution) % Resolution;
-        i_y = (i_y + Resolution) % Resolution;
-
-        // Notify presence of the agent in the cell
-        Phase->CBP[i_y][i_x] = 1;
+        if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
+            // Notify presence of the agent in the cell
+            Phase->CBP[i_y][i_x] = 1;
+        }
 }
 
 /* Randomizing phase of agents (with zero velocities) */
