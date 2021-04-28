@@ -264,7 +264,7 @@ void DisplayMenu() {
 
 /* Display some stats on a chart */
 void DisplayChart() {
-    int i,j;
+    int i,j,k;
     int Resolution;
     Resolution = ActualSitParams.Resolution;
     float yellow[3];
@@ -281,7 +281,11 @@ void DisplayChart() {
         xsize = 0;
 
         for (j = 0; j < Resolution; j++) {
-            if (ActualPhase.CBP[i][j] == 1) {
+            // TODO merge maps for display
+            double sum = 0;
+            for (k = 0; k < ActualSitParams.NumberOfAgents; sum += ActualPhase.CBP[k++][i][j]);
+
+            if (sum > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
                 DrawFullCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, green);
                 // glFlush();

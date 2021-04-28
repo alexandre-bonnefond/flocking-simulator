@@ -24,7 +24,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
-    Phase->CBP = doubleMatrix(Resolution, Resolution);
+    Phase->CBP = tripleMatrix(NumberOfAgents, Resolution, Resolution);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
@@ -42,7 +42,7 @@ void freePhase(phase_t * Phase, const int Resolution) {
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
     free(Phase->ReceivedPower);
-    freeMatrix(Phase->CBP, Resolution, Resolution);
+    freeTripleMatrix(Phase->CBP, Phase->NumberOfAgents, Resolution, Resolution);
 }
 
 /* Inserts the "WhichAgent"th agent's position and velocity into "Phase" */
@@ -727,9 +727,11 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
             PhaseData[WhichStep].EMA[j][i] = Phase->EMA[j][i];
         }
     }
-    for (i = 0; i < Resolution; i++) {
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
         for (j = 0; j < Resolution; j++) {
-            PhaseData[WhichStep].CBP[i][j] = Phase->CBP[i][j];
+            for (int k = 0; k < Resolution; k++) {
+                PhaseData[WhichStep].CBP[i][j][k] = Phase->CBP[i][j][k];
+            }
         }
     }
 }
@@ -838,7 +840,7 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         // Avoid out of bounds access when agents are out of the arena
         if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
             // Notify presence of the agent in the cell
-            Phase->CBP[i_y][i_x] = 1;
+            Phase->CBP[WhichAgent][i_y][i_x] = 1;
         }
 }
 

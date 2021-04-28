@@ -82,6 +82,34 @@ double **doubleMatrix(int rows, int cols) {
 
 }
 
+/* Dynamic triple array (3D, depth matrices with rows * cols cells) */ 
+double ***tripleMatrix(int depth, int rows, int cols) {
+
+    double ***tmat = (double ***) calloc(depth, sizeof(double**));
+    if (tmat == NULL) {
+        fprintf(stderr, "Matrix allocation error!\n");
+        exit(-1);
+    }
+
+    for (int i = 0; i < depth; i++) {
+        tmat[i] = (double **) calloc(cols, sizeof(double*));
+        if (tmat[i] == NULL) {
+            fprintf(stderr, "Matrix allocation error!\n");
+            exit(-1);
+        }
+
+        for (int j = 0; j < cols; j++) {
+            tmat[i][j] = (double *) calloc(rows, sizeof(double));
+            if (tmat[i][j] == NULL) {
+                fprintf(stderr, "Matrix allocation error!\n");
+                exit(-1);
+            }
+        }
+    }
+
+    return tmat;
+}
+
 /* Dynamic double time-indexed array */
 double ***doubleTimeIndexedMatrix(int timesteps, int rows, int cols) {
 
@@ -132,10 +160,20 @@ void freeMatrix(double **Matrix, int rows, int cols) {
     free(Matrix);
 }
 
-/* Frees 3D dynamic array
- */
-void
-freeTimeIndexedMatrix(double ***TimeIndexedMatrix, int timesteps, int rows,
+/** Frees 3D dynamic array */
+void freeTripleMatrix(double ***tmat, int depth, int cols, int rows) {
+    
+    for (int i = 0; i < depth; i++) {
+        for (int j = 0; j < cols; j++) {
+            free(tmat[i][j]);
+        }
+        free(tmat[i]);
+    }
+    free(tmat);
+}
+
+/* Frees 3D dynamic array */
+void freeTimeIndexedMatrix(double ***TimeIndexedMatrix, int timesteps, int rows,
         int cols) {
 
     int i, j;

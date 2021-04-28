@@ -46,6 +46,13 @@ double *doubleVector(int size);
  */
 double **doubleMatrix(int rows, int cols);
 
+/* Allocates a 3 dimensional dynamic array of double variables 
+ * Arrays allocated with this can be used as arrays of matrix structures
+ * "rows" and "cols" defines the number of rows and columns of the array, respectively
+ * and "depth" defines the number of rows * cols matrices contained in the triple matrix
+ */
+double ***tripleMatrix(int depth, int rows, int cols);
+
 /* Allocates a 3-indexed tensory data row
  * Arrays allocated with this can be used as a time-dependent matrix structure
  * "rows", "cols" and "timesteps" defines the size of the array. 
@@ -64,6 +71,13 @@ void freeInnerStates(inner_state_double_t * InnerStatesToFree, int size);
  * "rows" and "cols" defines the number of rows and columns of the array, respectively
  */
 void freeMatrix(double **Matrix, int rows, int cols);
+
+
+/* Frees a 3-indexed tensory data row
+ * Arrays allocated with this can be used as a time-dependent matrix structure
+ * "rows", "cols" and "timesteps" defines the size of the array. 
+ */
+void freeTripleMatrix(double ***mat, int depth, int cols, int rows);
 
 /* Frees 3D dynamic array
  */
