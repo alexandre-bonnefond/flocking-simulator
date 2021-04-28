@@ -81,6 +81,13 @@ void DrawTriangle(double CenterX, double CenterY, double LengthOfEdge,
 void DrawCircle(double Centerx, double Centery, double radius,
         const float *color);
 
+/* Draws an empty circle with given center coordinates (GL coords) and radius.
+ * "color" is an array that contains RGB values
+ * "segments" is the number of segments used to render the circle : less is faster but more is rounder
+ */
+void DrawFastCircle(double centerX, double centerY, double radius, int segments,
+                    const float *color);
+
 /* Draws an empty circle with thick edges with given center coordinates (GL coord) and radius 
  * "color" is an array that contains RGB values
  */

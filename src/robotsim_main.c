@@ -264,19 +264,22 @@ void DisplayMenu() {
 
 /* Display some stats on a chart */
 void DisplayChart() {
-    int i,j,k;
-    int Resolution;
-    Resolution = ActualSitParams.Resolution;
-    float yellow[3];
-    yellow[0] = 1; yellow[1]= 1; yellow[2] = 0;
-    float green[3];
-    green[0] = 0; green[1]= 1; green[2] = 0;
-    double xsize = 0, ysize = 0;
+    int Resolution = ActualSitParams.Resolution;
+
+    float red[3] = {1, 0, 0};
+    float blue[3] = {0, 0, 1};
+
+    // float green[3] = {0, 1, 0};
+    // float yellow[3] = {1, 1, 0};
+
     double step = 2.0 / Resolution;
     glClearColor(ActualColorConfig.EraseColor[0],
             ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     DrawSquare(Resolution);
+
+    int i,j,k;
+    double xsize = 0, ysize = 0;
     for (i = 0; i < Resolution; i++) {
         xsize = 0;
 
@@ -287,13 +290,21 @@ void DisplayChart() {
 
             if (sum > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
-                DrawFullCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, green);
-                // glFlush();
+
+                sum = MIN(1, sum);
+                float col[3] = {0};
+                LerpColor(blue, red, col, sum);
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
+
+                // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
             }
             xsize += step;
         }
         ysize += step;
     }
+
     glutSwapBuffers();
 }
 

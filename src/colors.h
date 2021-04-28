@@ -117,4 +117,6 @@ void LoadModelSpecificColors(char *readed_Name, char *readed_value,
         model_specific_color_t * ModelSpecificColors,
         int *NumberOfModelSpecificColors);
 
+void LerpColor(float* start, float* end, float* dest, float factor);
+
 #endif

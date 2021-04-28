@@ -55,7 +55,6 @@ void DrawShape(double CenterX, double CenterY, double width, double height,
                 CenterY - sin(angle) * width / 2.0 - cos(angle) * height / 2.0);
     }
     glEnd();
-
 }
 
 /* Draws a line with given endpoint coordinates (in GL coords) */
@@ -89,7 +88,7 @@ void DrawSquare(int Resolution) {
     glColor3f(1.0, 0.0, 0.0);
     for (int j = 0; j < Resolution; j++) {
         xsize = 0;
-        for (int i = 0; i < Resolution; i++) {                
+        for (int i = 0; i < Resolution; i++) {
              glBegin(GL_POLYGON);
                glVertex2f(-1.0 + xsize, -1.0 + ysize);
                glVertex2f(-1.0 + step + xsize, -1.0 + ysize);
@@ -114,8 +113,8 @@ void DrawDashedLine(double x1, double y1, double x2, double y2,
         glEnable(GL_LINE_STIPPLE);
         glLineStipple(4, 0x00FF);  /*  dashed  */
         glBegin(GL_LINES);
-        glVertex2f((x1),(y1)); 
-        glVertex2f((x2),(y2)); 
+        glVertex2f((x1),(y1));
+        glVertex2f((x2),(y2));
         glEnd();
         glDisable(GL_LINE_STIPPLE);
 }
@@ -213,7 +212,7 @@ void DrawGradientColoredCircle(const double Centerx, const double Centery,
 
 /* Draws a full circle with given center coordinates (GL coords) and radius */
 void DrawFullCircle(double Centerx, double Centery, double radius,
-        const float *color) {
+                    const float *color) {
 
     double i;
 
@@ -221,11 +220,27 @@ void DrawFullCircle(double Centerx, double Centery, double radius,
     for (i = 0; i < 2 * M_PI; i += 0.1) {
 
         DrawShape(Centerx, Centery, radius * M_SQRT2, radius * M_SQRT2, i,
-                color);
+                  color);
 
     }
 
 }
+
+/* Draws a full circle with given center coordinates (GL coords) and radius */
+void DrawFastCircle(double centerX, double centerY, double radius, int segments,
+                    const float *color) {
+
+    glBegin(GL_LINE_LOOP);
+    glColor3f(color[0], color[1], color[2]);
+    for (int i = 0; i < segments; i++) {
+        float theta = 2.0f * M_PI * ((float)i) / ((float)segments);
+        float x = radius * cosf(theta);
+        float y = radius * sinf(theta);
+        glVertex2f(x + centerX, y + centerY);
+    }
+    glEnd();
+}
+
 
 /* Draws an arrow with given center coordinates ("x" and "y") and Length ("Length") */
 void DrawArrow(double x, double y, double Length, double angle,
