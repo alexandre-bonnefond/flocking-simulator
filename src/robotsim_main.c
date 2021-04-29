@@ -299,7 +299,7 @@ void DisplayChart() {
                 DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
 
                 // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
-            }
+            } 
             xsize += step;
         }
         ysize += step;
