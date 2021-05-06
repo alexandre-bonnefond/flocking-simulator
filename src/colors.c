@@ -385,5 +385,10 @@ void LoadModelSpecificColors(char *readed_Name, char *readed_value,
             return;
         }
     }
+}
 
+void LerpColor(float* start, float* end, float* dest, float factor) {
+    dest[0] = start[0] + (end[0] - start[0]) * factor;
+    dest[1] = start[1] + (end[1] - start[1]) * factor;
+    dest[2] = start[2] + (end[2] - start[2]) * factor;
 }

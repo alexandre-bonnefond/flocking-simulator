@@ -46,7 +46,7 @@ typedef struct {
     int *RealIDs;
     int NumberOfInnerStates;
     int NumberOfAgents;
-    double **CBP; 
+    double ***CBP; 
 } phase_t;
 
 /* Simple tools for allocating phase space and cleaning memory

@@ -96,8 +96,8 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                     NearObstacles[cnt] = j;
                     cnt++;
             }
+            freeMatrix(ObstPolygon, obstacles.o[j].p_count, 2);
         }
-    freeMatrix(ObstPolygon, obstacles.o[j].p_count, 2);
     freeMatrix(HullPolygon, HullLength, 2);
     free(HullVertexSet);
     }
@@ -377,7 +377,11 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     NullVect(UnitVectDifference, 3);
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
-    point_xy *points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
+
+    static point_xy *points;
+    if (points == NULL) {        
+        points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
+    }
 
     /* Getting phase of actual TimeStepfrom PhaseData */
     LocalActualPhase = PhaseData[TimeStepLooped];
@@ -463,8 +467,10 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         /* Swapping the EMA line at the begining of the matrix (quick fix to improve...) */
         TempPhase.EMA[0] = TempPhase.EMA[j];
         
-        /* CBP strategy */
-        WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
+        /* CBP strategy (only on GPS tick) */
+        if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
+            WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
+        }
 
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
@@ -485,6 +491,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
     /* Compute the convex hull */
     (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
+    
     // stack_print(*Hull);
     // printf("\n");
     // free(points);
