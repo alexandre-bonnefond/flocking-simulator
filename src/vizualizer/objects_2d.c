@@ -71,37 +71,31 @@ void DrawLine(double x1, double y1, double x2, double y2, double width,
 
 void DrawSquare(int Resolution) {
 
-    glClear(GL_COLOR_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    float red[3];
-    red[0] = 1; red[1]= 0; red[2] = 0;
-    float yellow[3];
-    yellow[0] = 1; yellow[1]= 1; yellow[2] = 0;
-    float green[3];
-    green[0] = 0; green[1]= 1; green[2] = 0;
-    double xsize = 0, ysize = 0;
+
     double step = 2.0 / Resolution;
-//     printf("%f\n", step);
-    bool free = false;
-//     DrawGradientColoredCircle(0, 0, 30, 20, red, yellow, 60);
-//     glFlush();
+
     glColor3f(1.0, 0.0, 0.0);
-    for (int j = 0; j < Resolution; j++) {
-        xsize = 0;
-        for (int i = 0; i < Resolution; i++) {
-             glBegin(GL_POLYGON);
-               glVertex2f(-1.0 + xsize, -1.0 + ysize);
-               glVertex2f(-1.0 + step + xsize, -1.0 + ysize);
-               glVertex2f(-1.0 + step + xsize, -1.0 + step + ysize);
-               glVertex2f(-1.0 + xsize, -1.0 + step + ysize);
-            glEnd();
-         xsize += step;
-         glFlush();
-        }
-     ysize += step;
-        }
-        // glutPostRedisplay();
-     glFlush();
+
+    for (int i = -1; i < Resolution; i+=2) {
+
+        glBegin(GL_POLYGON);
+            glVertex2f(-1.0, -1.0 + step * i);
+            glVertex2f(+1.0, -1.0 + step * i);
+            glVertex2f(+1.0, -1.0 + step * (1 + i));
+            glVertex2f(-1.0, -1.0 + step * (1 + i));
+        glEnd();
+    }
+
+    for (int i = -1; i < Resolution; i+=2) {
+
+        glBegin(GL_POLYGON);
+            glVertex2f(-1.0 + step * i, -1.0);
+            glVertex2f(-1.0 + step * i, +1.0);
+            glVertex2f(-1.0 + step * (1 + i), +1.0);
+            glVertex2f(-1.0 + step * (1 + i), -1.0);
+        glEnd();
+    }
 }
 
 /* Draws a dashed line with given endpoint coordinates (in GL coords) */

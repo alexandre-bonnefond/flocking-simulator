@@ -840,7 +840,7 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         // Avoid out of bounds access when agents are out of the arena
         if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
             // Notify presence of the agent in the cell
-            Phase->CBP[WhichAgent][i_y][i_x] += .01;
+            Phase->CBP[WhichAgent][i_y][i_x] += .005;
         }
 }
 

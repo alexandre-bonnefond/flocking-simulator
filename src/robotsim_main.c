@@ -276,7 +276,6 @@ void DisplayChart() {
     glClearColor(ActualColorConfig.EraseColor[0],
             ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    DrawSquare(Resolution);
 
     int i,j,k;
     double xsize = 0, ysize = 0;
@@ -304,6 +303,8 @@ void DisplayChart() {
         }
         ysize += step;
     }
+
+    DrawSquare(Resolution);
 
     glutSwapBuffers();
 }
