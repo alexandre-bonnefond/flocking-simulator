@@ -276,7 +276,7 @@ void DisplayChart() {
     glClearColor(ActualColorConfig.EraseColor[0],
             ActualColorConfig.EraseColor[1], ActualColorConfig.EraseColor[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     int i,j,k;
     double xsize = 0, ysize = 0;
     for (i = 0; i < Resolution; i++) {
@@ -285,7 +285,11 @@ void DisplayChart() {
         for (j = 0; j < Resolution; j++) {
             // TODO merge maps for display
             double sum = 0;
-            for (k = 0; k < ActualSitParams.NumberOfAgents; sum += ActualPhase.CBP[k++][i][j]);
+
+            if (ActualVizParams.WhichAgentIsSelected == ActualPhase.NumberOfAgents)
+                for (k = 0; k < ActualSitParams.NumberOfAgents; sum += ActualPhase.CBP[k++][i][j]);
+            else
+                sum = ActualPhase.CBP[ActualVizParams.WhichAgentIsSelected][i][j];
 
             if (sum > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
