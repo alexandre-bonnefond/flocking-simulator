@@ -86,6 +86,9 @@ double **Polygons;
 /* Convex hull */
 node *Hull;
 
+/* CBP */
+static int ***CBPObst;
+ 
 // Temporary...
 static bool HighRes = true;
 
@@ -158,6 +161,8 @@ void Initialize() {
             ActualPhase.Coordinates[i][j] = PhaseData[0].Coordinates[i][j];
         }
     }
+
+    CBPObst = tripleIntMatrix(ActualSitParams.NumberOfAgents, ActualSitParams.NumberOfAgents, 2 * sqrt(2) * ActualSitParams.Resolution);
 
     InitializePhase(&ActualPhase, &ActualFlockingParams, &ActualSitParams, Verbose);
 
@@ -279,9 +284,17 @@ void DisplayChart() {
 
     int i,j,k;
     double xsize = 0, ysize = 0;
+    int col = 0;
+    int row = 0;
+    while (CBPObst[0][row][col] != 0 && CBPObst[0][row][col + 1] != 0) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        printf("%d\n", col);
+        DrawShape(-1.0 + step/2 + step * CBPObst[0][row][col], 1.0 - step/2 - CBPObst[0][row][col + 1] * step, step, step, 0, red);
+        col += 2;
+        row += 1;
+    }
     for (i = 0; i < Resolution; i++) {
         xsize = 0;
-
         for (j = 0; j < Resolution; j++) {
             // TODO merge maps for display
             double sum = 0;
@@ -290,12 +303,12 @@ void DisplayChart() {
             if (sum > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
 
-                sum = MIN(1, sum);
-                float col[3] = {0};
-                LerpColor(blue, red, col, sum);
+                // sum = MIN(1, sum);
+                // float col[3] = {0};
+                // LerpColor(blue, red, col, sum);
 
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
+                // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                // DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
 
                 // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
             } 
@@ -889,7 +902,7 @@ void DisplayTrajs() {
 /* Refreshing "trajectory" window */
 void UpdatePositionsToDisplay() {
 
-    int i;
+    int i, j, k;
 
     static int TimeStepsToStore = 0;
     /* For agent-following and CoM-following mode */
@@ -944,8 +957,21 @@ void UpdatePositionsToDisplay() {
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
-                // stack_print(Hull);
-                // printf("\n");
+
+                /* Ray Tracing function */
+                // for (j = 0; j < ActualSitParams.NumberOfAgents; j++) {
+                //     for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
+                //         if (j != k) {
+                //             if (fabs(ActualPhase.Laplacian[j][k] - PhaseData[Now-100].Laplacian[j][k]) > 20) {
+                //                 // printf("%d\t%d\n", j, k);
+                //                 // int * Vox;
+                //                 // Vox = FastVoxelTraversal(ActualPhase.Coordinates[j], ActualPhase.Coordinates[k],
+                //                 // 2 * ArenaRadius / ActualSitParams.Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
+
+                //             }
+                //         }
+                //     }
+                // }
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -956,6 +982,39 @@ void UpdatePositionsToDisplay() {
                  */
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
+
+                if (Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
+                    for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
+                        for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
+                            if (j != k) {
+                                if (fabs(PhaseData[Now + 1].Laplacian[j][k] - PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]) > 20) {
+                                    // printf("%d\t%d\n", j, k);
+                                    int *Vox;
+                                    Vox = FastVoxelTraversal(ActualPhase.Coordinates[j], ActualPhase.Coordinates[k],
+                                    2 * ArenaRadius / ActualSitParams.Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
+                                    int cntvox = 0;
+                                    for (cntvox = 0; cntvox < 100; cntvox += 2){
+                                        printf("%d\t%d\n", Vox[cntvox], Vox[cntvox + 1]);
+                                    }
+                                    // while (Vox[cntvox] != 99){
+                                    //     printf("%d\t%d\n", Vox[cntvox], Vox[cntvox+1]);
+                                    // //     CBPObst[j][k][cntvox] = Vox[cntvox];
+                                    // //     CBPObst[j][k][cntvox + 1] = Vox[cntvox + 1];
+                                    //     // cntvox += 2;
+                                    // }
+                                    
+                                    // CBPObst[j][k] = Vox;
+                                }
+                            }
+                            // printf("%d\t%d\n", j, k);
+                            // printf("%f\t", PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]);
+                            // printf("%f\t", PhaseData[Now + 1].Laplacian[j][k]);
+                        }
+                        // printf("\n");
+                    }
+                    // printf("\n\n\n\n");
+                }
+                // free(Vox);
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */

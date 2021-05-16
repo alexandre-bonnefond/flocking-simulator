@@ -400,4 +400,6 @@ double polygonArea(double *X, double *Y, int n);
 // Returns a node pointer to the first node in a stack containing
 // the list of points in the convex hull
 node *convex_hull(point_xy* points, int n);
+
+int * FastVoxelTraversal(double *CoordsA, double *CoordsB, int VoxelSize, double ArenaCenterX, double ArenaCenterY, double ArenaSize);
 #endif

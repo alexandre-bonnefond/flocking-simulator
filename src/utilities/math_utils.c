@@ -1511,3 +1511,75 @@ node *convex_hull(point_xy *points, int n)
     // Return the convex hull
     return hull;
 }
+
+int * FastVoxelTraversal(double *CoordsA, double *CoordsB, int VoxelSize, double ArenaCenterX, double ArenaCenterY, double ArenaSize) {
+
+    
+    // const int MaxLengthToStore = (int) (50 * 2 * sqrt(2)) + 1;
+    static int Voxels[100];
+
+    // Determining in which voxel is agent A
+    int vox_ax = (int) (CoordsA[0] - (ArenaCenterX - ArenaSize)) / VoxelSize;
+    int vox_ay = - (int) (CoordsA[1] - (ArenaCenterY + ArenaSize)) / VoxelSize;
+
+    int vox_bx = (int) (CoordsB[0] - (ArenaCenterX - ArenaSize)) / VoxelSize;
+    int vox_by = - (int) (CoordsB[1] - (ArenaCenterY + ArenaSize)) / VoxelSize;
+
+    // Origin
+    int x = vox_ax + 1;
+    int y = vox_ay + 1;
+
+
+    // Determining the Step 
+    double StepX, StepY;
+    double AB[2];
+    VectDifference2D(AB, CoordsB, CoordsA);
+    double dirX = AB[0];
+    double dirY = AB[1];
+
+    if (dirX > 0) {
+        StepX = 1;
+    }
+    else if (dirX < 0) {
+        StepX = -1;
+    }
+    else {
+        StepX = 0;
+    }
+    if (dirY > 0) {
+        StepY = -1;
+    }
+    else if (dirY < 0) {
+        StepY = 1;
+    }
+    else {
+        StepY = 0;
+    }
+
+    // Determining tDelta
+    double tDeltaX = 1 / fabs(dirX);
+    double tDeltaY = 1 / fabs(dirY);
+
+    // Determining tMax
+    double tMaxX = (x - CoordsA[0]) / dirX;
+    double tMaxY = (y - CoordsA[1]) / dirY;
+
+    // Begining of the loop
+    int cnt = 0;
+    while ((x != vox_bx && y != vox_by) && cnt < 100) {
+
+        if (tMaxX < tMaxY) {
+		    tMaxX = tMaxX + tDeltaX;
+		    x += StepX;
+
+	    } else {
+            tMaxY = tMaxY + tDeltaY;
+            y += StepY;
+	    }
+        Voxels[cnt] = x;
+        Voxels[cnt +1] = y;
+        cnt += 2;
+        printf("%d\t%d\n", x, y);
+    }    
+    return Voxels;
+}   

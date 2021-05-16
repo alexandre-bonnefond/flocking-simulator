@@ -15,7 +15,7 @@ phase_t SteppedPhase;
 phase_t TempPhase;
 
 double *ChangedInnerStateOfActualAgent;
-static int NearObstacles[6];
+static int NearObstacles[9];
 
 static int NumberOfNeighbours = 0;      /* Number of units observed by the actual agent */
 const double packet_loss_power = -65.0;
@@ -90,7 +90,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                 ObstPolygon[k][0] = obstacles.o[j].p[k][0];
                 ObstPolygon[k][1] = obstacles.o[j].p[k][1];   
             }
-            if (cnt > 6) { break; }
+            if (cnt > 9) { break; }
             if (IntersectingPolygons(HullPolygon, HullLength, ObstPolygon, obstacles.o[j].p_count) == true ||
                 IsInsidePolygon(obstacles.o[j].center, HullVertexSet, HullLength + 1)) {
                     NearObstacles[cnt] = j;
@@ -98,6 +98,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             }
             freeMatrix(ObstPolygon, obstacles.o[j].p_count, 2);
         }
+        // printf("%d\n", cnt);
     freeMatrix(HullPolygon, HullLength, 2);
     free(HullVertexSet);
     }
@@ -401,6 +402,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     static double CoordinatesToStep[3];
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
+        points[j].x = LocalActualPhase.Coordinates[j][0];
+        points[j].y = LocalActualPhase.Coordinates[j][1];
+
         GetAgentsVelocity(Velocity, &LocalActualPhase, j);
         GetAgentsCoordinates(CoordinatesToStep, &LocalActualPhase, j);
 
@@ -413,6 +417,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         InsertAgentsCoordinates(&SteppedPhase, CoordinatesToStep, j);
 
     }
+
+    /* Compute the convex hull */
+    (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
 
     /* Step GPS coordinates and velocities (in every "t_gps"th second) */
     if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value /
@@ -449,8 +456,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
 
-        points[j].x = LocalActualPhase.Coordinates[j][0];
-        points[j].y = LocalActualPhase.Coordinates[j][1];
+        // points[j].x = LocalActualPhase.Coordinates[j][0];
+        // points[j].y = LocalActualPhase.Coordinates[j][1];
         
         /* Fill the Laplacian and EMA Matrices in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
@@ -470,6 +477,22 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         /* CBP strategy (only on GPS tick) */
         if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
             WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
+
+            // for (i = 0; i < TempPhase.NumberOfAgents; i++) {
+                // if (i != j) {
+                //     if (fabs(OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] - \
+                //         LocalActualDelayedPhase.Laplacian[j][TempPhase.RealIDs[i]]) > 20) {
+                //             int * Vox;
+                //             Vox = FastVoxelTraversal(OutputPhase->Coordinates[j], OutputPhase->Coordinates[TempPhase.RealIDs[i]],
+                //             2 * ArenaRadius / SitParams->Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
+
+                        // for (int t = 0; t < 50; t++) {
+                        //     printf("%d ", Vox[t]);
+                        // }
+                        // printf("\n");
+                //     }
+                // }
+            // } 
         }
 
         /* Solving Newtonian with Euler-Naruyama method */
@@ -490,12 +513,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     }
 
     /* Compute the convex hull */
-    (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
-    
-    // stack_print(*Hull);
-    // printf("\n");
-    // free(points);
-    // points = NULL;
+    // (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
 
     // for (i = 0; i < SitParams->Resolution; i++){
     //     for (j = 0; j < SitParams->Resolution; j++){
@@ -508,7 +526,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     /* Print the Laplacian */
     // for (i = 0; i < SitParams->NumberOfAgents; i++){
     //     for (j = 0; j < SitParams->NumberOfAgents; j++){
-    //         printf("%f\t", OutputPhase->EMA[i][j]);
+    //         printf("%f\t", OutputPhase->Laplacian[i][j]);
     //     }
     //     printf("\n");
     // }
