@@ -78,8 +78,7 @@ void GetAgentsVelocity(double *Velocity, phase_t * Phase, const int WhichAgent) 
 }
 
 /* Inserts the "WhichAgent"th agent's velocity into "Phase" */
-void
-InsertAgentsVelocity(phase_t * Phase, double *Velocity, const int WhichAgent) {
+void InsertAgentsVelocity(phase_t * Phase, double *Velocity, const int WhichAgent) {
 
     int j;
     for (j = 0; j < 3; j++) {

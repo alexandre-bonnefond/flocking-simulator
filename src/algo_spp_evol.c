@@ -515,7 +515,6 @@ void HandleOuterVariables(phase_t * Phase,
         sit_parameters_t * SitParams,
         unit_model_params_t * UnitParams,
         const double ActualTime, char *OutputDirectory) {
-
 }
 
 void CalculatePreferredVelocity(double *OutputVelocity,
@@ -620,7 +619,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
             R_0, 3 * R_0, WhichAgent, (int) Dim);
         // UnitVect(GradientVelocity, GradientVelocity);
-        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
+        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int) Dim);
         // GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
         // MultiplicateWithScalar(GradientVelocity, GradientVelocity, 100, (int) Dim);
         // GradientBased(GradientVelocity, Phase, .1, 400, 450, 0.3,
@@ -628,7 +627,6 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         AlignmentOlfati(AlignOlfati, Phase, H_Bump, 2 * R_0, WhichAgent, (int) Dim, Epsilon);
         // MultiplicateWithScalar(AlignOlfati, AlignOlfati, 5, (int)Dim);
         // TrackingOlfati(TrackOlfati, TargetPosition, velo, Phase, WhichAgent, (int) Dim);
-                         
     }
 
     else if (Flocking_type == 2) {
