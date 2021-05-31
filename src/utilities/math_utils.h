@@ -81,6 +81,8 @@ double VectAbs(double *InputVector);
  */
 double VectAbsXY(double *InputVector);
 
+void VectDifference2D(double *ABDiff, double *VectA, double *VectB);
+
 /* Difference of two vectors (3D)
  * "ABDiff" is the difference of the vectors "VectA" and "VectB"
  * ABDiff = VectA - VectB
@@ -401,5 +403,4 @@ double polygonArea(double *X, double *Y, int n);
 // the list of points in the convex hull
 node *convex_hull(point_xy* points, int n);
 
-int * FastVoxelTraversal(double *CoordsA, double *CoordsB, int VoxelSize, double ArenaCenterX, double ArenaCenterY, double ArenaSize);
 #endif

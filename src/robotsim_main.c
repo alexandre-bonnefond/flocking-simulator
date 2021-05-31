@@ -284,15 +284,17 @@ void DisplayChart() {
 
     int i,j,k;
     double xsize = 0, ysize = 0;
-    int col = 0;
-    int row = 0;
-    while (CBPObst[0][row][col] != 0 && CBPObst[0][row][col + 1] != 0) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        printf("%d\n", col);
-        DrawShape(-1.0 + step/2 + step * CBPObst[0][row][col], 1.0 - step/2 - CBPObst[0][row][col + 1] * step, step, step, 0, red);
-        col += 2;
-        row += 1;
-    }
+    // for (int ag = 0; ag < 1; ag++) {
+    //     for (row = 0; row < ActualSitParams.NumberOfAgents; row++) {
+    //         for (k = 0; k <100; k++) {
+    //             if (CBPObst[ag][row][k] != 0 && CBPObst[ag][row][k + 1] != 0) {
+    //                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //                 // printf("%d\n", col);
+    //                 DrawShape(-1.0 + step/2 + step * CBPObst[ag][row][k], 1.0 - step/2 - CBPObst[ag][row][k + 1] * step, step, step, 0, red);
+    //             }
+    //         }
+    //     }
+    // }
     for (i = 0; i < Resolution; i++) {
         xsize = 0;
         for (j = 0; j < Resolution; j++) {
@@ -303,12 +305,12 @@ void DisplayChart() {
             if (sum > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
 
-                // sum = MIN(1, sum);
-                // float col[3] = {0};
-                // LerpColor(blue, red, col, sum);
+                sum = MIN(1, sum);
+                float col[3] = {0};
+                LerpColor(blue, red, col, sum);
 
-                // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                // DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
 
                 // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
             } 
@@ -352,31 +354,31 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
 
         /* Setting up size of the coordinate system */
-        // LengthOfAxis = RealToGlCoord_2D(ArenaRadius, ActualVizParams.MapSizeXY);
-        // TicDensity = RealToGlCoord_2D(2000.0, ActualVizParams.MapSizeXY);
-        // HowManyTics = (int) LengthOfAxis / TicDensity;
-        // // HowManyTics = (int) HowManyTics *1.5;
+        LengthOfAxis = RealToGlCoord_2D(ArenaRadius, ActualVizParams.MapSizeXY);
+        TicDensity = RealToGlCoord_2D(2000.0, ActualVizParams.MapSizeXY);
+        HowManyTics = (int) LengthOfAxis / TicDensity;
+        HowManyTics = (int) HowManyTics *1.5;
 
-        // /* Drawing ground */
-        // glColor3f(ActualColorConfig.AxisColor[0],
-        //         ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
-        // glBegin(GL_LINES);
-        // for (i = -HowManyTics; i < HowManyTics; i++) {
-        //     // glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
-        //     // glVertex2d(i * TicDensity, LengthOfAxis);
-        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
-        //         RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
-        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
-        //         RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
+        /* Drawing ground */
+        glColor3f(ActualColorConfig.AxisColor[0],
+                ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
+        glBegin(GL_LINES);
+        for (i = -HowManyTics; i < HowManyTics; i++) {
+            glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
+            glVertex2d(i * TicDensity, LengthOfAxis);
+            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
+                RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
+            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
+                RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
 
-        // }
-        // for (i = -HowManyTics; i < HowManyTics; i++) {
+        }
+        for (i = -HowManyTics; i < HowManyTics; i++) {
 
-        //     glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
-        //     glVertex2d(LengthOfAxis, i * TicDensity);
+            glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
+            glVertex2d(LengthOfAxis, i * TicDensity);
 
-        // }
-        // glEnd();
+        }
+        glEnd();
 
         /* Draw target */
         if (ActualUnitParams.flocking_type.Value == 2) {
@@ -958,21 +960,6 @@ void UpdatePositionsToDisplay() {
                         true, ConditionsReset, &Collisions, AgentsInDanger,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
-                /* Ray Tracing function */
-                // for (j = 0; j < ActualSitParams.NumberOfAgents; j++) {
-                //     for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
-                //         if (j != k) {
-                //             if (fabs(ActualPhase.Laplacian[j][k] - PhaseData[Now-100].Laplacian[j][k]) > 20) {
-                //                 // printf("%d\t%d\n", j, k);
-                //                 // int * Vox;
-                //                 // Vox = FastVoxelTraversal(ActualPhase.Coordinates[j], ActualPhase.Coordinates[k],
-                //                 // 2 * ArenaRadius / ActualSitParams.Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
-
-                //             }
-                //         }
-                //     }
-                // }
-
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
                         TimeStep * ActualSitParams.DeltaT,
@@ -982,39 +969,24 @@ void UpdatePositionsToDisplay() {
                  */
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
-
+                
                 if (Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
+
                     for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
+                        static double CoordA[3];
+                        GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
                         for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
                             if (j != k) {
                                 if (fabs(PhaseData[Now + 1].Laplacian[j][k] - PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]) > 20) {
-                                    // printf("%d\t%d\n", j, k);
-                                    int *Vox;
-                                    Vox = FastVoxelTraversal(ActualPhase.Coordinates[j], ActualPhase.Coordinates[k],
-                                    2 * ArenaRadius / ActualSitParams.Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
-                                    int cntvox = 0;
-                                    for (cntvox = 0; cntvox < 100; cntvox += 2){
-                                        printf("%d\t%d\n", Vox[cntvox], Vox[cntvox + 1]);
-                                    }
-                                    // while (Vox[cntvox] != 99){
-                                    //     printf("%d\t%d\n", Vox[cntvox], Vox[cntvox+1]);
-                                    // //     CBPObst[j][k][cntvox] = Vox[cntvox];
-                                    // //     CBPObst[j][k][cntvox + 1] = Vox[cntvox + 1];
-                                    //     // cntvox += 2;
-                                    // }
-                                    
-                                    // CBPObst[j][k] = Vox;
+                                    static double CoordB[3];
+                                    GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
+
+                                    FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
                                 }
                             }
-                            // printf("%d\t%d\n", j, k);
-                            // printf("%f\t", PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]);
-                            // printf("%f\t", PhaseData[Now + 1].Laplacian[j][k]);
                         }
-                        // printf("\n");
                     }
-                    // printf("\n\n\n\n");
                 }
-                // free(Vox);
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */

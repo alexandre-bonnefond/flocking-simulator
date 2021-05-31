@@ -361,5 +361,8 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                         const double Dist);
 
 double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams);
+
+void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int WhichAgent,
+                        double ArenaCenterX, double ArenaCenterY, double ArenaSize, int Resolution);
         
 #endif

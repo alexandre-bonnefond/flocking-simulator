@@ -1922,3 +1922,92 @@ double DegradedPower(double Dist, double DistObst, double Loss, unit_model_param
     }
         return Power;
 }
+
+void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int WhichAgent,
+                        double ArenaCenterX, double ArenaCenterY, double ArenaSize, int Resolution) {
+
+    int gridN = Resolution;
+
+    double gridMinBoundaries[2] = {ArenaCenterX - ArenaSize, ArenaCenterY - ArenaSize};
+    double gridMaxBoundaries[2] = {ArenaCenterX + ArenaSize, ArenaCenterY + ArenaSize};
+
+    double boxSize[2];
+    VectDifference2D(boxSize, gridMaxBoundaries, gridMinBoundaries);
+
+    double x = floor( ((CoordsA[0] - gridMinBoundaries[0]) / boxSize[0]) * gridN);
+    double y = floor( ((CoordsA[1] - gridMinBoundaries[1]) / boxSize[1]) * gridN);
+
+    double TargetX = floor( ((CoordsB[0] - gridMinBoundaries[0]) / boxSize[0]) * gridN);
+    double TargetY = floor( ((CoordsB[1] - gridMinBoundaries[1]) / boxSize[1]) * gridN);
+
+    double AB[2];
+    VectDifference2D(AB, CoordsB, CoordsA);
+    double dirX = AB[0];
+    double dirY = AB[1];
+
+    int StepX, StepY;
+    double tVoxelX, tVoxelY;
+
+    if (dirX > 0) {
+        tVoxelX = (x + 1) / gridN;
+        StepX = 1;
+    }
+    else if (dirX < 0) {
+        tVoxelX = x / gridN;
+        StepX = -1;
+    }
+    else {
+        tVoxelX = 0;
+        StepX = 0;
+    }
+    if (dirY > 0) {
+        tVoxelY = (y + 1) / gridN;
+        StepY = 1;
+    }
+    else if (dirY < 0) {
+        tVoxelY = y / gridN;
+        StepY = -1;
+    }
+    else {
+        tVoxelY = 0;
+        StepY = 0;
+    }
+
+    double VoxelMaxX, VoxelMaxY;
+    VoxelMaxX = gridMinBoundaries[0] + tVoxelX * boxSize[0];
+    VoxelMaxY = gridMinBoundaries[1] + tVoxelY * boxSize[1];
+
+    double tMaxX, tMaxY;
+    tMaxX = (VoxelMaxX - CoordsA[0]) / dirX;
+    tMaxY = (VoxelMaxY - CoordsA[1]) / dirY;
+
+    double VoxelSizeX, VoxelSizeY;
+    VoxelSizeX = boxSize[0] / gridN;
+    VoxelSizeY = boxSize[1] / gridN;
+
+    double tDeltaX, tDeltaY;
+    tDeltaX = VoxelSizeX / fabs(dirX);
+    tDeltaY = VoxelSizeY / fabs(dirY);
+
+    int cnt = 0;
+    // printf("\t\t%f\t%f\n", TargetX, TargetY);
+
+    while ( (x < gridN) && (x >= 0) && (y < gridN) && (y >= 0) ) {
+
+        if (x == TargetX && y == TargetY) { printf("break condition\n"); break; }
+        // if (Phase->CBP[WhichAgent][(int) x][Resolution - ((int) y + 1)] > -1 ) {
+        //     Phase->CBP[WhichAgent][(int) x][Resolution - ((int) y + 1)] -= .1;
+        // }
+        printf("%f\t%f\n", x, y);
+
+        if (tMaxX < tMaxY) {
+            x = x + StepX;
+            tMaxX = tMaxX + tDeltaX;
+        }
+        else {
+            y = y + StepY;
+            tMaxY = tMaxY + tDeltaY;
+        }
+        cnt += 2;
+    }
+}
