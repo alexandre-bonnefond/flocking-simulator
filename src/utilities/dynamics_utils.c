@@ -4,6 +4,7 @@
 /* vim:set ts=4 sw=4 sts=4 et: */
 
 #include "dynamics_utils.h"
+#include "data_struct.h"
 
 // double LinearLoss = 0.008;
 
@@ -24,7 +25,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
-    Phase->CBP = tripleMatrix(NumberOfAgents, Resolution, Resolution);
+    Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0.5);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
@@ -42,7 +43,7 @@ void freePhase(phase_t * Phase, const int Resolution) {
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
     free(Phase->ReceivedPower);
-    freeTripleMatrix(Phase->CBP, Phase->NumberOfAgents, Resolution, Resolution);
+    freeMeasurementMatrix(Phase->CBP, Phase->NumberOfAgents, Resolution, Resolution);
 }
 
 /* Inserts the "WhichAgent"th agent's position and velocity into "Phase" */
@@ -832,16 +833,32 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         }
 
         double SquareSize = 2 * ArenaSize / Resolution;
-
-        // Compute agent's coordinates in CBP space
-        int i_x = (int) (AgentsCoords[0] - (ArenaCenterX - ArenaSize)) / SquareSize;
-        int i_y = - (int) (AgentsCoords[1] - (ArenaCenterY + ArenaSize)) / SquareSize; // TODO check why a minus sign is needed
         
-        // Avoid out of bounds access when agents are out of the arena
-        if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
-            // Notify presence of the agent in the cell
-            Phase->CBP[WhichAgent][i_y][i_x] += .005;
-        }
+        // Compute agent's coordinates in CBP space
+        int i_x_0 = (int) (AgentsCoords[0] - (ArenaCenterX - ArenaSize)) / SquareSize;
+        int i_y_0 = - (int) (AgentsCoords[1] - (ArenaCenterY + ArenaSize)) / SquareSize; // TODO check why a minus sign is needed
+        
+        // TODO get GPS's position stdev
+        double sigma = 1200;
+        int sigmaGrid = sigma / SquareSize;
+
+        if (sigmaGrid == 0)
+            insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1.5, MTYPE_TRAIL);
+        else
+            for(int i = - 2 * sigmaGrid; i < 2 * sigmaGrid; i++) {
+                for(int j = - 2 * sigmaGrid; j < 2 * sigmaGrid; j++) {
+                    
+                    if (i*i + j*j > 4*sigmaGrid*sigmaGrid) continue;
+
+                    int i_x = i_x_0 + i;
+                    int i_y = i_y_0 + j;
+                    // Avoid out of bounds access when agents are out of the arena
+                    if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
+                        // Notify presence of the agent in the cell
+                        insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 1.5, MTYPE_TRAIL);
+                    }
+                }
+            }
 }
 
 /* Randomizing phase of agents (with zero velocities) */
@@ -1994,11 +2011,15 @@ void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int Wh
 
     while ( (x < gridN) && (x >= 0) && (y < gridN) && (y >= 0) ) {
 
-        if (x == TargetX && y == TargetY) { printf("break condition\n"); break; }
-        // if (Phase->CBP[WhichAgent][(int) x][Resolution - ((int) y + 1)] > -1 ) {
-        //     Phase->CBP[WhichAgent][(int) x][Resolution - ((int) y + 1)] -= .1;
-        // }
-        printf("%f\t%f\n", x, y);
+        if (x == TargetX && y == TargetY) { /* printf("break condition\n"); */ break; }
+        
+        int i_y = Resolution - ((int) y + 1);
+        int i_x = (int) x;
+        if (Phase->CBP[WhichAgent][i_y][i_x].current > -1 ) {
+            insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 0, MTYPE_OBST);
+        }
+        // printf("%f\t%f\n", x, y);
+
 
         if (tMaxX < tMaxY) {
             x = x + StepX;

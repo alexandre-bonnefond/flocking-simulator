@@ -78,3 +78,68 @@ compare(const void* a, const void* b)
     }
     return 1;
 }
+
+measurement_bundle*** allocMeasurementMatrix(int agentCount, int ResolutionX, int ResolutionY, double initValue) {
+
+    measurement_bundle ***tmat = (measurement_bundle ***) calloc(agentCount, sizeof(measurement_bundle**));
+    if (tmat == NULL) {
+        fprintf(stderr, "Matrix allocation error!\n");
+        exit(-1);
+    }
+
+    for (int i = 0; i < agentCount; i++) {
+        tmat[i] = (measurement_bundle **) calloc(ResolutionY, sizeof(measurement_bundle*));
+        if (tmat[i] == NULL) {
+            fprintf(stderr, "Matrix allocation error!\n");
+            exit(-1);
+        }
+
+        for (int j = 0; j < ResolutionY; j++) {
+            tmat[i][j] = (measurement_bundle *) calloc(ResolutionX, sizeof(measurement_bundle));
+            if (tmat[i][j] == NULL) {
+                fprintf(stderr, "Matrix allocation error!\n");
+                exit(-1);
+            }
+
+            for (int k = 0; k < ResolutionX; k++) {
+                tmat[i][j][k].count = 0;
+                tmat[i][j][k].current = initValue;
+                tmat[i][j][k].currentObst = initValue;
+            }
+        }
+    }
+
+    return tmat;
+}
+
+/** Frees 3D dynamic array */
+void freeMeasurementMatrix(measurement_bundle ***tmat, int agentCount, int ResolutionX, int ResolutionY) {
+    
+    for (int i = 0; i < agentCount; i++) {
+        for (int j = 0; j < ResolutionY; j++) {
+            free(tmat[i][j]);
+        }
+        free(tmat[i]);
+    }
+    free(tmat);
+}
+
+void insertMeasurementIntoBundle(measurement_bundle ** bundle_mat, int x, int y, double measurement, MeasurementType type) {
+
+    measurement_bundle* data = bundle_mat[y] + x;
+    
+    switch (type)
+    {
+    case MTYPE_TRAIL:
+        data->count++;
+        data->current = (data->current + measurement) / 2;
+        break;
+    
+    case MTYPE_OBST:
+        data->countObst++;
+        data->currentObst = (data->currentObst + measurement) / 2;
+        break;
+    default:
+        break;
+    }
+}

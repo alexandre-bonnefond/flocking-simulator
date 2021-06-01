@@ -271,8 +271,8 @@ void DisplayMenu() {
 void DisplayChart() {
     int Resolution = ActualSitParams.Resolution;
 
-    float red[3] = {1, 0, 0};
-    float blue[3] = {0, 0, 1};
+    float occupiedColor[3] = {0, 0, 0};
+    float freeColor[3] = {1, 1, 1};
 
     // float green[3] = {0, 1, 0};
     // float yellow[3] = {1, 1, 0};
@@ -299,27 +299,57 @@ void DisplayChart() {
         xsize = 0;
         for (j = 0; j < Resolution; j++) {
             // TODO merge maps for display
-            double sum = 0;
-            for (k = 0; k < ActualSitParams.NumberOfAgents; sum += ActualPhase.CBP[k++][i][j]);
+            double mean = 0;
+            long sampleCount = 1; 
+            for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
+                
+                // keep this condition and u can differenciate explored zones from inexplored zones
+                if (ActualPhase.CBP[k][i][j].count > 0) {
+                    mean += ActualPhase.CBP[k][i][j].current;
+                    sampleCount++;
+                }
+                
+                if (ActualPhase.CBP[k][i][j].countObst > 0) {
+                    mean += ActualPhase.CBP[k][i][j].currentObst;
+                    sampleCount++;
+                }
+            }
+            mean /= sampleCount;
 
-            if (sum > 0) {
+            if (mean > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
 
-                sum = MIN(1, sum);
+                mean = MIN(1, mean);
                 float col[3] = {0};
-                LerpColor(blue, red, col, sum);
+                LerpColor(occupiedColor, freeColor, col, mean);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
+            }
 
-                // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
-            } 
+            float black[3] = {0,0,0};
+
+            char str[10];
+            sprintf(str, "%.2lf", mean);
+            DrawString(-1.025 + step/2 + xsize, 0.985 - ysize - step/2, GLUT_BITMAP_TIMES_ROMAN_10,
+                str, black);
+
             xsize += step;
         }
         ysize += step;
     }
 
     DrawSquare(Resolution);
+
+
+    for (int i = 0; i < ActualSitParams.NumberOfAgents; i++) {
+        double* coord = ActualPhase.Coordinates[i];
+        DrawCopter_2D(coord[0] - ArenaCenterX,
+                      coord[1] - ArenaCenterY,
+                      ArenaRadius, 1000,
+                      ActualColorConfig.AgentsColor[i]
+                    );
+    }
 
     glutSwapBuffers();
 }
