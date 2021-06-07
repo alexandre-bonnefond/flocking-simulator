@@ -301,16 +301,30 @@ void DisplayChart() {
             // TODO merge maps for display
             double mean = 0;
             long sampleCount = 1; 
-            for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
+            if (ActualVizParams.WhichAgentIsSelected == ActualPhase.NumberOfAgents) {    
+                for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
+                    
+                    // keep this condition and u can differenciate explored zones from inexplored zones
+                    if (ActualPhase.CBP[k][i][j].count > 0) {
+                        mean += ActualPhase.CBP[k][i][j].current;
+                        sampleCount++;
+                    }
+                    
+                    if (ActualPhase.CBP[k][i][j].countObst > 0) {
+                        mean += ActualPhase.CBP[k][i][j].currentObst;
+                        sampleCount++;
+                    }
+                }
+            } else {
+                int agentId = ActualVizParams.WhichAgentIsSelected;
                 
                 // keep this condition and u can differenciate explored zones from inexplored zones
-                if (ActualPhase.CBP[k][i][j].count > 0) {
-                    mean += ActualPhase.CBP[k][i][j].current;
+                if (ActualPhase.CBP[agentId][i][j].count > 0) {
+                    mean += ActualPhase.CBP[agentId][i][j].current;
                     sampleCount++;
                 }
-                
-                if (ActualPhase.CBP[k][i][j].countObst > 0) {
-                    mean += ActualPhase.CBP[k][i][j].currentObst;
+                if (ActualPhase.CBP[agentId][i][j].currentObst > 0) {
+                    mean += ActualPhase.CBP[agentId][i][j].currentObst;
                     sampleCount++;
                 }
             }
