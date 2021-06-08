@@ -105,6 +105,10 @@ int ipow(int base, int exp) {
     return result;
 }
 
+int sign(double x) {
+    return (x > 0) - (x < 0);
+}
+
 
 /* Convert int from any base to a string */
 char reVal(int num) 

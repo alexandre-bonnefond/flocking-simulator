@@ -20,7 +20,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->Coordinates = doubleMatrix(NumberOfAgents, 3);
     Phase->Velocities = doubleMatrix(NumberOfAgents, 3);
     Phase->Laplacian = doubleMatrix(NumberOfAgents, NumberOfAgents);
-    Phase->EMA = doubleMatrix(NumberOfAgents, NumberOfAgents);
+    Phase->Pressure = doubleVector(NumberOfAgents);
     Phase->ReceivedPower = doubleVector(NumberOfAgents);
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
@@ -38,7 +38,7 @@ void freePhase(phase_t * Phase, const int Resolution) {
     freeMatrix(Phase->Coordinates, Phase->NumberOfAgents, 3);
     freeMatrix(Phase->Velocities, Phase->NumberOfAgents, 3);
     freeMatrix(Phase->Laplacian, Phase->NumberOfAgents, Phase->NumberOfAgents);
-    freeMatrix(Phase->EMA, Phase->NumberOfAgents, Phase->NumberOfAgents);
+    free(Phase->Pressure);
     freeMatrix(Phase->InnerStates, Phase->NumberOfAgents,
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
@@ -725,8 +725,8 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
         }
         for (i = 0; i < Phase->NumberOfAgents; i++) {
             PhaseData[WhichStep].Laplacian[j][i] = Phase->Laplacian[j][i];
-            PhaseData[WhichStep].EMA[j][i] = Phase->EMA[j][i];
         }
+        PhaseData[WhichStep].Pressure[j] = Phase->Pressure[j];
     }
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         for (j = 0; j < Resolution; j++) {
@@ -1654,7 +1654,7 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) 
     double *temp_pointer;
     int id;
     double power;
-    double ema;
+    double pressure;
 
     /* Positions and velocities */
     temp_pointer = Phase->Coordinates[i];
@@ -1679,10 +1679,10 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) 
     Phase->ReceivedPower[i] = Phase->ReceivedPower[j];
     Phase->ReceivedPower[j] = power;
 
-    /* EMA */
-    ema = Phase->EMA[TrueAgent][i];
-    Phase->EMA[TrueAgent][i] = Phase->EMA[TrueAgent][j];
-    Phase->EMA[TrueAgent][j] = ema; 
+    /* Pressure */
+    pressure = Phase->Pressure[i];
+    Phase->Pressure[i] = Phase->Pressure[j];
+    Phase->Pressure[j] = pressure;
 }
 
 /* Orders agents by distance from a given position */
@@ -1781,7 +1781,8 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
         Dist = VectAbs(DistFromRef);
         Pow = Phase->ReceivedPower[i];
-        packet_loss_rand = (randomizeDouble(0, 1) < Pow * Pow * packet_loss);
+        // packet_loss_rand = (randomizeDouble(0, 1) < Pow * Pow * packet_loss);
+        packet_loss_rand = false;
         switch (communication_mode)
         {
         case 0:
@@ -1832,86 +1833,6 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
-double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
-                    obstacles_t obstacles, 
-                    double **Polygons,
-                    unit_model_params_t * UnitParams,
-                    const double Dist) {
-        
-        int j;
-        double Power;
-        // bool StopScan = false;
-
-        if (UnitParams->communication_type.Value == 2) {
-            static double dist_obst;
-            static double Loss;
-            for (j = 0; j < obstacles.o_count; j++){  // very slow if the number of obstacles is  high
-
-                double CenterObst[3];
-                CenterObst[0] = obstacles.o[j].center[0];
-                CenterObst[1] = obstacles.o[j].center[1];
-                CenterObst[2] = 0;
-
-                if (obstacles.o_count > 70) {
-                    double DistObs;
-                    DistObs = DistanceOfTwoPoints2D(RefCoords, CenterObst);
-                    if (DistObs > 25000){
-                        continue;
-                    }
-                }
-
-                double **Intersections;
-                Intersections = doubleMatrix(2, 3);
-                // Intersections = malloc(sizeof(double *) * 2);
-                // Intersections[0] = malloc(sizeof(double) * 3);
-                // Intersections[1] = malloc(sizeof(double) * 3);
-                
-                int NumberOfIntersections;
-                // double dist_obst;
-                // double Loss;
-                static double DistanceThrough[3];
-
-                NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
-
-                if (NumberOfIntersections == 2) {
-                        VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-                        dist_obst = VectAbs(DistanceThrough);
-                        Loss = 40 * log10(dist_obst);
-                        break;
-                }
-                else {
-                    dist_obst = 0;
-                    Loss = 0;
-                }
-                // printf("%f\n", UnitParams->transmit_power.Value);
-                freeMatrix(Intersections, 2, 3);
-            }
-            if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
-            Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
-                log10((UnitParams->ref_distance.Value - dist_obst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));
-            // printf("%f\n", Power);
-            }
-            else
-            {
-                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
-                    log10((Dist - dist_obst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
-            }
-        }
-        else {
-            if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
-                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
-                    log10(UnitParams->ref_distance.Value * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2));
-            }
-            else
-            {
-                Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
-                    log10(Dist * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
-            }
-        }
-        return Power;
-}
-
 double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams) {
     
     double Power = 0;
@@ -1940,6 +1861,7 @@ double DegradedPower(double Dist, double DistObst, double Loss, unit_model_param
         return Power;
 }
 
+/* Voxel Traversal method for obstacle detection */
 void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int WhichAgent,
                         double ArenaCenterX, double ArenaCenterY, double ArenaSize, int Resolution) {
 
@@ -2031,4 +1953,71 @@ void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int Wh
         }
         cnt += 2;
     }
+}
+
+/* Measurement of the pressure */
+double PressureMeasure(phase_t * Phase, int WhichAgent, int Alpha, const int Dim, double distEq) {
+
+    double theta_inf, theta_sup, theta, theta_s, theta_i, theta_j, theta_test;
+    double P0 = 0;
+    double Ptheta = 0;
+    int mu;
+    int i;
+    double dist_ij;
+    double u_x[3] = {1, 0, 0};
+    double q_ji[3];
+    double O_i[3], O_j[3];
+    double V_i[3], V_j[3];
+    double q_diag[3];
+
+    GetAgentsCoordinates(O_i, Phase, WhichAgent);
+    GetAgentsVelocity(V_i, Phase, WhichAgent);
+    theta_i = AngleOfTwoVectors(V_i, u_x, Dim);
+    theta_i *= sign(V_i[1]);
+    // printf("%f\n", theta_i * 180 / M_PI);
+
+    for (i = 1; i < Phase->NumberOfAgents; i++ ) {
+
+        GetAgentsCoordinates(O_j, Phase, i);
+        VectDifference(q_ji, O_i, O_j);
+        GetAgentsVelocity(V_j, Phase, i);
+
+        mu = -1 * sign(q_ji[0] * V_i[1] - q_ji[1] * V_i[0]);
+        // printf("%d\n", mu);
+
+        if (mu == 1) {
+            /* Symétrie axiale par rapport à V_i pour avoir tous les "j" à gauche de "i" (utile pour le calcul) */
+            RotateVectAroundSpecificAxis(q_ji, q_ji, V_i, M_PI);
+            RotateVectAroundSpecificAxis(V_j, V_j, V_i, M_PI);
+        }
+
+        dist_ij = VectAbsXY(q_ji);
+
+        theta = AngleOfTwoVectors(q_ji, V_i, Dim);
+
+        VectSum(q_diag, q_ji, V_i);
+        theta_s = AngleOfTwoVectors(q_diag, q_ji, Dim);
+
+        // theta_test = AngleOfTwoVectors(q_ji, u_x, Dim);
+
+        theta_inf = theta_i - theta;
+        theta_inf = fmod(theta_inf, 2 * M_PI);
+        theta_sup = theta_i - theta + theta_s;
+        theta_sup = fmod(theta_sup, 2 * M_PI);
+        
+
+        theta_j = AngleOfTwoVectors(V_j, u_x, Dim);
+        theta_j *= sign(V_j[1]);
+
+        // printf("\t%f\t%f\t%f\t%d\t%d\n", theta_inf * 180 / M_PI, theta_sup * 180 / M_PI, theta_j * 180 / M_PI, mu, Phase->RealIDs[i]);
+
+        Ptheta = (exp(-pow(Alpha * theta_j / theta_sup, 2)) / (1 + exp(theta_inf - theta_j)));
+        // Ptheta = (1 - (1 / (1 + exp(theta_j - theta_inf)) + 1 / (1 + exp((-theta_j + theta_sup)))));
+        // printf("\t%f\n", Ptheta);
+
+        P0 += Ptheta * (1 / (1 + exp(dist_ij - distEq)));
+
+    }
+
+    return P0;
 }

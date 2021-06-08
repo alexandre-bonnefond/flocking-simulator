@@ -52,6 +52,8 @@ double randomizePowerLawDouble(const double x0, const double x1,
 // integer power
 int ipow(int base, int exp);
 
+/* Return the sign of a double */
+int sign(double x);
 
 // Function to convert a given decimal number 
 // to a base 'base' and 

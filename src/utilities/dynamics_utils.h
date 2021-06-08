@@ -41,7 +41,7 @@ typedef struct {
     double **Velocities;
     double **InnerStates;
     double **Laplacian;
-    double **EMA;
+    double *Pressure;
     double *ReceivedPower;
     int *RealIDs;
     int NumberOfInnerStates;
@@ -353,16 +353,15 @@ int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
         const double Range, const double power_thresh, const int communication_mode, 
         const int TrueAgent, const double packet_loss);
 
-/* Calculate the received power of an agent given its interdistance */
-double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
-                        obstacles_t obstacles,
-                        double **Polygons,
-                        unit_model_params_t * UnitParams,
-                        const double Dist);
-
+/* Calculate the received power of an agent depending on which method is used */
+/* The log-distance with varying alpha is chosen here and we have a reference distance */
 double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams);
 
+/* Voxel Traversal method for obstacle detection */
 void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int WhichAgent,
                         double ArenaCenterX, double ArenaCenterY, double ArenaSize, int Resolution);
+
+/* Measurement of the pressure */
+double PressureMeasure(phase_t * Phase, int WhichAgent, int Alpha, const int Dim, double distEq);
         
 #endif
