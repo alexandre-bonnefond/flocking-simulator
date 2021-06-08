@@ -841,10 +841,12 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         int i_y_0 = (int) (y_0 / SquareSize);
 
         // TODO get GPS's position stdev or compute SNR
-        double SNR = 25;
+        double SNR = 20;
         double sigma = 100 * sqrt(10 + 150*150 * pow(10, -SNR/10));
+        
+        if (i_x_0 >= 0 && i_x_0 < Resolution && i_y_0 >= 0 && i_y_0 < Resolution)
+            insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1, MTYPE_TRAIL);
 
-        insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1, MTYPE_TRAIL);
         for(int xOffset = - 2 * sigma; xOffset < 2 * sigma; xOffset += SquareSize) {
             for(int yOffset = - 2 * sigma; yOffset < 2 * sigma; yOffset += SquareSize) {
 
@@ -855,7 +857,11 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
                 // Avoid out of bounds access when agents are out of the arena
                 if (i_x >= 0 && i_x < Resolution && i_y >= 0 && i_y < Resolution && !(i_x == i_x_0 && i_y == i_y_0)) {
                     // Notify presence of the agent in the cell
-                    insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 1, MTYPE_TRAIL);
+                    
+                    // gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
+                    double measurement = 1;
+
+                    insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, measurement, MTYPE_TRAIL);
                 }
             }
         }

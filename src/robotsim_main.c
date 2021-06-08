@@ -300,7 +300,7 @@ void DisplayChart() {
         for (j = 0; j < Resolution; j++) {
             // TODO merge maps for display
             double mean = 0;
-            long sampleCount = 1; 
+            long sampleCount = 0; 
             if (ActualVizParams.WhichAgentIsSelected == ActualPhase.NumberOfAgents) {    
                 for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
                     
@@ -328,11 +328,11 @@ void DisplayChart() {
                     sampleCount++;
                 }
             }
-            mean /= sampleCount;
+            if (sampleCount == 0) { xsize += step; continue; }
 
+            mean /= sampleCount;
             if (mean > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
-
                 mean = MIN(1, mean);
                 float col[3] = {0};
                 LerpColor(occupiedColor, freeColor, col, mean);
@@ -1021,10 +1021,15 @@ void UpdatePositionsToDisplay() {
                         GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
                         for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
                             if (j != k) {
-                                if (fabs(PhaseData[Now + 1].Laplacian[j][k] - PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]) > 20) {
-                                    static double CoordB[3];
-                                    GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
+                            
+                                static double CoordB[3];
+                                GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
+                                double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
+                                double receivedPower = PhaseData[Now + 1].Laplacian[j][k];
+                                double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
 
+                                if (receivedPower > -70 && powerDifference > 10) {
+                                    // printf("%lf %lf\n", receivedPower, powerDifference);
                                     FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
                                 }
                             }
