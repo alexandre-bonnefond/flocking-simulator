@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Sun Mar 29 11:57:42 2020
@@ -14,7 +14,7 @@ from os import mkdir
 
 
 
-def gen_obstacles(distrib = "uniform", num_obst = 30, radius_obst = 500, std = 100):
+def gen_obstacles(distrib = "uniform", num_obst = 10, radius_obst = 500, std = 100):
     
     if distrib == "uniform":
         coordX = np.random.uniform(ArenaCenterX - radius, ArenaCenterX + radius, num_obst)

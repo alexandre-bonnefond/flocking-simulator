@@ -162,7 +162,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                 packet_loss_power);
 
         
-        if ((int)UnitParams->communication_type.Value == 1 || (int)UnitParams->communication_type.Value == 2) {
+        if ((int)UnitParams->communication_type.Value == 1 || (int)UnitParams->communication_type.Value == 2 || (int)UnitParams->communication_type.Value == 3) {
             OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours, WhichAgent);
         }
         else if ((int)UnitParams->communication_type.Value == 0) {

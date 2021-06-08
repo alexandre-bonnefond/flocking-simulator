@@ -1521,7 +1521,7 @@ int CountCluster(phase_t Phase, bool * Visited, unit_model_params_t * UnitParams
             Visited[k] = false;
         }
 
-        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3) {
             CreateClusters(i, Phase.Laplacian, Visited, 
             Phase.NumberOfAgents, UnitParams);
             for (k = 0; k < Dimension; k++) {
@@ -1614,7 +1614,7 @@ void CreateClusters(const int i, double **InputAdjacency, bool * Visited,
     Visited[i] = true;
 
     for (k = 0; k < NumberOfAgents; k++) {
-        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3) {
             if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value || InputAdjacency[k][i] >= UnitParams->sensitivity_thresh.Value) {
                 if (Visited[k] != true) {
                     CreateClusters(k, InputAdjacency, Visited, NumberOfAgents, UnitParams);
@@ -1787,6 +1787,16 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
             }
             break;
         case 2:
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh && !packet_loss_rand) {
+                SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
+                NumberOfNearbyAgents++;
+                i++;
+            } else if (Dist == 0) {
+                SwapAgents(Phase, i, 0, TrueAgent);
+                i++;
+            }
+            break;
+        case 3:
             if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh && !packet_loss_rand) {
                 SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
                 NumberOfNearbyAgents++;
