@@ -137,6 +137,7 @@ typedef struct {
     unit_param_double_t transmit_power;
     unit_param_double_t freq;
     unit_param_double_t sensitivity_thresh;
+    unit_param_double_t sensitivity_lora;
     unit_param_double_t smoothing;
     unit_param_double_t depthEMA;
 

@@ -1746,7 +1746,7 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent) {
 /* Packing of nearby agents to the first blocks of the phase space */
 int SelectNearbyVisibleAgents(phase_t * Phase,
         double *ReferencePosition,
-        double Range, double power_thresh, int communication_mode, 
+        double Range, double power_thresh, double power_lora, int communication_mode, 
         const int TrueAgent, const double packet_loss) {
 
     static double DistFromRef[3];
@@ -1796,8 +1796,9 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
                 i++;
             }
             break;
-        case 3:
-            if (Dist != 0 && Phase->ReceivedPower[i] > power_thresh && !packet_loss_rand) {
+        case 3: //communication qui prend en compte le passage en lora
+            //on diminue le power_tresh à une valeur adaptée au lora
+            if (Dist != 0 && Phase->ReceivedPower[i] > power_lora && !packet_loss_rand) {
                 SwapAgents(Phase, i, NumberOfNearbyAgents, TrueAgent);
                 NumberOfNearbyAgents++;
                 i++;
@@ -1829,56 +1830,53 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
                     double **Polygons,
                     unit_model_params_t * UnitParams,
                     const double Dist) {
-        
-        int j;
-        double Power;
-        // bool StopScan = false;
+            int j;
+            double Power;
 
-        if (UnitParams->communication_type.Value == 2) {
-            static double dist_obst;
-            static double Loss;
-            for (j = 0; j < obstacles.o_count; j++){  // very slow if the number of obstacles is  high
+            if (UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3){
+                static double dist_obst;
+                static double Loss;
+                for (j = 0; j < obstacles.o_count; j++){  // very slow if the number of obstacles is  high
+                    double CenterObst[3];
+                    CenterObst[0] = obstacles.o[j].center[0];
+                    CenterObst[1] = obstacles.o[j].center[1];
+                    CenterObst[2] = 0;
 
-                double CenterObst[3];
-                CenterObst[0] = obstacles.o[j].center[0];
-                CenterObst[1] = obstacles.o[j].center[1];
-                CenterObst[2] = 0;
-
-                if (obstacles.o_count > 70) {
-                    double DistObs;
-                    DistObs = DistanceOfTwoPoints2D(RefCoords, CenterObst);
-                    if (DistObs > 25000){
-                        continue;
+                    if (obstacles.o_count > 70) {
+                        double DistObs;
+                        DistObs = DistanceOfTwoPoints2D(RefCoords, CenterObst);
+                        if (DistObs > 25000){
+                            continue;
+                        }
                     }
-                }
 
-                double **Intersections;
-                Intersections = doubleMatrix(2, 3);
-                // Intersections = malloc(sizeof(double *) * 2);
-                // Intersections[0] = malloc(sizeof(double) * 3);
-                // Intersections[1] = malloc(sizeof(double) * 3);
-                
-                int NumberOfIntersections;
-                // double dist_obst;
-                // double Loss;
-                static double DistanceThrough[3];
+                    double **Intersections;
+                    Intersections = doubleMatrix(2, 3);
+                    // Intersections = malloc(sizeof(double *) * 2);
+                    // Intersections[0] = malloc(sizeof(double) * 3);
+                    // Intersections[1] = malloc(sizeof(double) * 3);
+                    
+                    int NumberOfIntersections;
+                    // double dist_obst;
+                    // double Loss;
+                    static double DistanceThrough[3];
 
-                NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
-                RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
+                    NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
+                    RefCoords, NeighbourCoords, Polygons[j], obstacles.o[j].p_count);
 
-                if (NumberOfIntersections == 2) {
-                        VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
-                        dist_obst = VectAbs(DistanceThrough);
-                        Loss = 40 * log10(dist_obst);
-                        break;
+                    if (NumberOfIntersections == 2) {
+                            VectDifference(DistanceThrough, Intersections[0], Intersections[1]);
+                            dist_obst = VectAbs(DistanceThrough);
+                            Loss = 40 * log10(dist_obst);
+                            break;
+                    }
+                    else {
+                        dist_obst = 0;
+                        Loss = 0;
+                    }
+                    // printf("%f\n", UnitParams->transmit_power.Value);
+                    freeMatrix(Intersections, 2, 3);
                 }
-                else {
-                    dist_obst = 0;
-                    Loss = 0;
-                }
-                // printf("%f\n", UnitParams->transmit_power.Value);
-                freeMatrix(Intersections, 2, 3);
-            }
             if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                 log10((UnitParams->ref_distance.Value - dist_obst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));
@@ -1907,7 +1905,7 @@ double ReceivedPowerLog(double * RefCoords, double * NeighbourCoords,
 double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams) {
     
     double Power = 0;
-    if (UnitParams->communication_type.Value == 2) {
+    if (UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3) {
         if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                 log10((UnitParams->ref_distance.Value - DistObst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));

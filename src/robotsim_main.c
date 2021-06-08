@@ -188,7 +188,7 @@ void Initialize() {
     ActualVizParams.UpX = 0.0;
 
     /* Communication network display is OFF */
-    ActualVizParams.DisplayCommNetwork = false;
+    ActualVizParams.DisplayCommNetwork = true;
     /* Hull display is OFF */
     ActualVizParams.DisplayHull = false;
 
@@ -556,11 +556,20 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         }
 
         /* Drawing communication network, if it's toggled on */
-        if (ActualVizParams.DisplayCommNetwork == true) {
-            for (i = 0; i < Phase->NumberOfAgents; i++) {
-                DrawSensorRangeNetwork_2D(PhaseData,
-                        &ActualUnitParams, i, Polygons, Now,
-                        &ActualVizParams, ActualColorConfig.CommNetWorkColor);
+        if (ActualVizParams.DisplayCommNetwork == 1) {
+            if (!(Phase->lost)){
+                for (i = 0; i < Phase->NumberOfAgents; i++) {
+                    float jaune [3]= {255.0, 255.0, 0.0};
+                    DrawSensorRangeNetwork_2D(PhaseData,
+                            &ActualUnitParams, i, Polygons, Now,
+                            &ActualVizParams, jaune);
+                }
+            }else{
+                for (i = 0; i < Phase->NumberOfAgents; i++) {
+                    DrawSensorRangeNetwork_2D(PhaseData,
+                            &ActualUnitParams, i, Polygons, Now,
+                            &ActualVizParams, ActualColorConfig.CommNetWorkColor);
+                }
             }
         }
 
@@ -1358,6 +1367,7 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     } else if (key == GLUT_KEY_F7) {
         ActualVizParams.DisplayCommNetwork =
                 !ActualVizParams.DisplayCommNetwork;
+        fprintf(stdout, "F7 : %d\n", ActualVizParams.DisplayCommNetwork);
         
         /* F1 toggles Hull display */
     } else if (key == GLUT_KEY_F1) {

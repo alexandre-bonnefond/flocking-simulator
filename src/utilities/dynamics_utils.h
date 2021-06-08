@@ -47,6 +47,7 @@ typedef struct {
     int NumberOfInnerStates;
     int NumberOfAgents;
     double ***CBP; 
+    int lost;
 } phase_t;
 
 /* Simple tools for allocating phase space and cleaning memory
@@ -176,10 +177,10 @@ void GetAverageOfXYTangentialVelocity(double *OutputLAPVel, phase_t * Phase,
 
 /* Get local average of tangential velocities from the viewpoint of the "WhichAgent"th agent,
  * around a centre point denoted by "RefPoint"
- *
- * "AreaSize" denotes the vision range of the agent.
- * Final output velocity will be placed in "OutputLAPVel".
- */
+ *int SelectNearbyVisibleAgents(phase_t * Phase,
+        double *ReferencePosition,
+        double Range, double power_thresh, double power_lora, int communication_mode, 
+        const int TrueAgent, const double packet_loss)
 void GetLocalAverageOfXYTangentialVelocity(double *OutputLAPVel,
         phase_t * Phase, double *RefPoint,
         const int WhichAgent, const double AreaSize);
@@ -349,8 +350,9 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent);
  * Returns the number of agents which are closer than R_C and whose packets
  * are not lost
  */
-int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
-        const double Range, const double power_thresh, const int communication_mode, 
+int SelectNearbyVisibleAgents(phase_t * Phase,
+        double *ReferencePosition,
+        double Range, double power_thresh, double power_lora, int communication_mode, 
         const int TrueAgent, const double packet_loss);
 
 /* Calculate the received power of an agent given its interdistance */

@@ -166,7 +166,7 @@ void CreateCluster(const int i, double **InputAdjacency,
     Visited[i] = true;
 
     for (k = 0; k < NumberOfAgents; k++) {
-        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3) {
             if (InputAdjacency[i][k] >= UnitParams->sensitivity_thresh.Value || InputAdjacency[k][i] >= UnitParams->sensitivity_thresh.Value) {
                 if (Visited[k] != true) {
                     CreateCluster(k, InputAdjacency, NumberOfAgents, UnitParams);
@@ -257,7 +257,7 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
             Visited[k] = false;
         }
 
-        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2) {
+        if (UnitParams->communication_type.Value == 1 || UnitParams->communication_type.Value == 2 || UnitParams->communication_type.Value == 3) {
             CreateCluster(i, Phase->Laplacian, Phase->NumberOfAgents, UnitParams);
             for (k = 0; k < SitParams->NumberOfAgents; k++) {
                 if (true == Visited[k]) {

@@ -180,8 +180,12 @@ void ChangeUnitModelParameter(unit_model_params_t * params, int WhichParam,
         }
     }
         break;
+    case 22:
+    {
+        params->sensitivity_lora.Value += StepSize * 0.01;
     }
-
+        break;
+    }
 }
 
 /* Sets the Name and unit of measurement of the unit model parameters */
@@ -205,6 +209,7 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.UnitOfMeas, "dBm");
     sprintf(UnitParams->freq.UnitOfMeas, "GHz");
     sprintf(UnitParams->sensitivity_thresh.UnitOfMeas, "dBm");
+    sprintf(UnitParams->sensitivity_lora.UnitOfMeas, "dBm");
     sprintf(UnitParams->smoothing.UnitOfMeas, "-");
     sprintf(UnitParams->depthEMA.UnitOfMeas, "-");
     sprintf(UnitParams->communication_type.UnitOfMeas, "-");
@@ -228,6 +233,7 @@ void SetNamesOfUnitModelParams(unit_model_params_t * UnitParams) {
     sprintf(UnitParams->transmit_power.Name, "Transmit Power");
     sprintf(UnitParams->freq.Name, "Frequency");
     sprintf(UnitParams->sensitivity_thresh.Name, "Sensitivity Threshold");
+    sprintf(UnitParams->sensitivity_lora.Name, "Sensitivity Lora");
     sprintf(UnitParams->smoothing.Name, "EMA Smoothing");
     sprintf(UnitParams->depthEMA.Name, "Depth of the EMA");
     sprintf(UnitParams->communication_type.Name, "Type of communication");
@@ -262,6 +268,7 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         UnitParams->transmit_power.Value = 10.0;
         UnitParams->freq.Value = 2.6;
         UnitParams->sensitivity_thresh.Value = -10.0;
+        UnitParams->sensitivity_lora.Value = -30.0;
         UnitParams->smoothing.Value = 2.0;
         UnitParams->depthEMA.Value = 1.0;
         UnitParams->communication_type.Value = 0.0;
@@ -359,6 +366,9 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
             } else if (strcmp(ReadedName, "Sensitivity_thresh") == 0) {
                 UnitParams->sensitivity_thresh.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
+            } else if (strcmp(ReadedName, "Sensitivity_lora") == 0) {
+                UnitParams->sensitivity_lora.Value = atof(ReadedValue);
+                NumberOfReadedNames++;
             } else if (strcmp(ReadedName, "EMA_Smoothing") == 0) {
                 UnitParams->smoothing.Value = atof(ReadedValue);
                 NumberOfReadedNames++;
@@ -398,6 +408,7 @@ void GetUnitModelParamsFromFile(unit_model_params_t * UnitParams,
         printf("Transmit_Power=10\n");
         printf("Freq=2.6\n");
         printf("Sensitivity_thresh=-10\n");
+        printf("Sensitivity_lora=-30\n");
         printf("EMA_Smoothing=2\n");
         printf("EMA_Depth=1");
         printf("Communication_type=0\n");
@@ -461,6 +472,8 @@ void SaveUnitModelParamsToFile(FILE * OutputFile_Unit,
     fprintf(OutputFile_Unit, "# Sensitivity threshold (dBm)\n");
     fprintf(OutputFile_Unit, "Sensitivity_thresh=%lf\n",
             UnitParams->sensitivity_thresh.Value);
+    fprintf(OutputFile_Unit, "Sensitivity_lora=%lf\n",
+            UnitParams->sensitivity_lora.Value);
     fprintf(OutputFile_Unit, "# Smoothing EMA (-)\n");
     fprintf(OutputFile_Unit, "EMA_Smoothing=%lf\n",
             UnitParams->smoothing.Value);
