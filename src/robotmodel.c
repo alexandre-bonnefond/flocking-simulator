@@ -420,6 +420,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     static double CoordinatesToStep[3];
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
+        points[j].x = LocalActualPhase.Coordinates[j][0];
+        points[j].y = LocalActualPhase.Coordinates[j][1];
+
         GetAgentsVelocity(Velocity, &LocalActualPhase, j);
         GetAgentsCoordinates(CoordinatesToStep, &LocalActualPhase, j);
 
@@ -432,6 +435,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         InsertAgentsCoordinates(&SteppedPhase, CoordinatesToStep, j);
 
     }
+
+    /* Compute the convex hull */
+    (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
 
     /* Step GPS coordinates and velocities (in every "t_gps"th second) */
     if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value /
@@ -467,9 +473,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-
-        points[j].x = LocalActualPhase.Coordinates[j][0];
-        points[j].y = LocalActualPhase.Coordinates[j][1];
         
         /* Fill the Laplacian and EMA Matrices in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
@@ -483,6 +486,9 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         
             }           
         }
+
+        /* Compute the convex hull */
+        (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
         /* Swapping the EMA line at the begining of the matrix (quick fix to improve...) */
         TempPhase.EMA[0] = TempPhase.EMA[j];
         
@@ -508,8 +514,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
     }
 
-    /* Compute the convex hull */
-    (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
+    
     
     // stack_print(*Hull);
     // printf("\n");

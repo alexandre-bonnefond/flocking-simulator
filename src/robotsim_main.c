@@ -557,20 +557,25 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
         /* Drawing communication network, if it's toggled on */
         if (ActualVizParams.DisplayCommNetwork == 1) {
-            if (!(Phase->lost)){
-                for (i = 0; i < Phase->NumberOfAgents; i++) {
-                    float jaune [3]= {255.0, 255.0, 0.0};
-                    DrawSensorRangeNetwork_2D(PhaseData,
-                            &ActualUnitParams, i, Polygons, Now,
-                            &ActualVizParams, jaune);
-                }
-            }else{
-                for (i = 0; i < Phase->NumberOfAgents; i++) {
+            for (i = 0; i < Phase->NumberOfAgents; i++) {
                     DrawSensorRangeNetwork_2D(PhaseData,
                             &ActualUnitParams, i, Polygons, Now,
                             &ActualVizParams, ActualColorConfig.CommNetWorkColor);
                 }
-            }
+            // if (!(Phase->lost)){
+            //     for (i = 0; i < Phase->NumberOfAgents; i++) {
+            //         float jaune [3]= {255.0, 255.0, 0.0};
+            //         DrawSensorRangeNetwork_2D(PhaseData,
+            //                 &ActualUnitParams, i, Polygons, Now,
+            //                 &ActualVizParams, jaune);
+            //     }
+            // }else{
+            //     for (i = 0; i < Phase->NumberOfAgents; i++) {
+            //         DrawSensorRangeNetwork_2D(PhaseData,
+            //                 &ActualUnitParams, i, Polygons, Now,
+            //                 &ActualVizParams, ActualColorConfig.CommNetWorkColor);
+            //     }
+            // }
         }
 
         if (ActualVizParams.DisplayHull == true) {

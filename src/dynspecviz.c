@@ -135,6 +135,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         Red[0] = .9; Red[1] = 0.1; Red[2] = .1;
         float * RedColor;
         RedColor = Red;
+        float yellow[3] = {1, 1, 0};
         double *ActualAgentsCoordinates;
         ActualAgentsCoordinates = PhaseData[Now].Coordinates[WhichAgent];
         GetAgentsCoordinatesFromTimeLine(ActualAgentsCoordinates, PhaseData,
@@ -331,6 +332,25 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 color);
 
                                 }
+
+                                else if (PhaseData[Now].Laplacian[WhichAgent][i] < Unit_params->sensitivity_thresh.Value
+                                        && PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_lora.Value) {
+
+                                        CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                        CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
+
+                                        CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                        CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
+
+                                        DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                                RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                                yellow);
+
+                                }
+
+
 
                         }
 
