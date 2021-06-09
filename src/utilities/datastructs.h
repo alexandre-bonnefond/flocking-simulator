@@ -46,6 +46,9 @@ double *doubleVector(int size);
  */
 double **doubleMatrix(int rows, int cols);
 
+/* Dynamic int triple array (3D, depth matrices with rows * cols cells) */ 
+int ***tripleIntMatrix(int depth, int rows, int cols);
+
 /* Allocates a 3 dimensional dynamic array of double variables 
  * Arrays allocated with this can be used as arrays of matrix structures
  * "rows" and "cols" defines the number of rows and columns of the array, respectively

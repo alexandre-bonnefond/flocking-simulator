@@ -86,6 +86,9 @@ double **Polygons;
 /* Convex hull */
 node *Hull;
 
+/* CBP */
+static int ***CBPObst;
+ 
 // Temporary...
 static bool HighRes = true;
 
@@ -114,6 +117,7 @@ bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
+int Robustness;
 double TargetPosition[3];
 double **TargetsArray; // = NULL;
 int cnt = 0;                    // Which target is on
@@ -158,6 +162,8 @@ void Initialize() {
             ActualPhase.Coordinates[i][j] = PhaseData[0].Coordinates[i][j];
         }
     }
+
+    CBPObst = tripleIntMatrix(ActualSitParams.NumberOfAgents, ActualSitParams.NumberOfAgents, 2 * sqrt(2) * ActualSitParams.Resolution);
 
     InitializePhase(&ActualPhase, &ActualFlockingParams, &ActualSitParams, Verbose);
 
@@ -266,8 +272,8 @@ void DisplayMenu() {
 void DisplayChart() {
     int Resolution = ActualSitParams.Resolution;
 
-    float red[3] = {1, 0, 0};
-    float blue[3] = {0, 0, 1};
+    float occupiedColor[3] = {0, 0, 0};
+    float freeColor[3] = {1, 1, 1};
 
     // float green[3] = {0, 1, 0};
     // float yellow[3] = {1, 1, 0};
@@ -279,32 +285,86 @@ void DisplayChart() {
 
     int i,j,k;
     double xsize = 0, ysize = 0;
+    // for (int ag = 0; ag < 1; ag++) {
+    //     for (row = 0; row < ActualSitParams.NumberOfAgents; row++) {
+    //         for (k = 0; k <100; k++) {
+    //             if (CBPObst[ag][row][k] != 0 && CBPObst[ag][row][k + 1] != 0) {
+    //                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //                 // printf("%d\n", col);
+    //                 DrawShape(-1.0 + step/2 + step * CBPObst[ag][row][k], 1.0 - step/2 - CBPObst[ag][row][k + 1] * step, step, step, 0, red);
+    //             }
+    //         }
+    //     }
+    // }
     for (i = 0; i < Resolution; i++) {
         xsize = 0;
-
         for (j = 0; j < Resolution; j++) {
             // TODO merge maps for display
-            double sum = 0;
-            for (k = 0; k < ActualSitParams.NumberOfAgents; sum += ActualPhase.CBP[k++][i][j]);
+            double mean = 0;
+            long sampleCount = 1; 
+            if (ActualVizParams.WhichAgentIsSelected == ActualPhase.NumberOfAgents) {    
+                for (k = 0; k < ActualSitParams.NumberOfAgents; k++) {
+                    
+                    // keep this condition and u can differenciate explored zones from inexplored zones
+                    if (ActualPhase.CBP[k][i][j].count > 0) {
+                        mean += ActualPhase.CBP[k][i][j].current;
+                        sampleCount++;
+                    }
+                    
+                    if (ActualPhase.CBP[k][i][j].countObst > 0) {
+                        mean += ActualPhase.CBP[k][i][j].currentObst;
+                        sampleCount++;
+                    }
+                }
+            } else {
+                int agentId = ActualVizParams.WhichAgentIsSelected;
+                
+                // keep this condition and u can differenciate explored zones from inexplored zones
+                if (ActualPhase.CBP[agentId][i][j].count > 0) {
+                    mean += ActualPhase.CBP[agentId][i][j].current;
+                    sampleCount++;
+                }
+                if (ActualPhase.CBP[agentId][i][j].currentObst > 0) {
+                    mean += ActualPhase.CBP[agentId][i][j].currentObst;
+                    sampleCount++;
+                }
+            }
+            mean /= sampleCount;
 
-            if (sum > 0) {
+            if (mean > 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
 
-                sum = MIN(1, sum);
+                mean = MIN(1, mean);
                 float col[3] = {0};
-                LerpColor(blue, red, col, sum);
+                LerpColor(occupiedColor, freeColor, col, mean);
 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                 DrawShape(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step, step, 0, col);
+            }
 
-                // DrawFastCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, 10, col);
-            } 
+            float black[3] = {0,0,0};
+
+            char str[10];
+            sprintf(str, "%.2lf", mean);
+            DrawString(-1.025 + step/2 + xsize, 0.985 - ysize - step/2, GLUT_BITMAP_TIMES_ROMAN_10,
+                str, black);
+
             xsize += step;
         }
         ysize += step;
     }
 
     DrawSquare(Resolution);
+
+
+    for (int i = 0; i < ActualSitParams.NumberOfAgents; i++) {
+        double* coord = ActualPhase.Coordinates[i];
+        DrawCopter_2D(coord[0] - ArenaCenterX,
+                      coord[1] - ArenaCenterY,
+                      ArenaRadius, 1000,
+                      ActualColorConfig.AgentsColor[i]
+                    );
+    }
 
     glutSwapBuffers();
 }
@@ -339,31 +399,31 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
 
         /* Setting up size of the coordinate system */
-        // LengthOfAxis = RealToGlCoord_2D(ArenaRadius, ActualVizParams.MapSizeXY);
-        // TicDensity = RealToGlCoord_2D(2000.0, ActualVizParams.MapSizeXY);
-        // HowManyTics = (int) LengthOfAxis / TicDensity;
-        // // HowManyTics = (int) HowManyTics *1.5;
+        LengthOfAxis = RealToGlCoord_2D(ArenaRadius, ActualVizParams.MapSizeXY);
+        TicDensity = RealToGlCoord_2D(2000.0, ActualVizParams.MapSizeXY);
+        HowManyTics = (int) LengthOfAxis / TicDensity;
+        HowManyTics = (int) HowManyTics *1.5;
 
-        // /* Drawing ground */
-        // glColor3f(ActualColorConfig.AxisColor[0],
-        //         ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
-        // glBegin(GL_LINES);
-        // for (i = -HowManyTics; i < HowManyTics; i++) {
-        //     // glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
-        //     // glVertex2d(i * TicDensity, LengthOfAxis);
-        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
-        //         RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
-        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
-        //         RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
+        /* Drawing ground */
+        glColor3f(ActualColorConfig.AxisColor[0],
+                ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
+        glBegin(GL_LINES);
+        for (i = -HowManyTics; i < HowManyTics; i++) {
+            glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
+            glVertex2d(i * TicDensity, LengthOfAxis);
+            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
+                RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
+            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
+                RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
 
-        // }
-        // for (i = -HowManyTics; i < HowManyTics; i++) {
+        }
+        for (i = -HowManyTics; i < HowManyTics; i++) {
 
-        //     glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
-        //     glVertex2d(LengthOfAxis, i * TicDensity);
+            glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
+            glVertex2d(LengthOfAxis, i * TicDensity);
 
-        // }
-        // glEnd();
+        }
+        glEnd();
 
         /* Draw target */
         if (ActualUnitParams.flocking_type.Value == 2) {
@@ -733,6 +793,7 @@ void DisplayTrajs() {
 
     static char CollisionsToWriteOut[18];
     static char TimeToWriteOut[40];
+    static char stringRobustness[40];
     static const char PausedCaption[6] = "Paused";
     static int LastTimeStep = 0;
     static struct timeval LastTime = { 0, 0 };
@@ -774,6 +835,11 @@ void DisplayTrajs() {
             LastTime.tv_sec + (NowTime.tv_usec - LastTime.tv_usec) / 1e6);
     LastTime = NowTime;
     LastTimeStep = TimeStep;
+
+    /* Writing out Robustness */
+    sprintf(stringRobustness, "Robustness = %d", Robustness);
+    DrawString(-0.95, 0.85, GLUT_BITMAP_9_BY_15, stringRobustness,
+               ActualColorConfig.MenuSelectionColor);
 
     /* Writing out Elapsed Time */
     if (true == PNGOutVid) {
@@ -889,7 +955,7 @@ void DisplayTrajs() {
 /* Refreshing "trajectory" window */
 void UpdatePositionsToDisplay() {
 
-    int i;
+    int i, j, k;
 
     static int TimeStepsToStore = 0;
     /* For agent-following and CoM-following mode */
@@ -944,8 +1010,6 @@ void UpdatePositionsToDisplay() {
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
-                // stack_print(Hull);
-                // printf("\n");
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -956,6 +1020,24 @@ void UpdatePositionsToDisplay() {
                  */
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
+                
+                if (Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
+
+                    for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
+                        static double CoordA[3];
+                        GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
+                        for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
+                            if (j != k) {
+                                if (fabs(PhaseData[Now + 1].Laplacian[j][k] - PhaseData[Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1].Laplacian[j][k]) > 20) {
+                                    static double CoordB[3];
+                                    GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
+
+                                    FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
+                                }
+                            }
+                        }
+                    }
+                }
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */
@@ -1036,9 +1118,9 @@ void UpdatePositionsToDisplay() {
     }
 
     /* Refresh both windows */
-    glutSetWindow(MenuWindowID);
+    //glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
+    //glutSetWindow(StatWindow);
     glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
@@ -1899,10 +1981,10 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
-        StatWindow = glutCreateWindow("Obstacle Probability Map");
-        glutIdleFunc(UpdatePCB);
-        glutDisplayFunc(DisplayChart);
+        //DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
+        //StatWindow = glutCreateWindow("Obstacle Probability Map");
+        //glutIdleFunc(UpdatePCB);
+        //glutDisplayFunc(DisplayChart);
         
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,

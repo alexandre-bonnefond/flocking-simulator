@@ -110,6 +110,35 @@ double ***tripleMatrix(int depth, int rows, int cols) {
     return tmat;
 }
 
+/* Dynamic int triple array (3D, depth matrices with rows * cols cells) */ 
+int ***tripleIntMatrix(int depth, int rows, int cols) {
+
+    int ***tmat = (int ***) calloc(depth, sizeof(int**));
+    if (tmat == NULL) {
+        fprintf(stderr, "Matrix allocation error!\n");
+        exit(-1);
+    }
+
+    for (int i = 0; i < depth; i++) {
+        tmat[i] = (int **) calloc(cols, sizeof(int*));
+        if (tmat[i] == NULL) {
+            fprintf(stderr, "Matrix allocation error!\n");
+            exit(-1);
+        }
+
+        for (int j = 0; j < cols; j++) {
+            tmat[i][j] = (int *) calloc(rows, sizeof(int));
+            if (tmat[i][j] == NULL) {
+                fprintf(stderr, "Matrix allocation error!\n");
+                exit(-1);
+            }
+        }
+    }
+
+    return tmat;
+}
+
+
 /* Dynamic double time-indexed array */
 double ***doubleTimeIndexedMatrix(int timesteps, int rows, int cols) {
 

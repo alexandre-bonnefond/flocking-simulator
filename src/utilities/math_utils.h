@@ -81,6 +81,8 @@ double VectAbs(double *InputVector);
  */
 double VectAbsXY(double *InputVector);
 
+void VectDifference2D(double *ABDiff, double *VectA, double *VectB);
+
 /* Difference of two vectors (3D)
  * "ABDiff" is the difference of the vectors "VectA" and "VectB"
  * ABDiff = VectA - VectB
@@ -400,4 +402,5 @@ double polygonArea(double *X, double *Y, int n);
 // Returns a node pointer to the first node in a stack containing
 // the list of points in the convex hull
 node *convex_hull(point_xy* points, int n);
+
 #endif
