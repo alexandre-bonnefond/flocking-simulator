@@ -617,25 +617,9 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         /* Drawing communication network, if it's toggled on */
         if (ActualVizParams.DisplayCommNetwork == true) {
             for (i = 0; i < Phase->NumberOfAgents; i++) {
-                    int j;
-                    float couleur [3] = {0,1,0};
-                    float green [3]= {0,1,0};
-                    float red [3] = {1,0,0};
-                    int HowManySteps = 8;
-                    float degrade [HowManySteps][3];
-
-                    for (j = 0; j < HowManySteps; j++) {
-                        couleur[0] += (red[0] - green[0]) / HowManySteps;
-                        couleur[1] += (red[1] - green[1]) / HowManySteps;
-                        couleur[2] += (red[2] - green[2]) / HowManySteps;
-                        degrade [j][0] = couleur[0];
-                        degrade [j][1] = couleur[1];
-                        degrade [j][2] = couleur[2];
-                    }
-                    int indice = abs(Phase->ReceivedPower[i] + 40)*HowManySteps/40;
                     DrawSensorRangeNetwork_2D(PhaseData,
                         &ActualUnitParams, i, Polygons, Now,
-                        &ActualVizParams, degrade[indice]);
+                        &ActualVizParams, ActualColorConfig.CommNetWorkColor);
             }
         }
 

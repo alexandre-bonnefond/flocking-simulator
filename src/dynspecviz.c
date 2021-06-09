@@ -154,6 +154,41 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double angle;
         static double CenterX1, CenterX2, CenterY1, CenterY2; 
 
+        //création du dégradé de couleurs
+        float couleur [3] = {0,1,0};
+        float green2 [3]= {0,1,0};
+        float red2 [3] = {1,0,0};
+        int HowManySteps = 8;
+        float degrade [HowManySteps][3];
+
+        /*for (int m = 0; m < HowManySteps; m++) {
+                degrade [m][0] = 0;
+                degrade [m][1] = 0;
+                degrade [m][2] = 0;
+        }*/
+
+        //parcourir Laplacian pour trouver min et max
+        //diviser le produit en croix par la diff entre min et max (caster en int)
+        //prendre la valeur absolue toujurs, parce que les plus petites valeurs commencent au vert entre autre
+
+
+        for (int n=0; n< HowManySteps; n++){
+                for(int o=0; o<3; o++){
+                        fprintf(stdout, "dégradé[%d][%d] = %f \n",n,o, degrade[n][o]);
+                }
+        }
+
+
+        for (int m = 0; m < HowManySteps; m++) {
+                couleur[0] += (red2[0] - green2[0]) / HowManySteps;
+                couleur[1] += (red2[1] - green2[1]) / HowManySteps;
+                couleur[2] += (red2[2] - green2[2]) / HowManySteps;
+                degrade [m][0] = couleur[0];
+                degrade [m][1] = couleur[1];
+                degrade [m][2] = couleur[2];
+        }
+        
+
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
 
                 if (i != WhichAgent) {
@@ -261,9 +296,15 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 }
                         }
 
-                        else if ((int)(Unit_params->communication_type.Value) == 2) {
+                        else if ((int)(Unit_params->communication_type.Value) == 2) { // comm avec pertes dans les obstacles
 
                                 if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value && IsLeading == true) {
+
+                                        fprintf(stdout,"puissance %f, agent %d \n", PhaseData[Now].Laplacian[WhichAgent][i], WhichAgent);
+                                        //val abs pour que ça soit de 50 (rouge) à 0(vert, état initial du tableau)
+
+                                        int indice = (abs(PhaseData[Now].Laplacian[WhichAgent][i] + 40)*HowManySteps)/30; //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        //color = degrade[indice];
                                         
                                         ArrowCenterX =
                                                 (ActualAgentsCoordinates[0] +
@@ -275,11 +316,13 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                         DifferenceVector[2] = 0;
                                         angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
 
-                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
+                                        //dans cette boucle c'est que c'est au dessus de -70 normalement du coup ici appeler notre fonction de choix de couleur
+
+                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY), //travailelr sur cette fonction sur l'input color
                                                 RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
                                                 RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
                                                         VizParams->MapSizeXY), RealToGlCoord_2D(30,
-                                                        VizParams->MapSizeXY), angle, color);
+                                                        VizParams->MapSizeXY), angle, degrade[indice]); //degrade[indice]
 
                                         for (j = 0; j < obstacles.o_count; j++){
 
@@ -318,6 +361,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 
                                 else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
 
+                                        //faut que le pointillé soit pas en blanc du coup
+                                        int indice = (abs(PhaseData[Now].Laplacian[WhichAgent][i] + 40)*HowManySteps)/50;
+
                                         CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
                                         CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
 
@@ -328,7 +374,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
                                                 RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
                                                 RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
-                                                color);
+                                                degrade[indice]);
 
                                 }
 
