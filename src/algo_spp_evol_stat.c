@@ -8,6 +8,7 @@
 
 #include "algo_stat.h"
 #include "algo_spp_evol.h"
+#include "utilities/datastructs.h"
 
 /* Macro for saving standard deviations at the end of the simulation */
 // Place it inside the CloseModelSpecificStats function!
@@ -29,6 +30,7 @@ FILE *f_DistanceFromArenaFile;
 FILE *f_ClusterDependentParams;
 FILE *f_ClusterParams;
 FILE *f_ClusterRP;
+FILE *f_SuperLaMatriceCBP;
 
 FILE *f_DistanceFromArenaFile_StDev;
 FILE *f_ClusterDependentParams_StDev;
@@ -66,6 +68,10 @@ double Data_DistanceFromArena_StDev = 0.0, Data_DistanceFromArenaMin_StDev =
 
 double n_Avg = 0.0, n_StDev = 0.0;
 
+measurement_bundle*** last_CBP_array = NULL;
+int last_CBP_size = 0;
+int last_agent_count = 0;
+
 /* Function for opening stat files, creating header lines, etc. */
 void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
 
@@ -75,6 +81,7 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
             f_ClusterDependentParams);
     INITIALIZE_OUTPUT_FILE("cluster_parameters.dat", f_ClusterParams);
     INITIALIZE_OUTPUT_FILE("cluster_dependent_received_power.dat", f_ClusterRP);
+    INITIALIZE_OUTPUT_FILE("cbp_matrices.dat", f_SuperLaMatriceCBP);
 
     /* Headers */
     if (STAT != StatUtils->SaveMode && STEADYSTAT != StatUtils->SaveMode) {
@@ -422,6 +429,20 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
 
 }
 
+void SaveCBPToFile(measurement_bundle*** CBP, int agentCount, int size, FILE* file) {
+
+    for (int i = 0; i < agentCount; i++) {
+        fprintf(file, "%d\n", i);
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                fprintf(file, "%ld %ld ", CBP[i][y][x].count, CBP[i][y][x].countObst);
+            }
+            fprintf(file, "\n");
+        }
+        fprintf(file, "\n");
+    }
+}
+
 void SaveModelSpecificStats(phase_t * Phase,
         stat_utils_t * StatUtils, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams,
@@ -531,6 +552,9 @@ void SaveModelSpecificStats(phase_t * Phase,
 
     SaveClusterDependentParams(Phase, SitParams, UnitParams, StatUtils);
 
+    last_CBP_array = Phase->CBP;
+    last_CBP_size = SitParams->Resolution;
+    last_agent_count = Phase->NumberOfAgents;
 }
 
 /* For closing stat files */
@@ -600,6 +624,8 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * Uni
             StDev_Temp = 0.0;
         }
         fprintf(f_DistanceFromArenaFile_StDev, "\t%lf\n", sqrt(StDev_Temp));
+
+        SaveCBPToFile(last_CBP_array, last_agent_count, last_CBP_size, f_SuperLaMatriceCBP);
 
         fclose(f_DistanceFromArenaFile_StDev);
         fclose(f_ClusterDependentParams_StDev);

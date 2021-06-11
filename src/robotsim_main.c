@@ -790,8 +790,8 @@ void UpdateMenu() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1135,11 +1135,10 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
-
 }
 
 /* Functions for handling keyboard and mouse events */
@@ -1301,8 +1300,8 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1598,8 +1597,8 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1621,8 +1620,8 @@ void HandleMouse2(int button, int state, int x, int y, phase_t *PhaseData) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
     // printf("%f %f\n", MouseCoordToReal_2D(x, 600*400,
@@ -1709,8 +1708,8 @@ void HandleMouse(int button, int state, int x, int y) {
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    // glutSetWindow(StatWindow);
-    // glutPostRedisplay();
+    glutSetWindow(StatWindow);
+    glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -2015,10 +2014,10 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        // DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
-        // StatWindow = glutCreateWindow("Obstacle Probability Map");
-        // glutIdleFunc(UpdatePCB);
-        // glutDisplayFunc(DisplayChart);
+        DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
+        StatWindow = glutCreateWindow("Obstacle Probability Map");
+        glutIdleFunc(UpdatePCB);
+        glutDisplayFunc(DisplayChart);
         
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,
