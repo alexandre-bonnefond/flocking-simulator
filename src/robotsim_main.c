@@ -840,9 +840,15 @@ void DisplayTrajs() {
     LastTimeStep = TimeStep;
 
     /* Writing out Robustness */
-    sprintf(stringRobustness, "Robustness = %d", Robustness);
-    DrawString(-0.95, 0.85, GLUT_BITMAP_9_BY_15, stringRobustness,
-               ActualColorConfig.MenuSelectionColor);
+    if (ActualSitParams.NumberOfClusters > 1) {
+        sprintf(stringRobustness, "Robustness = %d", Robustness);
+        DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
+                   ActualColorConfig.MenuSelectionColor);
+    }else{
+        sprintf(stringRobustness, "Robustness = %d", Robustness);
+        DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
+                   ActualColorConfig.MenuSelectionColor);
+    }
 
     /* Writing out Elapsed Time */
     if (true == PNGOutVid) {

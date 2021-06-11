@@ -516,7 +516,7 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
 
     //Creation de la matrice
     int matriceA[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
-    printf("Number of agents = %d\n", SitParams->NumberOfAgents);
+    //printf("Number of agents = %d\n", SitParams->NumberOfAgents);
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j <= i; j++) {
             if (i != j && OutputPhase->Laplacian[i][j] > -70) {
@@ -533,13 +533,13 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
     }
 
     //Affichage de la matrice
-    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+    /*for (int i = 0; i < SitParams->NumberOfAgents; i++) {
         for (int j = 0; j < SitParams->NumberOfAgents; j++) {
             printf("%d ", matriceA[i][j]);
         }
         printf("\n");
     }
-    printf("\n");
+    printf("\n");*/
 
     //Creation tableau de résultat
     int res[SitParams->NumberOfAgents];
@@ -547,7 +547,7 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
         res[k] = 0;
     }
     //Remplissage du tableau de résultat
-    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+    for (int i = 0; i < 20; i++) {
         res[minCUT(matriceA) - 1]++;
     }
     //Affichage résultat
