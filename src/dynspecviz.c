@@ -329,7 +329,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                         fprintf(stdout,"puissance %f, agent %d \n", PhaseData[Now].Laplacian[WhichAgent][i], WhichAgent);
                                         //val abs pour que ça soit de 50 (rouge) à 0(vert, état initial du tableau)
 
-                                        int indice = (abs(PhaseData[Now].Laplacian[WhichAgent][i] + 40)*HowManySteps)/30; //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        int indice = (int) ((log10(abs(PhaseData[Now].Laplacian[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
                                         //color = degrade[indice];
                                         if (indice >= HowManySteps){
                                                 indice = HowManySteps - 1;
