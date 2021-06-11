@@ -30,6 +30,10 @@ Transmit_Power=20.000000
 Freq=2.400000
 # Sensitivity threshold (dBm)
 Sensitivity_thresh=-70.000000
+# Smoothing EMA (-)
+EMA_Smoothing=20.000000
+# Depth EMA (-)
+EMA_Depth=20.000000
 # Communication type (-)
 Communication_type=2.000000
 # Flocking type (-)

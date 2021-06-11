@@ -1515,3 +1515,12 @@ node *convex_hull(point_xy *points, int n)
     // Return the convex hull
     return hull;
 }
+
+double gaussianPdf(double avg, double stdev, double value, int norm) {
+    double square = (value - avg) / stdev;
+    square *= square;
+    if (norm)
+        return exp(-.5*square);
+    else
+        return M_INV_SQRT_2_PI * 1.0 / stdev * exp(-.5*square);
+}

@@ -23,6 +23,12 @@
 #ifndef M_PI_2
 #define M_PI_2 1.57079632679489661923
 #endif
+#ifndef M_SQRT_2_PI
+#define M_SQRT_2_PI 2.506628274631000502415765284811
+#endif
+#ifndef M_INV_SQRT_2_PI
+#define M_INV_SQRT_2_PI 0.39894228040143267793994605993439
+#endif
 
 /* Randomizer functions */
 
@@ -404,5 +410,12 @@ double polygonArea(double *X, double *Y, int n);
 // Returns a node pointer to the first node in a stack containing
 // the list of points in the convex hull
 node *convex_hull(point_xy* points, int n);
+
+/**
+ *  Returns the value of the Gaussian pdf with given parameters at given point x
+ *  if norm is 1 the gaussian value is normalized (1 at its maximum)
+ **/
+double gaussianPdf(double avg, double stdev, double value, int norm); 
+
 
 #endif
