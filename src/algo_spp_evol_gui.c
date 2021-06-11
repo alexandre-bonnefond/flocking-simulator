@@ -228,11 +228,21 @@ void HandleSpecialMouseEvent(int button,
         flocking_model_params_t * FlockingParams,
         vizmode_params_t * VizParams, 
         double * CoordTarg, double *** TargetsArray,
-        const int Modifier) {
+        const int Modifier, phase_t * Phase) {
 
     // static int count = 0;
 
-    if (VizParams->TwoDimViz && button == GLUT_LEFT && state == GLUT_DOWN && Modifier != GLUT_ACTIVE_ALT) {
+    if (VizParams->TwoDimViz == true) {
+        if (button == 0 && state == GLUT_DOWN && Modifier == 2) {
+            Phase->Coordinates[0][0] = MouseCoordToReal_2D(x, VizParams->MapSizeXY,
+                    VizParams->Resolution);
+            Phase->Coordinates[0][1] = -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
+                    VizParams->Resolution);
+        }
+    }
+
+    if (VizParams->TwoDimViz && button == GLUT_LEFT && state == GLUT_DOWN && Modifier != GLUT_ACTIVE_ALT
+        && Modifier != GLUT_ACTIVE_CTRL) {
         CHANGE_PARAMETER(ArenaCenterX, MouseCoordToReal_2D(x,
                         VizParams->MapSizeXY,
                         VizParams->Resolution) + VizParams->CenterX);

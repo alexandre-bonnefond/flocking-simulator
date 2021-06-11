@@ -138,19 +138,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             }
             freeMatrix(Intersections, 2, 3);
         }
-        LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);
-        
-        /* EMA calculation */
-
-        // if (TimeStepReal < DepthEMA) 
-        // {
-        //     LocalActualPhaseToCreate->EMA[WhichAgent][i] += LocalActualPhaseToCreate->ReceivedPower[i]/DepthEMA;
-        // }
-        // else
-        // {
-        //     LocalActualPhaseToCreate->EMA[WhichAgent][i] = EMA(LocalActualPhaseToCreate->ReceivedPower[i], 
-        //     Phase->EMA[WhichAgent][i], UnitParams->smoothing.Value, DepthEMA);
-        // }      
+        LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);     
     }
 
     if (OrderByDistance) {
@@ -455,44 +443,24 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 SitParams->DeltaT)) == 0));
                                         
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-
-        // points[j].x = LocalActualPhase.Coordinates[j][0];
-        // points[j].y = LocalActualPhase.Coordinates[j][1];
         
-        /* Fill the Laplacian and EMA Matrices in dBm */
+        /* Fill the Laplacian Matrix in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
             if ( j == TempPhase.RealIDs[i]) {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.NumberOfAgents;
-                // OutputPhase->EMA[j][TempPhase.RealIDs[i]] = 0;
             }
             else {
-                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];
-                OutputPhase->EMA[j][TempPhase.RealIDs[i]] = TempPhase.EMA[j][i];
-        
+                OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];        
             }           
         }
-        /* Swapping the EMA line at the begining of the matrix (quick fix to improve...) */
-        TempPhase.EMA[0] = TempPhase.EMA[j];
         
-        /* CBP strategy (only on GPS tick) */
+        /* CBP strategy (only on GPS tick) and Compute the pressure for each agent */
         if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
             WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
-
-            // for (i = 0; i < TempPhase.NumberOfAgents; i++) {
-                // if (i != j) {
-                //     if (fabs(OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] - \
-                //         LocalActualDelayedPhase.Laplacian[j][TempPhase.RealIDs[i]]) > 20) {
-                //             int * Vox;
-                //             Vox = FastVoxelTraversal(OutputPhase->Coordinates[j], OutputPhase->Coordinates[TempPhase.RealIDs[i]],
-                //             2 * ArenaRadius / SitParams->Resolution, ArenaCenterX, ArenaCenterY, ArenaRadius);
-
-                        // for (int t = 0; t < 50; t++) {
-                        //     printf("%d ", Vox[t]);
-                        // }
-                        // printf("\n");
-                //     }
-                // }
-            // } 
+            // printf("Agent %d\n", j);
+            double P0 = PressureMeasure(&TempPhase, 0, 2, 3, 4000);
+            // printf("Pression agent %d = %f\n", j, P0);
+            OutputPhase->Pressure[j] = P0;
         }
 
         /* Solving Newtonian with Euler-Naruyama method */
@@ -512,9 +480,6 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
     }
 
-    /* Compute the convex hull */
-    // (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
-
     // for (i = 0; i < SitParams->Resolution; i++){
     //     for (j = 0; j < SitParams->Resolution; j++){
     //         printf("%f\t", OutputPhase->CBP[i][j]);
@@ -526,7 +491,14 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     /* Print the Laplacian */
     // for (i = 0; i < SitParams->NumberOfAgents; i++){
     //     for (j = 0; j < SitParams->NumberOfAgents; j++){
-    //         printf("%f\t", OutputPhase->Laplacian[i][j]);
+    //         if (i == j)
+    //         {
+    //             printf("%d\t",(int) OutputPhase->Laplacian[i][i]);
+    //         }
+    //         else
+    //         {
+    //             printf("%f\t", OutputPhase->Laplacian[i][j]);
+    //         }
     //     }
     //     printf("\n");
     // }

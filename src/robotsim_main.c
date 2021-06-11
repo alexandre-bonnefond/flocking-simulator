@@ -197,6 +197,9 @@ void Initialize() {
     /* Hull display is OFF */
     ActualVizParams.DisplayHull = false;
 
+    /* Pressure display is OFF */
+    ActualVizParams.DisplayPressure = false;
+
     /* Tail display is OFF. */
     ActualVizParams.DisplayTail = false;
     ActualVizParams.LengthOfTail = 500;
@@ -549,8 +552,15 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                             ActualColorConfig.AgentsColor[i]);
                 }
 
+                if (ActualVizParams.DisplayPressure == true) {
+                    float red[3] = {1, 0, 0};
+                    float gr[3] = {0, 1, 0};
+                    DrawGradientColoredCircle(RealToGlCoord_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX, ActualVizParams.MapSizeXY), RealToGlCoord_2D(AgentsCoordinates[1] -
+                            ActualVizParams.CenterY, ActualVizParams.MapSizeXY), RealToGlCoord_2D(1000 * Phase->Pressure[i],
+                            ActualVizParams.MapSizeXY), RealToGlCoord_2D(100, ActualVizParams.MapSizeXY), red, gr, 25);
+                }
             }
-
         }
 
         /* Draw Velocity Arrows */
@@ -1125,8 +1135,8 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1450,6 +1460,10 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     } else if (key == GLUT_KEY_F1) {
         ActualVizParams.DisplayHull = !ActualVizParams.DisplayHull;
 
+        /* F1 toggles Hull display */
+    } else if (key == GLUT_KEY_F10) {
+        ActualVizParams.DisplayPressure = !ActualVizParams.DisplayPressure;
+
         /* F5 Saves the parameters */
     } else if (key == GLUT_KEY_F5) {
 
@@ -1591,11 +1605,26 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
 
 }
 
-void HandleMouse2(int button, int state, int x, int y) {
+void HandleMouse2(int button, int state, int x, int y, phase_t *PhaseData) {
 
     static int Modder = 0;
-    static double RotationAxis[3];
     Modder = glutGetModifiers();
+    if (ActualVizParams.TwoDimViz == true) {
+        if (button == 2 && state == GLUT_DOWN && Modder == GLUT_ACTIVE_CTRL) {
+            PhaseData[TimeStep].Coordinates[0][0] = MouseCoordToReal_2D(x, ActualVizParams.MapSizeXY,
+                    ActualVizParams.Resolution);
+            PhaseData[TimeStep].Coordinates[0][1] = MouseCoordToReal_2D(y, ActualVizParams.MapSizeXY,
+                    ActualVizParams.Resolution);
+        }
+    }
+
+    /* Refreshing both windows */
+    glutSetWindow(MenuWindowID);
+    glutPostRedisplay();
+    // glutSetWindow(StatWindow);
+    // glutPostRedisplay();
+    glutSetWindow(VizWindowID);
+    glutPostRedisplay();
     // printf("%f %f\n", MouseCoordToReal_2D(x, 600*400,
     //                 ActualVizParams.Resolution), MouseCoordToReal_2D(y, 600*400,
     //                 ActualVizParams.Resolution));
@@ -1675,7 +1704,7 @@ void HandleMouse(int button, int state, int x, int y) {
 
     /* Call of model-specific mouse handling function */
     HandleSpecialMouseEvent(button, state, x, y, &cnt, &ActualFlockingParams,
-            &ActualVizParams, TargetPosition, &TargetsArray, Modder);
+            &ActualVizParams, TargetPosition, &TargetsArray, Modder, &PhaseData[Now]);
 
     /* Refreshing both windows */
     glutSetWindow(MenuWindowID);
@@ -1986,10 +2015,10 @@ int main(int argc, char *argv[]) {
         glutKeyboardFunc(HandleKeyBoard);
         glutSpecialFunc(HandleKeyBoardSpecial);
 
-        DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
-        StatWindow = glutCreateWindow("Obstacle Probability Map");
-        glutIdleFunc(UpdatePCB);
-        glutDisplayFunc(DisplayChart);
+        // DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
+        // StatWindow = glutCreateWindow("Obstacle Probability Map");
+        // glutIdleFunc(UpdatePCB);
+        // glutDisplayFunc(DisplayChart);
         
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,

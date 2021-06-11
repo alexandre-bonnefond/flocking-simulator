@@ -44,6 +44,8 @@ typedef struct {
     /* Length of displayed tail */
     bool DisplayTail;
     int LengthOfTail;
+    /* Display pressure */
+    bool DisplayPressure;
 
     /* Which parameter is selected? */
     /* 0 means "Visualization speed" */
