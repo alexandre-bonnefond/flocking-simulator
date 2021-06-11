@@ -839,8 +839,17 @@ void DisplayTrajs() {
 
     /* Writing out Robustness */
     sprintf(stringRobustness, "Robustness = %d", Robustness);
-    DrawString(-0.95, 0.85, GLUT_BITMAP_9_BY_15, stringRobustness,
-               ActualColorConfig.MenuSelectionColor);
+    if (ActualSitParams.NumberOfClusters == 1 ) {
+        DrawString(-0.95, 0.85, GLUT_BITMAP_9_BY_15, stringRobustness,
+                ActualColorConfig.MenuSelectionColor);
+    } else {
+
+        static double TempColor[3];
+        fprintf(stdout, TempColor);
+
+        DrawString(-0.95, 0.85, GLUT_BITMAP_9_BY_15, "Fragmentation : Robustness = NULL",
+                TempColor);
+    }
 
     /* Writing out Elapsed Time */
     if (true == PNGOutVid) {
