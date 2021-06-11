@@ -7,8 +7,9 @@
 
 #endif //PIR_SUJE2_KARGER_H
 
-#define N_karger 5
+#define N_karger 10
 
+int minCUT(int A[N_karger][N_karger];);
 //int lireFichier(FILE *fich, int mat[N_karger][N_karger]);
 void affichage(int mat[N_karger][N_karger]);
 int supprLigne(int mat[N_karger][N_karger], int ligne);

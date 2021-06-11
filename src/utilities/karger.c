@@ -5,6 +5,59 @@
 #include "karger.h"
 
 time_t t;
+
+int minCUT(int A[N_karger][N_karger]) {
+    /*FILE *fichier;
+    char monFichier[15] = "matriceB2.txt";*/
+    int couple[2];
+    int c = 0;
+
+    //time_t avant, apres;
+
+    /*fichier = fopen(monFichier, "r");
+    if (!fichier) {
+        fprintf(stderr, "erreur d'ouverture du fichier %s\n", monFichier);
+        //exit(-1);
+    }
+
+    int err = lireFichier(fichier, A);
+    if (err) {
+        fprintf(stderr, "erreur lors de la lecture de %s\n", monFichier);
+        //exit(-1);
+    }*/
+
+    //affichage(A);
+    //printf("\n");
+    //printf("Tailles %d\n", tailleMatrice(A));
+    //printf("Symétrique : %d\n", checkSym(A));
+    //time(&avant);
+
+    if (checkSym(A)) {
+        while (tailleMatrice(A) > 2) {
+            //printf("Tour : %d\n", ++c);
+
+            choixRandom(A, couple);
+            //printf("Choix random %d et %d\n", (couple[0]+1), (couple[1]+1));
+
+            merge(A, couple[0], couple[1]);
+            //affichage(A);
+
+            //printf("Tailles %d\n", tailleMatrice(A));
+            //printf("Symétrique : %d\n", checkSym(A));
+        }
+    } else {
+        printf("Erreur matrice non symétrique\n");
+        //exit(-1);
+    }
+
+    //time(&apres);
+
+    //printf("La coupe minimale est de %d\n", coupeMin(A));
+    //printf("La coupe minimale est trouvé en %ld.\n", (apres - avant));
+
+    return coupeMin(A);
+}
+
 /*int lireFichier(FILE *fich, int mat[N_karger][N_karger]) {
     int i, j, res;
     int val;

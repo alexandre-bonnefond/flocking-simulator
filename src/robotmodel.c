@@ -7,6 +7,7 @@
  */
 #include "utilities/karger.h"
 #include "robotmodel.h"
+#include <time.h>
 
 double **PreferredVelocities;
 phase_t LocalActualPhase;
@@ -367,6 +368,8 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
           bool *AgentsInDanger, double *WindVelocityVector, double *Accelerations,
           double **TargetsArray, double **Polygons, node **Hull, int Verbose) {
 
+    //For karger
+    //srand(time(0));
     int i, j, k;
     static double CheckVelocityCache[3];
     NullVect(CheckVelocityCache, 3);
@@ -437,7 +440,6 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
     NullVect(RealCoptForceVector, 3);
     static double ActualRealVelocity[3];
     NullVect(ActualRealVelocity, 3);
-    int test[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
 
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
 
@@ -470,26 +472,6 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
                 OutputPhase->EMA[j][TempPhase.RealIDs[i]] = TempPhase.EMA[j][i];
             }
         }
-
-        //Remplissage
-        for (int i = 0; i < SitParams->NumberOfAgents; i++) {
-            for (int j = 0; j < SitParams->NumberOfAgents; j++) {
-                if (i != j && OutputPhase->Laplacian[i][j] > -70) {
-                    test[i][j] = 1;
-                } else {
-                    test[i][j] = 0;
-                }
-            }
-        }
-
-        /*//Affichage
-        for (int i = 0; i < SitParams->NumberOfAgents; i++) {
-            for (int j = 0; j < SitParams->NumberOfAgents; j++) {
-                printf("%d ", test[i][j]);
-            }
-            printf("\n");
-        }
-        printf("\n\n");*/
 
         /* Swapping the EMA line at the begining of the matrix (quick fix to improve...) */
         TempPhase.EMA[0] = TempPhase.EMA[j];
@@ -532,7 +514,57 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
         }
     }
 
+
     // TODO : Algo de minCut
+    //Karger
+    //Remplissage
+    /*int test[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
+    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+        for (int j = 0; j < SitParams->NumberOfAgents; j++) {
+            if (i != j && OutputPhase->Laplacian[i][j] > -70) {
+                test[i][j] = 1;
+            } else {
+                test[i][j] = 0;
+            }
+        }
+    }
+
+    //Affichage
+    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+        for (int j = 0; j < SitParams->NumberOfAgents; j++) {
+            printf("%d ", test[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    int res[N_karger];
+    int val = 0;
+
+    for (int k = 0; k < N_karger; k++) {
+        res[k] = 0;
+    }
+
+    for (int i = 0; i < 10; i++) {
+        res[minCUT(test)-1]++;
+    }
+
+    for (int l = 0; l < N_karger; l++) {
+        printf("%d : %d\n", l + 1, res[l]);
+    }
+
+    for (int l = 1; l < N_karger; l++) {
+        if (res[l] != 0){
+            val = l+1;
+            break;
+        }
+    }
+
+    int val = 0;
+    //val++;
+
+    Robustness = &val;*/
+
 
     /* Compute the convex hull */
     // (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);

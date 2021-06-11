@@ -43,10 +43,10 @@ endif
 
 # SPP model for testing evolution algorithms
 spp_evol:
-	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_gui.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c
+	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_gui.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c src/utilities/karger.h src/utilities/karger.c
 
 debug:
-	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_gui.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c 
+	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_gui.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c src/utilities/karger.h src/utilities/karger.c
 
 optim:
-	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c 
+	$(GCC) src/algo_spp_evol.c src/algo_spp_evol_stat.c src/utilities/interactions.c src/utilities/obstacles.c src/utilities/karger.h src/utilities/karger.c
