@@ -173,7 +173,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         //prendre la valeur absolue toujurs, parce que les plus petites valeurs commencent au vert entre autre
 
 
-        for (int n=0; n< HowManySteps; n++){
+        /*for (int n=0; n< HowManySteps; n++){
                 for(int o=0; o<3; o++){
                         fprintf(stdout, "dégradé[%d][%d] = %f \n",n,o, degrade[n][o]);
                 }
@@ -191,8 +191,8 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                         degrade [m][1] = couleur[1];
                         degrade [m][2] = couleur[2];
                 } 
-        }
-        /*degrade [0][0] =  couleur[0];
+        }*/
+        degrade [0][0] =  couleur[0];
         degrade [0][1] = couleur[1];
         degrade [0][2] =  couleur[2];
         for (int m = 0; m < (HowManySteps/2); m++) {
@@ -212,7 +212,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                 degrade [k][0] =  couleur[0];
                 degrade [k][1] = couleur[1];
                 degrade [k][2] =  couleur[2];
-        } */
+        } 
         
 
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
@@ -329,6 +329,18 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                         fprintf(stdout,"puissance %f, agent %d \n", PhaseData[Now].Laplacian[WhichAgent][i], WhichAgent);
                                         //val abs pour que ça soit de 50 (rouge) à 0(vert, état initial du tableau)
 
+                                        //Première solution à la non symétrie : une moyenne des 2
+                                        //float moyenne = (PhaseData[Now].Laplacian[WhichAgent][i]+PhaseData[Now].Laplacian[i][WhichAgent])/2;
+                                        //int indice = (int) ((log10(abs(moyenne))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        
+                                        //Deuxième solution : on ne garde que la moins bonne
+                                        /*int indice;
+                                        if (PhaseData[Now].Laplacian[WhichAgent][i] < PhaseData[Now].Laplacian[i][WhichAgent]){
+                                                indice = (int) ((log10(abs(PhaseData[Now].Laplacian[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24);
+                                        } else {
+                                                indice = (int) ((log10(abs(PhaseData[Now].Laplacian[i][WhichAgent]))-1.6)*(HowManySteps-1)/0.24);
+                                        } */
+
                                         int indice = (int) ((log10(abs(PhaseData[Now].Laplacian[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
                                         //color = degrade[indice];
                                         if (indice >= HowManySteps){
@@ -388,7 +400,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 
                                 }
 
-                                else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
+                                /*else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
 
                                         //faut que le pointillé soit pas en blanc du coup
                                         int indice = (abs(PhaseData[Now].Laplacian[WhichAgent][i] + 40)*HowManySteps)/50;
@@ -405,7 +417,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
                                                 degrade[indice]);
 
-                                }
+                                }*/
 
                         }
 
