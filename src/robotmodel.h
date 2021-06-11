@@ -40,7 +40,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
         bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations,
-        double ** TargetsArray, double **Polygons, node **Hull, int Verbose);
+        double ** TargetsArray, double **Polygons, node **Hull, int Verbose, int *pRobustness);
 
 /*  Initialization and killing
  */

@@ -366,7 +366,7 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
           vizmode_params_t *VizParams, int TimeStepLooped, int TimeStepReal,
           bool CountCollisions, bool *ConditionsReset, int *Collisions,
           bool *AgentsInDanger, double *WindVelocityVector, double *Accelerations,
-          double **TargetsArray, double **Polygons, node **Hull, int Verbose) {
+          double **TargetsArray, double **Polygons, node **Hull, int Verbose, int *pRobustness) {
 
     //For karger
     //srand(time(0));
@@ -514,57 +514,57 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
         }
     }
 
-
-    // TODO : Algo de minCut
-    //Karger
-    //Remplissage
-    /*int test[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
-    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
-        for (int j = 0; j < SitParams->NumberOfAgents; j++) {
+    //Creation de la matrice
+    int matriceA[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
+    printf("Number of agents = %d\n", SitParams->NumberOfAgents);
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j <= i; j++) {
             if (i != j && OutputPhase->Laplacian[i][j] > -70) {
-                test[i][j] = 1;
+                matriceA[i][j] = 1;
+                matriceA[j][i] = 1;
             } else {
-                test[i][j] = 0;
+                matriceA[i][j] = 0;
+                matriceA[j][i] = 0;
+            }
+            if (i == j) {
+                matriceA[i][i] = 0;
             }
         }
     }
 
-    //Affichage
+    //Affichage de la matrice
     for (int i = 0; i < SitParams->NumberOfAgents; i++) {
         for (int j = 0; j < SitParams->NumberOfAgents; j++) {
-            printf("%d ", test[i][j]);
+            printf("%d ", matriceA[i][j]);
         }
         printf("\n");
     }
     printf("\n");
 
-    int res[N_karger];
-    int val = 0;
-
-    for (int k = 0; k < N_karger; k++) {
+    //Creation tableau de résultat
+    int res[SitParams->NumberOfAgents];
+    for (int k = 0; k < SitParams->NumberOfAgents; k++) {
         res[k] = 0;
     }
-
-    for (int i = 0; i < 10; i++) {
-        res[minCUT(test)-1]++;
+    //Remplissage du tableau de résultat
+    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+        res[minCUT(matriceA) - 1]++;
     }
-
-    for (int l = 0; l < N_karger; l++) {
+    //Affichage résultat
+    /*for (int l = 0; l < N_karger; l++) {
         printf("%d : %d\n", l + 1, res[l]);
-    }
-
-    for (int l = 1; l < N_karger; l++) {
-        if (res[l] != 0){
-            val = l+1;
-            break;
+    }*/
+    //Resultat
+    if (SitParams->NumberOfClusters > 1) {
+        (*pRobustness) = 0;
+    }else {
+        for (int l = 1; l < SitParams->NumberOfAgents; l++) {
+            if (res[l] != 0) {
+                (*pRobustness) = l + 1;
+                break;
+            }
         }
     }
-
-    int val = 0;
-    //val++;
-
-    Robustness = &val;*/
-
 
     /* Compute the convex hull */
     // (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);

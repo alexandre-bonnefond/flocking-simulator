@@ -119,6 +119,7 @@ bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
 int Robustness;
+int *pRobustness;
 double TargetPosition[3];
 double **TargetsArray; // = NULL;
 int cnt = 0;                    // Which target is on
@@ -795,6 +796,7 @@ void DisplayTrajs() {
     static char CollisionsToWriteOut[18];
     static char TimeToWriteOut[40];
     static char stringRobustness[40];
+    pRobustness = &Robustness;
     static const char PausedCaption[6] = "Paused";
     static int LastTimeStep = 0;
     static struct timeval LastTime = { 0, 0 };
@@ -1010,7 +1012,7 @@ void UpdatePositionsToDisplay() {
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
                         true, ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose, pRobustness);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -1052,7 +1054,7 @@ void UpdatePositionsToDisplay() {
                         &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose, pRobustness);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2272,7 +2274,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose, pRobustness);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
@@ -2296,7 +2298,7 @@ int main(int argc, char *argv[]) {
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
                         ConditionsReset, &Collisions, AgentsInDanger,
-                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
+                        WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose, pRobustness);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
                         &ActualSitParams, &ActualUnitParams,
