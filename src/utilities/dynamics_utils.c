@@ -25,7 +25,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
-    Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0.5);
+    Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
@@ -841,16 +841,17 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         int i_y_0 = (int) (y_0 / SquareSize);
 
         // TODO get GPS's position stdev or compute SNR
-        double SNR = 20;
+        double SNR = 60;
         double sigma = 100 * sqrt(10 + 150*150 * pow(10, -SNR/10));
         
         if (i_x_0 >= 0 && i_x_0 < Resolution && i_y_0 >= 0 && i_y_0 < Resolution)
             insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1, MTYPE_TRAIL);
 
-        for(int xOffset = - 2 * sigma; xOffset < 2 * sigma; xOffset += SquareSize) {
-            for(int yOffset = - 2 * sigma; yOffset < 2 * sigma; yOffset += SquareSize) {
+        float numberOfSigma = 1.5;
+        for(int xOffset = - numberOfSigma * sigma; xOffset < numberOfSigma * sigma; xOffset += SquareSize) {
+            for(int yOffset = - numberOfSigma * sigma; yOffset < numberOfSigma * sigma; yOffset += SquareSize) {
 
-                if (xOffset*xOffset + yOffset*yOffset > 4*sigma*sigma) continue;
+                if (xOffset*xOffset + yOffset*yOffset > numberOfSigma*numberOfSigma*sigma*sigma) continue;
 
                 int i_x = (int) ( (x_0 + xOffset) / SquareSize );
                 int i_y = (int) ( (y_0 + yOffset) / SquareSize );
@@ -858,9 +859,8 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
                 if (i_x >= 0 && i_x < Resolution && i_y >= 0 && i_y < Resolution && !(i_x == i_x_0 && i_y == i_y_0)) {
                     // Notify presence of the agent in the cell
                     
-                    // gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
+                    // double measurement = gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
                     double measurement = 1;
-
                     insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, measurement, MTYPE_TRAIL);
                 }
             }
@@ -2021,7 +2021,7 @@ void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int Wh
         
         int i_y = Resolution - ((int) y + 1);
         int i_x = (int) x;
-        if (Phase->CBP[WhichAgent][i_y][i_x].current > -1 ) {
+        if (Phase->CBP[WhichAgent][i_y][i_x].currentAvg > -1) {
             insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 0, MTYPE_OBST);
         }
         // printf("%f\t%f\n", x, y);

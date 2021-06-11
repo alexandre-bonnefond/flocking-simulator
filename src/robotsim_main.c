@@ -306,13 +306,13 @@ void DisplayChart() {
                     
                     // keep this condition and u can differenciate explored zones from inexplored zones
                     if (ActualPhase.CBP[k][i][j].count > 0) {
-                        mean += ActualPhase.CBP[k][i][j].current;
-                        sampleCount++;
+                        mean += ActualPhase.CBP[k][i][j].count;
+                        sampleCount += ActualPhase.CBP[k][i][j].count;
                     }
                     
                     if (ActualPhase.CBP[k][i][j].countObst > 0) {
-                        mean += ActualPhase.CBP[k][i][j].currentObst;
-                        sampleCount++;
+                        mean += ActualPhase.CBP[k][i][j].countObst * 0;
+                        sampleCount += ActualPhase.CBP[k][i][j].countObst;
                     }
                 }
             } else {
@@ -320,18 +320,18 @@ void DisplayChart() {
                 
                 // keep this condition and u can differenciate explored zones from inexplored zones
                 if (ActualPhase.CBP[agentId][i][j].count > 0) {
-                    mean += ActualPhase.CBP[agentId][i][j].current;
+                    mean += ActualPhase.CBP[agentId][i][j].currentAvg;
                     sampleCount++;
                 }
-                if (ActualPhase.CBP[agentId][i][j].currentObst > 0) {
-                    mean += ActualPhase.CBP[agentId][i][j].currentObst;
+                if (ActualPhase.CBP[agentId][i][j].currentObstAvg > 0) {
+                    mean += ActualPhase.CBP[agentId][i][j].currentObstAvg;
                     sampleCount++;
                 }
             }
-            if (sampleCount == 0) { xsize += step; continue; }
-
+            
             mean /= sampleCount;
-            if (mean > 0) {
+
+            if (mean >= 0) {
                 // DrawGradientColoredCircle(-1.0 + step/2 + xsize, 1.0 - ysize - step/2, step/4, step/6, green, yellow, 25);
                 mean = MIN(1, mean);
                 float col[3] = {0};
@@ -1014,22 +1014,29 @@ void UpdatePositionsToDisplay() {
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
                 
-                if (Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
+                if (TimeStep * ActualSitParams.DeltaT > 20.0 && Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
 
                     for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
                         static double CoordA[3];
                         GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
                         for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
                             if (j != k) {
-                            
+                                
                                 static double CoordB[3];
                                 GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
-                                double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
+                                int previousTick = Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1;
+                                // double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
                                 double receivedPower = PhaseData[Now + 1].Laplacian[j][k];
-                                double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
+                                // double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
+                                double relPowerVariation = receivedPower - PhaseData[previousTick].Laplacian[j][k];
 
-                                if (receivedPower > -70 && powerDifference > 10) {
+                                if (PhaseData[previousTick].Laplacian[j][k] < -70) {
+                                    continue; // skip non-neighbours
+                                }
+
+                                if (relPowerVariation < -10) {
                                     // printf("%lf %lf\n", receivedPower, powerDifference);
+                                    // printf("%lf\n", TimeStep * ActualSitParams.DeltaT);
                                     FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
                                 }
                             }
