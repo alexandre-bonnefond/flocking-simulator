@@ -839,11 +839,13 @@ void DisplayTrajs() {
     LastTime = NowTime;
     LastTimeStep = TimeStep;
 
+    float rouge[3] = {255.0, 0.0, 0.0};
+
     /* Writing out Robustness */
     if (ActualSitParams.NumberOfClusters > 1) {
         sprintf(stringRobustness, "Robustness = %d", Robustness);
         DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
-                   ActualColorConfig.MenuSelectionColor);
+                   rouge);
     }else{
         sprintf(stringRobustness, "Robustness = %d", Robustness);
         DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
