@@ -157,6 +157,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         //création du dégradé de couleurs
         float couleur [3] = {0,1,0};
         float green2 [3]= {0,1,0};
+        float yellow2[3] ={1,1,0};
         float red2 [3] = {1,0,0};
         int HowManySteps = 8;
         float degrade [HowManySteps][3];
@@ -178,15 +179,40 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                 }
         }
 
-
+        degrade [0][0] =  couleur[0];
+        degrade [0][1] = couleur[1];
+        degrade [0][2] =  couleur[2];
         for (int m = 0; m < HowManySteps; m++) {
                 couleur[0] += (red2[0] - green2[0]) / HowManySteps;
                 couleur[1] += (red2[1] - green2[1]) / HowManySteps;
                 couleur[2] += (red2[2] - green2[2]) / HowManySteps;
-                degrade [m][0] = couleur[0];
-                degrade [m][1] = couleur[1];
-                degrade [m][2] = couleur[2];
+                if (m>0){ 
+                        degrade [m][0] = couleur[0];
+                        degrade [m][1] = couleur[1];
+                        degrade [m][2] = couleur[2];
+                } 
         }
+        /*degrade [0][0] =  couleur[0];
+        degrade [0][1] = couleur[1];
+        degrade [0][2] =  couleur[2];
+        for (int m = 0; m < (HowManySteps/2); m++) {
+                couleur[0] += 2*(yellow2[0] - green2[0]) / HowManySteps;
+                couleur[1] += 2*(yellow2[1] - green2[1]) / HowManySteps;
+                couleur[2] += 2*(yellow2[2] - green2[2]) / HowManySteps;
+                if (m > 0){
+                        degrade [m][0] =  couleur[0];
+                        degrade [m][1] = couleur[1];
+                        degrade [m][2] =  couleur[2];
+                }
+        } 
+        for (int k = (HowManySteps/2); k < HowManySteps; k++) {
+                couleur[0] += 2*(red2[0] - yellow2[0]) / HowManySteps;
+                couleur[1] += 2*(red2[1] - yellow2[1]) / HowManySteps;
+                couleur[2] += 2*(red2[2] - yellow2[2]) / HowManySteps;
+                degrade [k][0] =  couleur[0];
+                degrade [k][1] = couleur[1];
+                degrade [k][2] =  couleur[2];
+        } */
         
 
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
@@ -305,6 +331,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 
                                         int indice = (abs(PhaseData[Now].Laplacian[WhichAgent][i] + 40)*HowManySteps)/30; //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
                                         //color = degrade[indice];
+                                        if (indice >= HowManySteps){
+                                                indice = HowManySteps - 1;
+                                        }
                                         
                                         ArrowCenterX =
                                                 (ActualAgentsCoordinates[0] +
