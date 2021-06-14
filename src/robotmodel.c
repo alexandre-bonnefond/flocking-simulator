@@ -168,6 +168,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                             packet_loss_ratio / packet_loss_power / packet_loss_power);
                     Phase->lost[WhichAgent] = 1;
                     fprintf(stdout,"L'agent %d,perdu: %d avec %d voisins\n", WhichAgent, Phase->lost[WhichAgent], NumberOfNeighbours);
+                    fprintf(stdout,"Puissance reçu : %f\n", LocalActualPhaseToCreate->ReceivedPower[WhichAgent]);
             } else {
                 Phase->lost[WhichAgent] = 0;
             }

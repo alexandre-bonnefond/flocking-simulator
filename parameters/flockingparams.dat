@@ -45,10 +45,10 @@ ArenaRadius=62500.000000
 # Friction coefficient (-)
 C_Frict=0.050000
 # Arena Center X (Multiply it with 0.010000 to get its Value in m)
-ArenaCenterX=-3733.333333
+ArenaCenterX=87622.087670
 # Arena Center Y (Multiply it with 0.010000 to get its Value in m)
-ArenaCenterY=14666.666667
+ArenaCenterY=47274.122668
 # Shape of the arena (Multiply it with 0.000000 to get its real Value)
-ArenaShape=0.000000
+ArenaShape=1.000000
 # Number of dimensions in the simulation (2 or 3)
 Dim=2.000000

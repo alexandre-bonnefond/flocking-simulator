@@ -1771,7 +1771,8 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
         VectDifference(DistFromRef, DistFromRef, ReferencePosition);
         Dist = VectAbs(DistFromRef);
         Pow = Phase->ReceivedPower[i];
-        packet_loss_rand = (randomizeDouble(0, 1) < Pow * Pow * packet_loss);
+        //packet_loss_rand = (randomizeDouble(0, 1) < Pow * Pow * packet_loss);
+        packet_loss_rand = false;
         switch (communication_mode)
         {
         case 0:

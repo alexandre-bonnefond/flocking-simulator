@@ -8,7 +8,7 @@ R_C=30000.000000
 # Delay of comm. (s)
 t_del=0.200000
 # GPS refresh rate (s)
-t_GPS=0.200000
+t_GPS=0.010000
 # Parameters of inner noises (cm^2 / s^2)
 Sigma_GPS_XY=50.000000
 Sigma_GPS_Z=0.000000
