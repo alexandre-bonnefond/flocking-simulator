@@ -36,6 +36,6 @@ EMA_Smoothing=20.000000
 # Depth EMA (-)
 EMA_Depth=20.000000
 # Communication type (-)
-Communication_type=3.000000
+Communication_type=2.000000
 # Flocking type (-)
 Flocking_type=2.000000

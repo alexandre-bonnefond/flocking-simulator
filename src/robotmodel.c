@@ -38,7 +38,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         const bool OrderByDistance) {
 
     int i, j, k;
-    Phase->lost = 0;
+    LocalActualPhaseToCreate->lost = 0;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
     double DepthEMA = UnitParams->depthEMA.Value;
@@ -154,8 +154,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
     if (OrderByDistance) {
         /* OrderByDistance selects the nearby agents, and places their phase to the beginning of the full phase array. */
-        fprintf(stdout,"L'agent %d,perdu: %d\n", WhichAgent, Phase->lost);
-        if ((int)UnitParams->communication_type.Value == 3) { //First we test if the agent is lost (NumberOfNeighbours == 1) and then we pass in Lora
+        if ((int)UnitParams->communication_type.Value == 2) { //First we test if the agent is lost (NumberOfNeighbours == 1) and then we pass in Lora
             NumberOfNeighbours =
                     SelectNearbyVisibleAgents(LocalActualPhaseToCreate,
                     ActualAgentsPosition, UnitParams->R_C.Value, 
@@ -167,10 +166,10 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                             ActualAgentsPosition, UnitParams->R_C.Value, 
                             UnitParams->sensitivity_thresh.Value, UnitParams->sensitivity_lora.Value, 3, WhichAgent,
                             packet_loss_ratio / packet_loss_power / packet_loss_power);
-                    Phase->lost = 1;
-                    fprintf(stdout,"L'agent %d,perdu: %d\n", WhichAgent, Phase->lost);
+                    LocalActualPhaseToCreate->lost = 1;
+                    fprintf(stdout,"L'agent %d,perdu: %d\n", WhichAgent, LocalActualPhaseToCreate->lost);
             } else {
-                Phase->lost = 0;
+                LocalActualPhaseToCreate->lost = 0;
             }
         } else {
             NumberOfNeighbours =
