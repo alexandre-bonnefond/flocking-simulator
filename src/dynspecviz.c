@@ -199,7 +199,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         float temp [PhaseData[0].NumberOfAgents][PhaseData[0].NumberOfAgents];
 
 //Minimum
-/*        for (int i = 0; i< 10; i++){
+        for (int i = 0; i< 10; i++){
             for (int j=0; j<10; j++){
                 if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]>-70)){
                     temp[i][j]= MIN(PhaseData[Now].Laplacian[i][j], PhaseData[Now].Laplacian[j][i]);
@@ -212,9 +212,9 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
             }
             fprintf (stdout, " \n");
         }
-*/
+
 //Moyenne
-        for (int i = 0; i< 10; i++){
+/*        for (int i = 0; i< 10; i++){
             for (int j=0; j<10; j++){
                 if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]>-70)){
 
@@ -232,7 +232,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
             }
             fprintf (stdout, " \n");
         }
-
+*/
 
 
         degrade [0][0] =  couleur[0];
@@ -384,7 +384,20 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 indice = (int) ((log10(abs(PhaseData[Now].Laplacian[i][WhichAgent]))-1.6)*(HowManySteps-1)/0.24);
                                         } */
 
-                                        int indice = (int) ((log10(abs(temp[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        //int indice = (int) ((log10(abs(temp[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        
+                                        // tentative échelle log 
+                                        float res = ((((abs(temp[WhichAgent][i])-40)*(100-10))/(70-40))+10);
+                                        int indice = (int)(((log10(res)-1)*(7))/(2-1));
+
+                                        //Pour éviter les erreurs de segmentation
+                                        if (indice < 0 ){
+                                                indice = 0;
+                                        } else if (indice >7){
+                                                indice = 7;
+                                        }
+
+
                                         //color = degrade[indice];
                                         if (indice >= HowManySteps){
                                                 indice = HowManySteps - 1;
