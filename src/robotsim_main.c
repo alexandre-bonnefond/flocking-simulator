@@ -843,7 +843,7 @@ void DisplayTrajs() {
 
     /* Writing out Robustness */
     if (ActualSitParams.NumberOfClusters > 1) {
-        sprintf(stringRobustness, "Robustness = %d", Robustness);
+        sprintf(stringRobustness, "Robustness = 0");
         DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
                    rouge);
     }else{
