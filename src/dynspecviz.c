@@ -10,6 +10,8 @@
 #include "utilities/obstacles.h"
 #include <stdlib.h>
 
+#define MIN(a,b) (a>b?b:a)
+
 static double EyeFromCenter[3];
 static double DistanceFromCenter;
 static double NewEyeZ;
@@ -192,6 +194,47 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                         degrade [m][2] = couleur[2];
                 } 
         }*/
+
+        //Création matrice Laplacienne symétrique
+        float temp [PhaseData[0].NumberOfAgents][PhaseData[0].NumberOfAgents];
+
+//Minimum
+/*        for (int i = 0; i< 10; i++){
+            for (int j=0; j<10; j++){
+                if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]>-70)){
+                    temp[i][j]= MIN(PhaseData[Now].Laplacian[i][j], PhaseData[Now].Laplacian[j][i]);
+                } else if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]<-70)){
+                    temp[i][j]= PhaseData[Now].Laplacian [i][j];
+                } else  {
+                    temp[i][j]= PhaseData[Now].Laplacian [j][i]; // soit ya que la valeur de ji qui est affichable soit aucune des 2 donc ça revient au même
+                }
+                fprintf (stdout, " %f ,", temp[i][j]);
+            }
+            fprintf (stdout, " \n");
+        }
+*/
+//Moyenne
+        for (int i = 0; i< 10; i++){
+            for (int j=0; j<10; j++){
+                if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]>-70)){
+
+                    temp[i][j]= ((PhaseData[Now].Laplacian[i][j] + PhaseData[Now].Laplacian[j][i])/2);
+
+                } else if ((PhaseData[Now].Laplacian[i][j]>-70) && (PhaseData[Now].Laplacian[j][i]<-70)){
+
+                    temp[i][j]= PhaseData[Now].Laplacian [i][j];
+
+                } else  {
+
+                    temp[i][j]= PhaseData[Now].Laplacian [j][i]; // soit ya que la valeur de ji qui est affichable soit aucune des 2 donc ça revient au même
+                }
+                fprintf (stdout, " %f ,", temp[i][j]);
+            }
+            fprintf (stdout, " \n");
+        }
+
+
+
         degrade [0][0] =  couleur[0];
         degrade [0][1] = couleur[1];
         degrade [0][2] =  couleur[2];
@@ -326,7 +369,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
 
                                 if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value && IsLeading == true) {
 
-                                        fprintf(stdout,"puissance %f, agent %d \n", PhaseData[Now].Laplacian[WhichAgent][i], WhichAgent);
+                                        fprintf(stdout,"puissance %f, agent %d \n", temp[WhichAgent][i], WhichAgent);
                                         //val abs pour que ça soit de 50 (rouge) à 0(vert, état initial du tableau)
 
                                         //Première solution à la non symétrie : une moyenne des 2
@@ -341,7 +384,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                                 indice = (int) ((log10(abs(PhaseData[Now].Laplacian[i][WhichAgent]))-1.6)*(HowManySteps-1)/0.24);
                                         } */
 
-                                        int indice = (int) ((log10(abs(PhaseData[Now].Laplacian[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
+                                        int indice = (int) ((log10(abs(temp[WhichAgent][i]))-1.6)*(HowManySteps-1)/0.24); //produit en croix, on trouve un int pour savoir à quelle couleur la com correspond
                                         //color = degrade[indice];
                                         if (indice >= HowManySteps){
                                                 indice = HowManySteps - 1;
