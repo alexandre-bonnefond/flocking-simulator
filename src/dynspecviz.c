@@ -149,15 +149,20 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double NeighboursCoordinates[3];
         static double DifferenceVector[3];
         static double AbsDistance;
-        //static int lost = 0;
+        static int lost = 1; // initialisé à perdu 
 
         static double ArrowCenterX;
         static double ArrowCenterY;
         static double angle;
         static double CenterX1, CenterX2, CenterY1, CenterY2; 
 
-        if (PhaseData[WhichAgent].lost == 1) {
+        /*if (PhaseData[WhichAgent].lost == 1) {
                 fprintf(stdout,"agent %d est lost \n",WhichAgent);
+        }*/
+        for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
+                if (i != WhichAgent && PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value){
+                        lost = 0; //pas perdu !!!!!!
+                }
         }
 
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
@@ -339,7 +344,7 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 }
 
 
-                                else if (PhaseData[WhichAgent].lost == 1 && PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_lora.Value) {
+                                else if (PhaseData[Now].lost[WhichAgent] == 1 && PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_lora.Value) {
 
                                         CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
                                         CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;

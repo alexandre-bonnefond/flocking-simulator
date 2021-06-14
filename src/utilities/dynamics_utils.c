@@ -23,6 +23,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->ReceivedPower = doubleVector(NumberOfAgents);
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
+    Phase->lost = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
     Phase->CBP = tripleMatrix(NumberOfAgents, Resolution, Resolution);
 
@@ -41,6 +42,7 @@ void freePhase(phase_t * Phase, const int Resolution) {
     freeMatrix(Phase->InnerStates, Phase->NumberOfAgents,
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
+    free(Phase->lost);
     free(Phase->ReceivedPower);
     freeTripleMatrix(Phase->CBP, Phase->NumberOfAgents, Resolution, Resolution);
 }
@@ -1635,6 +1637,7 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) 
 
     double *temp_pointer;
     int id;
+    int status;
     double power;
     double ema;
 
@@ -1655,6 +1658,11 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) 
     id = Phase->RealIDs[i];
     Phase->RealIDs[i] = Phase->RealIDs[j];
     Phase->RealIDs[j] = id;
+
+    /* lost */
+    status = Phase->lost[i];
+    Phase->lost [i]= Phase->lost[j];
+    Phase->lost[j] = status;
 
     /* Received power */
     power = Phase->ReceivedPower[i];

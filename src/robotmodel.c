@@ -38,7 +38,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         const bool OrderByDistance) {
 
     int i, j, k;
-    LocalActualPhaseToCreate->lost = 0;
+    Phase->lost[WhichAgent] = 0;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
     double DepthEMA = UnitParams->depthEMA.Value;
@@ -166,10 +166,10 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                             ActualAgentsPosition, UnitParams->R_C.Value, 
                             UnitParams->sensitivity_thresh.Value, UnitParams->sensitivity_lora.Value, 3, WhichAgent,
                             packet_loss_ratio / packet_loss_power / packet_loss_power);
-                    LocalActualPhaseToCreate->lost = 1;
-                    fprintf(stdout,"L'agent %d,perdu: %d\n", WhichAgent, LocalActualPhaseToCreate->lost);
+                    Phase->lost[WhichAgent] = 1;
+                    fprintf(stdout,"L'agent %d,perdu: %d avec %d voisins\n", WhichAgent, Phase->lost[WhichAgent], NumberOfNeighbours);
             } else {
-                LocalActualPhaseToCreate->lost = 0;
+                Phase->lost[WhichAgent] = 0;
             }
         } else {
             NumberOfNeighbours =
@@ -485,6 +485,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         
             }           
         }
+        OutputPhase->lost[j] = TempPhase.lost[j];
 
         /* Compute the convex hull */
         (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
