@@ -541,6 +541,10 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
     }
     printf("\n");*/
 
+    float time;
+    clock_t t1, t2;
+    t1 = clock();
+
     //Creation tableau de résultat
     int res[SitParams->NumberOfAgents];
     for (int k = 0; k < SitParams->NumberOfAgents; k++) {
@@ -550,6 +554,11 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
     for (int i = 0; i < 20; i++) {
         res[minCUT(matriceA) - 1]++;
     }
+
+    t2 = clock();
+    time = ((t2-t1)*1e6)/CLOCKS_PER_SEC; 
+    fprintf(stdout, "time : %f  micro secondes \n", time);
+
     //Affichage résultat
     /*for (int l = 0; l < N_karger; l++) {
         printf("%d : %d\n", l + 1, res[l]);
