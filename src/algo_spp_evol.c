@@ -144,6 +144,16 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Mult = 1,
         .Min = 0,
         .Max = 2e222
+    );/* Linear v-x coefficient of attraction Lora*/
+    CREATE_FLOCKING_PARAM(Slope_Att_Lora,
+        .Name = "Slope of attraction Lora",
+        .UnitOfMeas = "1/s",
+        .Value = 0.1,
+        .Digits = 3,
+        .SizeOfStep = 0.001,
+        .Mult = 1,
+        .Min = 0,
+        .Max = 2e222
     );
     /* Linear v-x coefficient of friction breaking curve */
     CREATE_FLOCKING_PARAM(Slope_Frict,
@@ -522,12 +532,13 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         phase_t * Phase,
         double ** TargetsArray,
         int WhichTarget,
-        const int WhichAgent,
+        int WhichAgent,
         flocking_model_params_t * FlockingParams,
         vizmode_params_t * VizParams,
         const double Delay,
         const double ActualTime, agent_debug_info_t * DebugInfo,
-        const int Flocking_type) {
+        const int Flocking_type,
+        int ImLost) {
 
     /* Clear output velocity */
     NullVect(OutputVelocity, 3);
@@ -644,6 +655,15 @@ void CalculatePreferredVelocity(double *OutputVelocity,
             UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
             MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
                     MIN(V_Flock, VectAbs(TargetTrackingVelocity)), (int)Dim);
+        }
+
+        //fprintf(stdout, "Lost : %d\n", Phase->lost[WhichAgent]);
+
+        if (Phase->lost[ImLost] == 1) {
+            fprintf(stdout, "J'arrive\n");
+            /* Attraction */
+            AttractionLin(AttractionVelocity, Phase, V_Rep,
+                          Slope_Att_Lora, R_0 + 500, ImLost, (int) Dim, false);
         }
 
     }

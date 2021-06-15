@@ -131,7 +131,7 @@ void DrawSensorRangeNetwork_2D(phase_t *PhaseData,
                                vizmode_params_t *VizParams, const float *color) {
 
     int i, j;
-
+    int check = 0;
     float Red[3];
     Red[0] = .9;
     Red[1] = 0.1;
@@ -292,6 +292,8 @@ void DrawSensorRangeNetwork_2D(phase_t *PhaseData,
                                    VizParams->MapSizeXY), RealToGlCoord_2D(30,
                                    VizParams->MapSizeXY), angle, color);
 
+                    check = 1;
+
                     for (j = 0; j < obstacles.o_count; j++) {
 
                         double **Intersections;
@@ -345,7 +347,7 @@ void DrawSensorRangeNetwork_2D(phase_t *PhaseData,
                                    RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
                                    color);
 
-                } */else if (PhaseData[Now].lost[WhichAgent] == 1 &&
+                } */else if (check == 0 && PhaseData[Now].lost[WhichAgent] == 1 &&
                            PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_lora.Value) {
 
                     ArrowCenterX = (ActualAgentsCoordinates[0] + NeighboursCoordinates[0]) * 0.5 - VizParams->CenterX;

@@ -27,6 +27,7 @@ double V_Rep;
 double R_0;
 double Slope_Rep;
 double Slope_Att;
+double Slope_Att_Lora;
 double RP_MAX;
 double RP_MIN;
 

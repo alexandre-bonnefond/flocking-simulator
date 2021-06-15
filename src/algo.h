@@ -49,12 +49,13 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         phase_t * Phase,
         double ** TargetsArray,
         int WhichTarget,
-        const int WhichAgent,
+        int WhichAgent,
         flocking_model_params_t * FlockingParams,
         vizmode_params_t * VizParams,
         const double Delay,
         const double ActualTime, agent_debug_info_t * DebugInfo,
-        const int Flocking_type);
+        const int Flocking_type,
+        int ImLost);
 
 /* Destruction of all model-specific objects initilalized in InitializePhase */
 void DestroyPhase(phase_t * Phase, flocking_model_params_t * FlockingParams,

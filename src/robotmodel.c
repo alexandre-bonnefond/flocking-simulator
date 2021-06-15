@@ -38,6 +38,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         const bool OrderByDistance) {
 
     int i, j, k;
+    LocalActualPhaseToCreate->lost[WhichAgent] = 0;
     Phase->lost[WhichAgent] = 0;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
@@ -167,10 +168,12 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                             UnitParams->sensitivity_thresh.Value, UnitParams->sensitivity_lora.Value, 3, WhichAgent,
                             packet_loss_ratio / packet_loss_power / packet_loss_power);
                     Phase->lost[WhichAgent] = 1;
-                    fprintf(stdout,"L'agent %d,perdu: %d avec %d voisins\n", WhichAgent, Phase->lost[WhichAgent], NumberOfNeighbours);
+                    LocalActualPhaseToCreate->lost[WhichAgent] = 1;
+                    fprintf(stdout,"L'agent %d,perdu: %d avec %d voisins\n", WhichAgent, LocalActualPhaseToCreate->lost[WhichAgent], NumberOfNeighbours);
                     fprintf(stdout,"Puissance reçu : %f\n", LocalActualPhaseToCreate->ReceivedPower[WhichAgent]);
             } else {
-                Phase->lost[WhichAgent] = 0;
+                    LocalActualPhaseToCreate->lost[WhichAgent] = 0;
+                    Phase->lost[WhichAgent] = 0;
             }
         } else {
             NumberOfNeighbours =
@@ -330,9 +333,11 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         /* Calculating target velocity */
         NullVect(TempTarget, 3);
 
+        //fprintf(stdout, "Lost %d : %d\n", WhichAgent, Phase->lost[WhichAgent]);
+
         CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 
                 TargetsArray, WhichTarget, 0, FlockingParams, VizParams, UnitParams->t_del.Value,
-                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value);
+                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value, WhichAgent);
 
         for (i = 0; i < 3; i++) {
 
@@ -483,10 +488,10 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             else {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];
                 OutputPhase->EMA[j][TempPhase.RealIDs[i]] = TempPhase.EMA[j][i];
-        
             }           
         }
         OutputPhase->lost[j] = TempPhase.lost[j];
+        //fprintf(stdout, "Lost %d : %d : %d\n", j, OutputPhase->lost[j], TempPhase.lost[j]);
 
         /* Compute the convex hull */
         (*Hull) = convex_hull(points, LocalActualPhase.NumberOfAgents);
@@ -500,7 +505,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
 
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);
-        RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
+        RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent,
                 TargetsArray, WhichTarget, &TempPhase, ActualRealVelocity, UnitParams, 
                 FlockingParams, VizParams, SitParams->DeltaT, TimeStepReal, 
                 TimeStepLooped, j, WindVelocityVector);
