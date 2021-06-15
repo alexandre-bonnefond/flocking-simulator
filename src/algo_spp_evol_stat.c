@@ -9,6 +9,7 @@
 #include "algo_stat.h"
 #include "algo_spp_evol.h"
 #include "utilities/datastructs.h"
+#include "algo_spp_evol_stat.h"
 
 /* Macro for saving standard deviations at the end of the simulation */
 // Place it inside the CloseModelSpecificStats function!
@@ -435,7 +436,7 @@ void SaveCBPToFile(measurement_bundle*** CBP, int agentCount, int size, FILE* fi
         fprintf(file, "%d\n", i);
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
-                fprintf(file, "%ld %ld ", CBP[i][y][x].count, CBP[i][y][x].countObst);
+                fprintf(file, "%ld %ld %lf %lf ", CBP[i][y][x].count, CBP[i][y][x].countObst, CBP[i][y][x].currentAvg, CBP[i][y][x].currentObstAvg);
             }
             fprintf(file, "\n");
         }
