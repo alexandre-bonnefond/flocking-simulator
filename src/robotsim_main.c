@@ -118,8 +118,8 @@ bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
-int Robustness;
-int *pRobustness;
+float Robustness;
+float *pRobustness;
 double TargetPosition[3];
 double **TargetsArray; // = NULL;
 int cnt = 0;                    // Which target is on
@@ -843,12 +843,12 @@ void DisplayTrajs() {
 
     /* Writing out Robustness */
     if (ActualSitParams.NumberOfClusters > 1) {
-        sprintf(stringRobustness, "Robustness = 0");
-        DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
+        sprintf(stringRobustness, "Robustness = 0.00");
+        DrawString(-0.95, 0.76, GLUT_BITMAP_9_BY_15, stringRobustness,
                    rouge);
     }else{
-        sprintf(stringRobustness, "Robustness = %d", Robustness);
-        DrawString(-0.95, 0.77, GLUT_BITMAP_9_BY_15, stringRobustness,
+        sprintf(stringRobustness, "Robustness = %.2f", Robustness);
+        DrawString(-0.95, 0.76, GLUT_BITMAP_9_BY_15, stringRobustness,
                    ActualColorConfig.MenuSelectionColor);
     }
 

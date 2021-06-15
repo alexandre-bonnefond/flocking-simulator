@@ -1,11 +1,9 @@
-#define N_karger 10
-
-int minCUT(int A[N_karger][N_karger]);
-void affichage(int mat[N_karger][N_karger]);
-int supprLigne(int mat[N_karger][N_karger], int ligne);
-int merge(int mat[N_karger][N_karger], int ligne1, int ligne2);
-int tailleMatrice(int mat[N_karger][N_karger]);
-void choixRandom(int mat[N_karger][N_karger], int res[2]);
-int coupeMin(int mat[N_karger][N_karger]);
-int checkValide(int mat[N_karger][N_karger], int i);
-int checkSym(int mat[N_karger][N_karger]);
+int minCUT(int taille, int original[taille][taille]) ;
+void affichage(int taille, int mat[taille][taille]) ;
+void supprLigne(int taille, int mat[taille][taille], int ligne);
+void merge(int taille, int mat[taille][taille], int ligne1, int ligne2);
+int tailleMatrice(int taille, int mat[taille][taille]);
+void choixRandom(int taille, int mat[taille][taille], int res[2]);
+int coupeMin(int taille, int mat[taille][taille]);
+int checkValide(int taille, int mat[taille][taille], int i);
+int checkSym(int taille, int mat[taille][taille]);

@@ -366,7 +366,7 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
           vizmode_params_t *VizParams, int TimeStepLooped, int TimeStepReal,
           bool CountCollisions, bool *ConditionsReset, int *Collisions,
           bool *AgentsInDanger, double *WindVelocityVector, double *Accelerations,
-          double **TargetsArray, double **Polygons, node **Hull, int Verbose, int *pRobustness) {
+          double **TargetsArray, double **Polygons, node **Hull, int Verbose, float *pRobustness) {
 
     //For karger
     //srand(time(0));
@@ -514,10 +514,15 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
         }
     }
 
-    //Creation de la matrice
+    /* Algo de Karger */
+    /* Initialisation */
     int matriceA[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
+    int temp[SitParams->NumberOfAgents][SitParams->NumberOfAgents];
+    float time;
+    clock_t t1, t2;
+
     //printf("Number of agents = %d\n", SitParams->NumberOfAgents);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
         for (int j = 0; j <= i; j++) {
             if (i != j && OutputPhase->Laplacian[i][j] > -70) {
                 matriceA[i][j] = 1;
@@ -532,44 +537,56 @@ void Step(phase_t *OutputPhase, phase_t *GPSPhase, phase_t *GPSDelayedPhase,
         }
     }
 
-    //Affichage de la matrice
-    /*for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+    /* Affichage de la matrice */
+    /*fprintf(stdout, "Matrice d'entrée : \n");
+    for (int i = 0; i < SitParams->NumberOfAgents; i++) {
         for (int j = 0; j < SitParams->NumberOfAgents; j++) {
-            printf("%d ", matriceA[i][j]);
+            //printf("%d ", matriceA[i][j]);
+            fprintf(stdout, "%d ", matriceA[i][j]);
         }
         printf("\n");
     }
     printf("\n");*/
 
-    float time;
-    clock_t t1, t2;
+    /* Premiere marque temporelle */
     t1 = clock();
 
-    //Creation tableau de résultat
+    /* Creation et initialisation du tableau de résultat */
     int res[SitParams->NumberOfAgents];
     for (int k = 0; k < SitParams->NumberOfAgents; k++) {
         res[k] = 0;
     }
-    //Remplissage du tableau de résultat
-    for (int i = 0; i < 20; i++) {
-        res[minCUT(matriceA) - 1]++;
+
+
+    /* Remplissage du tableau de résultat */
+    for (int l = 1; l <= 40; l++) {
+        for (int i = 0; i < SitParams->NumberOfAgents; i++) {
+            for (int j = 0; j < SitParams->NumberOfAgents; j++) {
+                temp[i][j] = matriceA[i][j];
+            }
+        }
+        int resVal = minCUT(SitParams->NumberOfAgents, temp);
+        //fprintf(stdout, "%d\n", resVal);
+        res[resVal]++;
     }
 
+    /* Deuxieme marque temporelle */
     t2 = clock();
     time = ((t2-t1)*1e6)/CLOCKS_PER_SEC; 
-    fprintf(stdout, "time : %f  micro secondes \n", time);
+    //fprintf(stdout, "time : %f  micro secondes \n", time);
 
-    //Affichage résultat
-    /*for (int l = 0; l < N_karger; l++) {
-        printf("%d : %d\n", l + 1, res[l]);
+    /* Affichage résultat */
+    /*for (int l = 1; l < SitParams->NumberOfAgents; l++) {
+        printf("%d : %d\n", l, res[l]);
     }*/
     //Resultat
     if (SitParams->NumberOfClusters > 1) {
-        (*pRobustness) = 0;
+        (*pRobustness) = 0.00;
     }else {
         for (int l = 1; l < SitParams->NumberOfAgents; l++) {
             if (res[l] != 0) {
-                (*pRobustness) = l + 1;
+                (*pRobustness) = (float) l/(SitParams->NumberOfAgents - 1);
+                //(*pRobustness) = (float) l;
                 break;
             }
         }

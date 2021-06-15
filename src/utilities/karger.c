@@ -4,55 +4,46 @@
 #include <time.h>
 #include "karger.h"
 
-int minCUT(int A[N_karger][N_karger]) {
+int minCUT(int taille, int A[taille][taille]) {
     int couple[2];
 
-    //affichage(A);
-    //printf("\n");
-    //printf("Tailles %d\n", tailleMatrice(A));
-    //printf("Symétrique : %d\n", checkSym(A));
+    //fprintf(stdout, "A : \n");
+    //affichage(taille, A);
+    //fprintf(stdout, "Original : \n");
+    //affichage(taille, original);
 
-    if (checkSym(A)) {
-        while (tailleMatrice(A) > 2) {
-            choixRandom(A, couple);
-            //printf("Choix random %d et %d\n", (couple[0]+1), (couple[1]+1));
-
-            merge(A, couple[0], couple[1]);
-            //affichage(A);
-
-            //printf("Tailles %d\n", tailleMatrice(A));
-            //printf("Symétrique : %d\n", checkSym(A));
+    if (checkSym(taille, A)) {
+        while (tailleMatrice(taille, A) > 2) {
+            choixRandom(taille, A, couple);
+            merge(taille, A, couple[0], couple[1]);
         }
     } else {
         printf("Erreur matrice non symétrique\n");
+        return 0;
     }
 
-    //printf("La coupe minimale est de %d\n", coupeMin(A));
-    return coupeMin(A);
+    return coupeMin(taille, A);
 }
 
-void affichage(int mat[N_karger][N_karger]) {
-    int i, j;
-    for (i = 0; i < N_karger; i++) {
-        for (j = 0; j < N_karger; j++) {
-            printf("%d ", mat[i][j]);
+void affichage(int taille, int mat[taille][taille]) {
+    for (int i = 0; i < taille; i++) {
+        for (int j = 0; j < taille; j++) {
+            fprintf(stdout, "%d ", mat[i][j]);
         }
         printf("\n");
     }
+    printf("\n");
 }
 
-int supprLigne(int mat[N_karger][N_karger], int ligne) {
-    int i;
-    for (i = 0; i < N_karger; i++) {
+void supprLigne(int taille, int mat[taille][taille], int ligne) {
+    for (int i = 0; i < taille; i++) {
         mat[ligne][i] = 0;
         mat[i][ligne] = 0;
     }
-    return (0);
 }
 
-int merge(int mat[N_karger][N_karger], int ligne1, int ligne2) {
-    int i;
-    for (i = 0; i < N_karger; i++) {
+void merge(int taille, int mat[taille][taille], int ligne1, int ligne2) {
+    for (int i = 0; i < taille; i++) {
         if ((mat[ligne1][i] != 0) || (mat[ligne2][i] != 0)) {
             mat[ligne1][i] += mat[ligne2][i];
             mat[i][ligne1] += mat[i][ligne2];
@@ -60,60 +51,57 @@ int merge(int mat[N_karger][N_karger], int ligne1, int ligne2) {
     }
     mat[ligne1][ligne1] = 0;
     mat[ligne1][ligne2] = 0;
-    supprLigne(mat, ligne2);
-    return (0);
+    supprLigne(taille, mat, ligne2);
 }
 
-int tailleMatrice(int mat[N_karger][N_karger]) {
-    int i, j;
-    int res = N_karger;
-    for (i = 0; i < N_karger; i++) {
+int tailleMatrice(int taille, int mat[taille][taille]) {
+    int res = taille;
+    for (int i = 0; i < taille; i++) {
         int tmp = 0;
-        for (j = 0; j < N_karger; j++) {
+        for (int j = 0; j < taille; j++) {
             if (mat[i][j] == 0) {
                 tmp++;
             }
         }
-        if (tmp == N_karger) {
+        if (tmp == taille) {
             res--;
         }
     }
     return res;
 }
 
-int checkValide(int mat[N_karger][N_karger], int i) {
+int checkValide(int taille, int mat[taille][taille], int i) {
     int res = 0;
-    for (int l = 0; l < N_karger; l++) {
+    for (int l = 0; l < taille; l++) {
         if (mat[i][l] == 0) {
             res++;
         }
     }
-    if (res == N_karger) {
+    if (res == taille) {
         return 0;
     }
     return 1;
 }
 
-void choixRandom(int mat[N_karger][N_karger], int res[2]) {
+void choixRandom(int taille, int mat[taille][taille], int res[2]) {
     int i, j;
     do {
         do {
-            i = (rand() % N_karger);
-        } while (!checkValide(mat, i) );
+            i = (rand() % taille);
+        } while (!checkValide(taille, mat, i) );
 
         do {
-            j = (rand() % N_karger);
-        } while (!(i != j && checkValide(mat, j)));
+            j = (rand() % taille);
+        } while (!(i != j && checkValide(taille, mat, j)));
     } while (!mat[i][j] != 0);
 
     res[0] = i;
     res[1] = j;
 }
 
-int coupeMin(int mat[N_karger][N_karger]) {
-    int i, j;
-    for (i = 0; i < N_karger; i++) {
-        for (j = 0; j < N_karger; j++) {
+int coupeMin(int taille, int mat[taille][taille]) {
+    for (int i = 0; i < taille; i++) {
+        for (int j = 0; j < taille; j++) {
             if (mat[i][j] != 0) {
                 return mat[i][j];
             }
@@ -122,10 +110,9 @@ int coupeMin(int mat[N_karger][N_karger]) {
     return 0;
 }
 
-int checkSym(int mat[N_karger][N_karger]) {
-    int i, j;
-    for (i = 0; i < N_karger; i++) {
-        for (j = 0; j < N_karger; j++) {
+int checkSym(int taille, int mat[taille][taille]) {
+    for (int i = 0; i < taille; i++) {
+        for (int j = 0; j < taille; j++) {
             if (i != j && mat[i][j] != mat[j][i]) {
                 return 0;
             }
