@@ -31,6 +31,7 @@
 #include "utilities/file_utils.h"
 #include "utilities/dynamics_utils.h"
 #include "utilities/output_utils.h"
+#include "algo_spp_evol_stat.h"
 #include "robotmodel.h"
 
 /* Tools for OpenGL visualization and GUI */
@@ -1035,16 +1036,16 @@ void UpdatePositionsToDisplay() {
                                 static double CoordB[3];
                                 GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
                                 int previousTick = Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1;
-                                // double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
                                 double receivedPower = PhaseData[Now + 1].Laplacian[j][k];
-                                // double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
+                                double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
+                                double powerDifference = receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams);
                                 double relPowerVariation = receivedPower - PhaseData[previousTick].Laplacian[j][k];
 
-                                if (PhaseData[previousTick].Laplacian[j][k] < -70) {
+                                if (PhaseData[previousTick].Laplacian[j][k] < -100) {
                                     continue; // skip non-neighbours
                                 }
 
-                                if (relPowerVariation < -10) {
+                                if (relPowerVariation < -10 || powerDifference < -15) {
                                     // printf("%lf %lf\n", receivedPower, powerDifference);
                                     // printf("%lf\n", TimeStep * ActualSitParams.DeltaT);
                                     FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
@@ -1454,6 +1455,25 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
     } else if (key == GLUT_KEY_F7) {
         ActualVizParams.DisplayCommNetwork =
                 !ActualVizParams.DisplayCommNetwork;
+                
+        
+        /* F8 to save current CBP to disk */
+    } else if (key == GLUT_KEY_F8) {
+
+        FILE* saveFile;
+        char OutputPath[512];
+        strcpy (OutputPath, ActualStatUtils.OutputDirectory);
+        strcat (OutputPath, "/");
+        strcat (OutputPath, "cbp_matrices_temp.dat");
+        strcat (OutputPath, "\0");
+        saveFile = fopen (OutputPath, "w");
+        
+        // TODO why does resolution equal 750 when i have 75 in the config file?
+        SaveCBPToFile(PhaseData[Now].CBP, ActualPhase.NumberOfAgents, (int) ActualVizParams.Resolution / 10, saveFile);
+        fclose(saveFile);
+        
+        printf("Saved CBP data\n");
+                
         
         /* F1 toggles Hull display */
     } else if (key == GLUT_KEY_F1) {

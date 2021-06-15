@@ -26,6 +26,7 @@ int    orientation(const point_xy*, const point_xy*, const point_xy*);
 int    compare(const void*, const void*);
 
 typedef struct measurement_bundle {
+    double logOdds;
     double currentAvg;
     double currentObstAvg;
     long count;

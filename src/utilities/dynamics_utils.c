@@ -859,8 +859,8 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
                 if (i_x >= 0 && i_x < Resolution && i_y >= 0 && i_y < Resolution && !(i_x == i_x_0 && i_y == i_y_0)) {
                     // Notify presence of the agent in the cell
                     
-                    // double measurement = gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
-                    double measurement = 1;
+                    double measurement = gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
+                    // double measurement = 1;
                     insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, measurement, MTYPE_TRAIL);
                 }
             }

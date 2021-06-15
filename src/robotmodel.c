@@ -585,6 +585,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
         ConditionsReset[1] = false;
     }
+
     /* Insert Phase into PhaseData... */
     for (j = 0; j < SitParams->NumberOfAgents; j++) {
         for (i = 0; i < 3; i++) {

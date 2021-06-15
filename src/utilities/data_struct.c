@@ -2,6 +2,7 @@
 //
 // Contains the function definitions from data_struct.h
 #include "data_struct.h"
+#include "math.h"
 
 // Given two points, swap their values
 void swap(point_xy* a, point_xy* b)
@@ -102,7 +103,9 @@ measurement_bundle*** allocMeasurementMatrix(int agentCount, int ResolutionX, in
             }
 
             for (int k = 0; k < ResolutionX; k++) {
+
                 tmat[i][j][k].count = 0;
+                tmat[i][j][k].logOdds = 0.0;
                 tmat[i][j][k].countObst = 0;
                 tmat[i][j][k].currentAvg = initValue;
                 tmat[i][j][k].currentObstAvg = initValue;

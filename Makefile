@@ -6,7 +6,7 @@ PNG_OUT := $(strip $(pngout))
 DEBUG_MODE := $(strip $(debug))
 SERVER_MODE := $(strip $(server))
 
-DEFAULT_FLAGS := -lm
+DEFAULT_FLAGS := -lm -O3
 VIZUALIZER_FLAGS := -lGL -lGLU -lglut
 PNGOUTPUT_FLAGS := -lIL -lILU -lILUT
 ERROR_FLAGS := -Wall -Wextra
