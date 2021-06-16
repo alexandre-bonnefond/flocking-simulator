@@ -725,7 +725,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
 /* Update the PCB */
 void UpdatePCB() {
-    glutSetWindow(StatWindow);
+    // glutSetWindow(StatWindow);
     glOrtho(-50.0, 50.0, -50.0, 50.0, -1.0, 1.0);
     glutPostRedisplay();
 }
@@ -1053,8 +1053,8 @@ void UpdatePositionsToDisplay() {
     /* Refresh both windows */
     glutSetWindow(MenuWindowID);
     glutPostRedisplay();
-    glutSetWindow(StatWindow);
-    glutPostRedisplay();
+    //glutSetWindow(StatWindow);
+    //glutPostRedisplay();
     glutSetWindow(VizWindowID);
     glutPostRedisplay();
 
@@ -1916,9 +1916,9 @@ int main(int argc, char *argv[]) {
         glutSpecialFunc(HandleKeyBoardSpecial);
 
         DisplayWindow(700, 700, ActualVizParams.Resolution + 65 + 400, 0);
-        StatWindow = glutCreateWindow("Obstacle Probability Map");
-        glutIdleFunc(UpdatePCB);
-        glutDisplayFunc(DisplayChart);
+        // StatWindow = glutCreateWindow("Obstacle Probability Map");
+        // glutIdleFunc(UpdatePCB);
+        // glutDisplayFunc(DisplayChart);
         
 
         DisplayWindow(ActualVizParams.Resolution, ActualVizParams.Resolution, 0,

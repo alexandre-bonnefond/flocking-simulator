@@ -600,13 +600,20 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     
 
     if (Flocking_type == 0) {
-        /* Repulsion */
-        RepulsionLin(PotentialVelocity, Phase, V_Rep,
-                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+        if (Phase->lost[ImLost] == 1) {
+            fprintf(stdout, "J'arrive\n");
+            /* Attraction */
+            AttractionLin(AttractionVelocity, Phase, V_Rep,
+                          Slope_Att_Lora, R_0 + 500, WhichAgent, (int) Dim, false);
+        } else {
+            /* Repulsion */
+            RepulsionLin(PotentialVelocity, Phase, V_Rep,
+                         Slope_Rep, R_0, WhichAgent, (int) Dim, false);
 
-        /* Attraction */
-        AttractionLin(AttractionVelocity, Phase, V_Rep,
-                Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
+            /* Attraction */
+            AttractionLin(AttractionVelocity, Phase, V_Rep,
+                          Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
+        }
         
         /* Repulsion */
 
@@ -660,7 +667,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         //fprintf(stdout, "Lost : %d\n", Phase->lost[WhichAgent]);
 
         if (Phase->lost[ImLost] == 1) {
-            fprintf(stdout, "J'arrive\n");
+            //fprintf(stdout, "J'arrive\n");
             /* Attraction */
             AttractionLin(AttractionVelocity, Phase, V_Rep,
                           Slope_Att_Lora, R_0 + 500, ImLost, (int) Dim, false);
