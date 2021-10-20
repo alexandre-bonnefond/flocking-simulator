@@ -228,8 +228,6 @@ void PowerFuncMatrix(double **Res, double **Mat, const int N,
 
 /* Other useful tools */
 
-double EMA(double x_current, double x_previous, double smoothing, int width);
-
 double ClampScalar(const double x, const double x_min, const double x_max);
 
 /*

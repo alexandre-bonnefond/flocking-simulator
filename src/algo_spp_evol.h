@@ -27,8 +27,7 @@ double V_Rep;
 double R_0;
 double Slope_Rep;
 double Slope_Att;
-double RP_MAX;
-double RP_MIN;
+double K_Press;
 
 /* Parameters of friction */
 double C_Frict;

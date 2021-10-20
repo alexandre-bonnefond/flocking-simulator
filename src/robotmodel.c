@@ -40,7 +40,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     int i, j, k;
     LocalActualPhaseToCreate->NumberOfAgents = Phase->NumberOfAgents;   
     LocalActualPhaseToCreate->NumberOfInnerStates = Phase->NumberOfInnerStates; // ???
-    double DepthEMA = UnitParams->depthEMA.Value;
+    
     /* Setting up order by distance from actual unit */
 
     for (i = 0; i < Phase->NumberOfAgents; i++) {
@@ -220,6 +220,26 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
     }
 
+    /* Computing the pressure */
+    static double RealNeighboursPosition[3];
+    NullVect(RealNeighboursPosition, 3);
+
+    double InterAgentDistance;
+    double Press = 0;
+
+    GetAgentsCoordinates(RealPosition, LocalActualPhaseToCreate, 0);
+
+    for (i = 1; i < NumberOfNeighbours; i++) {
+
+        GetAgentsCoordinates(RealNeighboursPosition, LocalActualPhaseToCreate, i);
+        VectDifference(RealNeighboursPosition, RealNeighboursPosition, RealPosition);
+        InterAgentDistance = VectAbs(RealNeighboursPosition);
+        if (InterAgentDistance <= R_0) {
+            Press += (R_0 - InterAgentDistance) / R_0;
+        }
+    }
+
+    LocalActualPhaseToCreate->Pressure[0] = Press;
     LocalActualPhaseToCreate->NumberOfAgents = NumberOfNeighbours;
 
 }
@@ -438,7 +458,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
                 TimeStepReal, &LocalActualDelayedPhase, Polygons, 
-                *Hull, j, UnitParams, 
+                *Hull, j, UnitParams,
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /  
                 SitParams->DeltaT)) == 0));
                                         
@@ -453,15 +473,17 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];        
             }           
         }
+
+        OutputPhase->Pressure[j] = TempPhase.Pressure[0];
         
         /* CBP strategy (only on GPS tick) and Compute the pressure for each agent */
-        if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
-            WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
-            // printf("Agent %d\n", j);
-            double P0 = PressureMeasure(&TempPhase, 0, 2, 3, 4000);
-            // printf("Pression agent %d = %f\n", j, P0);
-            OutputPhase->Pressure[j] = P0;
-        }
+        // if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
+        //     WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);
+        //     // printf("Agent %d\n", j);
+        //     double P0 = PressureMeasure(&TempPhase, 0, 2, 3, 4000);
+        //     // printf("Pression agent %d = %f\n", j, P0);
+        //     OutputPhase->Pressure[j] = P0;
+        // }
 
         /* Solving Newtonian with Euler-Naruyama method */
         NullVect(RealCoptForceVector, 3);

@@ -75,28 +75,16 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Max = 2e222
     );
 
-    /* Max Power before doing repulsion */
-    CREATE_FLOCKING_PARAM(RP_MAX,
-        .Name = "Power before Rep",
-        .UnitOfMeas = "dBm",
-        .Value = -50.0,
-        .Digits = 2,
+    /* Linear coefficient for the pressure repulsion */
+    CREATE_FLOCKING_PARAM(K_Press, 
+        .Name = "Slope of pressure repulsion",
+        .UnitOfMeas = "-",
+        .Value = 100,
+        .Digits = 1,
         .SizeOfStep = 1,
         .Mult = 1,
-        .Min = -55.0,
-        .Max = 0.0
-    );
-
-    /* Min Power before doing attraction */
-    CREATE_FLOCKING_PARAM(RP_MIN,
-        .Name = "Power before Att",
-        .UnitOfMeas = "dBm",
-        .Value = -55.0,
-        .Digits = 2,
-        .SizeOfStep = 1,
-        .Mult = 1,
-        .Min = -70.0,
-        .Max = -50.0
+        .Min = 0,
+        .Max = 2e222
     );
 
     /* Distance of friction relative to repulsion below which we only allow
@@ -378,8 +366,11 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
             ArenaCenterX, ArenaCenterY, 0,
             0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
 
+    // PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
+    //          ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    
     PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
-             ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+             ArenaCenterX - 50000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
     /* reset z coordinate in two dimensions */
     if (2 == Dim) {
@@ -550,6 +541,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     NullVect(ObstacleVelocity, 3);
     static double PotentialVelocity[3];
     NullVect(PotentialVelocity, 3);
+    static double PressureVelocity[3];
+    NullVect(PressureVelocity, 3);
     static double AttractionVelocity[3];
     NullVect(AttractionVelocity, 3);
     static double GradientAcceleration[3];
@@ -587,25 +580,28 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     MultiplicateWithScalar(NormalizedAgentsVelocity, NormalizedAgentsVelocity,
             V_Flock, (int) Dim);
 
+    /* test going east term */
+    FillVect(test2,1, 0,
+            AgentsVelocity[2]);
+    UnitVect(test2, test2);
+    MultiplicateWithScalar(test2, test2,
+            0.1 *  V_Flock, (int) Dim);
+
+    static double dist;
     
 
     if (Flocking_type == 0) {
         /* Repulsion */
         RepulsionLin(PotentialVelocity, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
-
+        printf("%f\t", VectAbs(PotentialVelocity));
         /* Attraction */
         AttractionLin(AttractionVelocity, Phase, V_Rep,
                 Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
-        
-        /* Repulsion */
 
-        // RepulsionPowLin(PotentialVelocity, Phase, ActualTime, V_Rep,
-        //         300, RP_MAX, WhichAgent, (int) Dim, false);
-
-        // /* Attraction */
-        // AttractionPowLin(AttractionVelocity, Phase, ActualTime, V_Rep,
-        //         30, RP_MIN, WhichAgent, (int) Dim, false);
+        /* Press Rep */
+        PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0);
+        printf("%f\t%d\n", VectAbs(PressureVelocity), WhichAgent);
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
         //     R_0, 3 * R_0, WhichAgent, (int) Dim);
@@ -673,9 +669,11 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     }
 
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
+    // VectSum(OutputVelocity, OutputVelocity, test2);
 
     if (Flocking_type == 0) {
         VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+        VectSum(OutputVelocity, OutputVelocity, PressureVelocity);
         VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
     }

@@ -117,6 +117,7 @@ bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
 int NumberOfCluster;
+double DistanceBetweenAgentsLive;
 double TargetPosition[3];
 double **TargetsArray; // = NULL;
 int cnt = 0;                    // Which target is on
@@ -1075,6 +1076,9 @@ void UpdatePositionsToDisplay() {
         NumberOfCluster = CountCluster(ActualPhase, Visited, &ActualUnitParams);
         ActualSitParams.NumberOfClusters = NumberOfCluster;
 
+        DistanceBetweenAgentsLive = StatOfDistanceBetweenNearestNeighbours(&ActualPhase)[0];
+        printf("%f\n", DistanceBetweenAgentsLive*0.01);
+
     }
 
     
@@ -1247,7 +1251,7 @@ void HandleKeyBoard(unsigned char key, int x, int y) {
         /* Generating integer from hexadecimal string */
         char key_temp[1];
         key_temp[0] = key;
-        int keyint = strtol(key_temp, NULL, 23);
+        int keyint = strtol(key_temp, NULL, 22);
         if (ActualVizParams.UnitParamsDisplayed == true) {
 
             if (keyint <= 21 && keyint > 0) {

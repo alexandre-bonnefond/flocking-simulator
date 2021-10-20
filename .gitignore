@@ -6,7 +6,7 @@ output_default*/
 output_folder/
 # config/
 # parameters/
-# obstacles/
+obstacles/
 .vscode/*
 
 robotflocksim_main

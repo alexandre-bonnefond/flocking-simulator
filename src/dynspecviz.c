@@ -316,21 +316,21 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 
                                 }
 
-                                else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
+                                // else if (PhaseData[Now].Laplacian[WhichAgent][i] > Unit_params->sensitivity_thresh.Value) {
 
-                                        CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
-                                        CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
+                                //         CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                //         CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
 
-                                        CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
-                                        CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
+                                //         CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                //         CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
 
-                                        DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
-                                                RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
-                                                RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
-                                                RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
-                                                color);
+                                //         DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                //                 RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                //                 RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                //                 RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                //                 color);
 
-                                }
+                                // }
 
                         }
 

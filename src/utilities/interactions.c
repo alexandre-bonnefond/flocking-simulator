@@ -157,6 +157,7 @@ void AttractionLin(double *OutputVelocity,
 
         MultiplicateWithScalar(DifferenceVector, DifferenceVector,
                 SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
+        // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (2 * R_0_l), 0.3), Dim_l);
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 
@@ -167,6 +168,40 @@ void AttractionLin(double *OutputVelocity,
         MultiplicateWithScalar(OutputVelocity, OutputVelocity, length, Dim_l);
     }
     //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
+}
+
+void PressureRepulsion(double *OutputVelocity, 
+            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0) {
+    
+    NullVect(OutputVelocity, 3);
+
+    int i;
+    int n = 0;
+
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+    // printf("nb agents = %d\n", Phase->NumberOfAgents);
+    AgentsCoordinates = Phase->Coordinates[WhichAgent];
+    
+    static double DifferenceVector[3];
+    static double DistanceFromNeighbour;
+    /* Attractive interaction term */
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+        if (i == WhichAgent)
+            continue;
+        
+        NeighboursCoordinates = Phase->Coordinates[i];
+        VectDifference(DifferenceVector, AgentsCoordinates,
+                NeighboursCoordinates);
+        if (2 == Dim_l) {
+            DifferenceVector[2] = 0.0;
+        }
+
+        UnitVect(DifferenceVector, DifferenceVector);
+
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector, k * Phase->Pressure[i], Dim_l);
+        VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+    }
 }
 
 /* Smooth pairwise potential without finite cut-off */
@@ -224,7 +259,8 @@ void GradientBased(double *OutputVelocity,
             SigmaDistance = SigmaNorm(DifferenceVector, epsilon);
 
             PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * ActionFunction(SigmaDistance - SigmaD, a, b);
-
+            // PhiAlpha = BumpFunction(SigmaDistance / SigmaR, h) * ActionFunction(SigmaDistance - SigmaD, a, b) + exp(0.5 * cos((2 * M_PI / SigmaD) * SigmaDistance)) - 1;
+            // printf("%d\t%f\n",Phase->RealIDs[i], PhiAlpha);
             MultiplicateWithScalar(DifferenceVector, GradVector, PhiAlpha, Dim_l);
             VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
             

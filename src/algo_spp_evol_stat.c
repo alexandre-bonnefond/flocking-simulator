@@ -385,7 +385,8 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
         fprintf(f_ClusterRP, "%lf\t%lf\t%lf\t%lf\t%lf\n",
                 StatUtils->ElapsedTime, Avg_RP, sqrt(StDev_RP), Min_RP, Max_RP);
 
-    } else {
+    } else if (StatUtils->SaveMode != STEADYSTAT
+            || StatUtils->ElapsedTime > SitParams->StartOfSteadyState) {
 
         Data_Corr_Sum += Avg_Corr * SitParams->DeltaT;
         Data_CorrStd_Sum += sqrt(StDev_Corr) * SitParams->DeltaT;
@@ -546,6 +547,7 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * Uni
                 ElapsedTime, Data_Corr_Sum / ElapsedTime,
                 Data_CorrStd_Sum / ElapsedTime, Data_CorrMin_Sum / ElapsedTime,
                 Data_CorrMax_Sum / ElapsedTime);
+        printf("\t\t\t\t\t\t%f\n", Data_MaxCluster_Sum);
         fprintf(f_ClusterParams, "%lf\t%lf\t%lf\t%lf\n", ElapsedTime,
                 Data_MinCluster_Sum / ElapsedTime,
                 Data_MaxCluster_Sum / ElapsedTime,

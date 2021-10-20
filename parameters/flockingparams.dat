@@ -8,10 +8,8 @@ V_Frict=63.000000
 V_Max=700.000000
 # Equilibrium distance (Multiply it with 0.010000 to get its Value in m)
 R_0=4000.000000
-# Power before Rep (dBm)
-RP_MAX=-44.000000
-# Power before Att (dBm)
-RP_MIN=-55.000000
+# Slope of pressure repulsion (-)
+K_Press=0
 # Friction range (Multiply it with 0.010000 to get its Value in m)
 R_0_Offset_Frict=8530.000000
 # Shill dist offset (Multiply it with 0.010000 to get its Value in m)
@@ -39,9 +37,9 @@ A_Action_Function=10.000000
 # B Action Function (m)
 B_Action_Function=37.000000
 # Size of neighbourhood (-)
-Size_Neighbourhood=6.000000
+Size_Neighbourhood=10.000000
 # Arena Radius (Multiply it with 0.010000 to get its Value in m)
-ArenaRadius=30000.000000
+ArenaRadius=62000.000000
 # Friction coefficient (-)
 C_Frict=0.050000
 # Arena Center X (Multiply it with 0.010000 to get its Value in m)
