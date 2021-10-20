@@ -18,11 +18,11 @@ Radius=300.0
 # Length to store in memory (s)
 # Larger stored length means faster running,
 # but more allocated memory
-LengthToStore=15.0
+LengthToStore=5.0
 #
 # Default speed of visualization
 VizSpeedUp=40
 StartOfSteadyState=10
 #CBP
-Resolution=30
+Resolution=75
 

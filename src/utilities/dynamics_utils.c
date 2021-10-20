@@ -25,7 +25,7 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
-    Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0.5);
+    Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
@@ -835,30 +835,36 @@ void WhereInGrid(phase_t * Phase, const int Resolution,
         double SquareSize = 2 * ArenaSize / Resolution;
         
         // Compute agent's coordinates in CBP space
-        int i_x_0 = (int) (AgentsCoords[0] - (ArenaCenterX - ArenaSize)) / SquareSize;
-        int i_y_0 = - (int) (AgentsCoords[1] - (ArenaCenterY + ArenaSize)) / SquareSize; // TODO check why a minus sign is needed
+        double x_0 = (AgentsCoords[0] - (ArenaCenterX - ArenaSize));
+        double y_0 = - (AgentsCoords[1] - (ArenaCenterY + ArenaSize)); // TODO check why a minus sign is needed
+        int i_x_0 = (int) (x_0 / SquareSize);
+        int i_y_0 = (int) (y_0 / SquareSize);
+
+        // TODO get GPS's position stdev or compute SNR
+        double SNR = 60;
+        double sigma = 100 * sqrt(10 + 150*150 * pow(10, -SNR/10));
         
-        // TODO get GPS's position stdev
-        double sigma = 1200;
-        int sigmaGrid = sigma / SquareSize;
+        if (i_x_0 >= 0 && i_x_0 < Resolution && i_y_0 >= 0 && i_y_0 < Resolution)
+            insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1, MTYPE_TRAIL);
 
-        if (sigmaGrid == 0)
-            insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x_0, i_y_0, 1.5, MTYPE_TRAIL);
-        else
-            for(int i = - 2 * sigmaGrid; i < 2 * sigmaGrid; i++) {
-                for(int j = - 2 * sigmaGrid; j < 2 * sigmaGrid; j++) {
+        float numberOfSigma = 1.5;
+        for(int xOffset = - numberOfSigma * sigma; xOffset < numberOfSigma * sigma; xOffset += SquareSize) {
+            for(int yOffset = - numberOfSigma * sigma; yOffset < numberOfSigma * sigma; yOffset += SquareSize) {
+
+                if (xOffset*xOffset + yOffset*yOffset > numberOfSigma*numberOfSigma*sigma*sigma) continue;
+
+                int i_x = (int) ( (x_0 + xOffset) / SquareSize );
+                int i_y = (int) ( (y_0 + yOffset) / SquareSize );
+                // Avoid out of bounds access when agents are out of the arena
+                if (i_x >= 0 && i_x < Resolution && i_y >= 0 && i_y < Resolution && !(i_x == i_x_0 && i_y == i_y_0)) {
+                    // Notify presence of the agent in the cell
                     
-                    if (i*i + j*j > 4*sigmaGrid*sigmaGrid) continue;
-
-                    int i_x = i_x_0 + i;
-                    int i_y = i_y_0 + j;
-                    // Avoid out of bounds access when agents are out of the arena
-                    if (i_x >= 0 && i_x < Resolution && i_y >=0 && i_y < Resolution) {
-                        // Notify presence of the agent in the cell
-                        insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 1.5, MTYPE_TRAIL);
-                    }
+                    // double measurement = gaussianPdf(0, sigma, sqrt(xOffset*xOffset + yOffset*yOffset), 1);
+                    double measurement = 1;
+                    insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, measurement, MTYPE_TRAIL);
                 }
             }
+        }
 }
 
 /* Randomizing phase of agents (with zero velocities) */
@@ -1937,7 +1943,7 @@ void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int Wh
         
         int i_y = Resolution - ((int) y + 1);
         int i_x = (int) x;
-        if (Phase->CBP[WhichAgent][i_y][i_x].current > -1 ) {
+        if (Phase->CBP[WhichAgent][i_y][i_x].currentAvg > -1) {
             insertMeasurementIntoBundle(Phase->CBP[WhichAgent], i_x, i_y, 0, MTYPE_OBST);
         }
         // printf("%f\t%f\n", x, y);

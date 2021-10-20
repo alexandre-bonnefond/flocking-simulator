@@ -103,8 +103,9 @@ measurement_bundle*** allocMeasurementMatrix(int agentCount, int ResolutionX, in
 
             for (int k = 0; k < ResolutionX; k++) {
                 tmat[i][j][k].count = 0;
-                tmat[i][j][k].current = initValue;
-                tmat[i][j][k].currentObst = initValue;
+                tmat[i][j][k].countObst = 0;
+                tmat[i][j][k].currentAvg = initValue;
+                tmat[i][j][k].currentObstAvg = initValue;
             }
         }
     }
@@ -131,14 +132,24 @@ void insertMeasurementIntoBundle(measurement_bundle ** bundle_mat, int x, int y,
     switch (type)
     {
     case MTYPE_TRAIL:
+        
+        // environment is static, if we passed somewhere multiple times and determined its 0.8 safe/free 
+        // then the only reason we measure 0.2 is bc of GPS uncertainties so we discard the data
+        if (measurement < data->currentAvg) {
+            // printf("skipped measure : %lf\n", measurement);
+            return;
+        }
+
+        data->currentAvg = (data->currentAvg * data->count + measurement) / (data->count + 1);
         data->count++;
-        data->current = (data->current + measurement) / 2;
         break;
     
     case MTYPE_OBST:
+
+        data->currentObstAvg = (data->currentObstAvg * data->countObst + measurement) / (data->countObst + 1);
         data->countObst++;
-        data->currentObst = (data->currentObst + measurement) / 2;
         break;
+
     default:
         break;
     }
