@@ -1025,35 +1025,35 @@ void UpdatePositionsToDisplay() {
                 InsertPhaseToDataLine(PhaseData, &ActualPhase, Now + 1, ActualSitParams.Resolution);
                 InsertInnerStatesToDataLine(PhaseData, &ActualPhase, Now + 1);
                 
-                if (TimeStep * ActualSitParams.DeltaT > 20.0 && Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
+                // if (TimeStep * ActualSitParams.DeltaT > 20.0 && Now % ((int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT)) == 0) {
 
-                    for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
-                        static double CoordA[3];
-                        GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
-                        for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
-                            if (j != k) {
+                //     for (j = 0; j < ActualSitParams.NumberOfAgents; j++){
+                //         static double CoordA[3];
+                //         GetAgentsCoordinatesFromTimeLine(CoordA, PhaseData, j, Now + 1);
+                //         for (k = 0; k < ActualSitParams.NumberOfAgents; k++){
+                //             if (j != k) {
                                 
-                                static double CoordB[3];
-                                GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
-                                int previousTick = Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1;
-                                // double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
-                                double receivedPower = PhaseData[Now + 1].Laplacian[j][k];
-                                // double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
-                                double relPowerVariation = receivedPower - PhaseData[previousTick].Laplacian[j][k];
+                //                 static double CoordB[3];
+                //                 GetAgentsCoordinatesFromTimeLine(CoordB, PhaseData, k, Now + 1);
+                //                 int previousTick = Now - (int) (ActualUnitParams.t_GPS.Value / ActualSitParams.DeltaT) + 1;
+                //                 // double agentDistance = DistanceOfTwoPoints2D(CoordA, CoordB);
+                //                 double receivedPower = PhaseData[Now + 1].Laplacian[j][k];
+                //                 // double powerDifference = fabs(receivedPower - DegradedPower(agentDistance, 0, 0, &ActualUnitParams));
+                //                 double relPowerVariation = receivedPower - PhaseData[previousTick].Laplacian[j][k];
 
-                                if (PhaseData[previousTick].Laplacian[j][k] < -70) {
-                                    continue; // skip non-neighbours
-                                }
+                //                 if (PhaseData[previousTick].Laplacian[j][k] < -70) {
+                //                     continue; // skip non-neighbours
+                //                 }
 
-                                if (relPowerVariation < -10) {
-                                    // printf("%lf %lf\n", receivedPower, powerDifference);
-                                    // printf("%lf\n", TimeStep * ActualSitParams.DeltaT);
-                                    FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
-                                }
-                            }
-                        }
-                    }
-                }
+                //                 if (relPowerVariation < -10) {
+                //                     // printf("%lf %lf\n", receivedPower, powerDifference);
+                //                     // printf("%lf\n", TimeStep * ActualSitParams.DeltaT);
+                //                     FastVoxelTraversal(&ActualPhase, CoordA, CoordB, j, ArenaCenterX, ArenaCenterY, ArenaRadius, ActualSitParams.Resolution);
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
 
             } else {
                 /* Shifting Data line, if PhaseData is overloaded */
@@ -1102,8 +1102,8 @@ void UpdatePositionsToDisplay() {
         NumberOfCluster = CountCluster(ActualPhase, Visited, &ActualUnitParams);
         ActualSitParams.NumberOfClusters = NumberOfCluster;
 
-        DistanceBetweenAgentsLive = StatOfDistanceBetweenNearestNeighbours(&ActualPhase)[0];
-        printf("%f\n", DistanceBetweenAgentsLive*0.01);
+        // DistanceBetweenAgentsLive = StatOfDistanceBetweenNearestNeighbours(&ActualPhase)[0];
+        // printf("%f\n", DistanceBetweenAgentsLive*0.01);
 
     }
 
@@ -2078,10 +2078,10 @@ int main(int argc, char *argv[]) {
         /* Opening output files */
         FILE *f_Correlation, *f_CoM, *f_Velocity, *f_HullArea,
                 *f_DistanceBetweenNeighbours, *f_DistanceBetweenUnits,
-                *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions;
+                *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions, *f_Pressure;
         FILE *f_Correlation_StDev, *f_CoM_StDev, *f_Velocity_StDev, *f_HullArea_StDev,
                 *f_CollisionRatio_StDev, *f_DistanceBetweenUnits_StDev,
-                *f_Acceleration_StDev, *f_ReceivedPowers_StDev, *f_DistanceBetweenNeighbours_StDev;
+                *f_Acceleration_StDev, *f_ReceivedPowers_StDev, *f_DistanceBetweenNeighbours_StDev, *f_Pressure_StDev;
 
         /* Positions and velocities */
 
@@ -2286,6 +2286,26 @@ int main(int argc, char *argv[]) {
                         "This file contains standard deviations. Check out \"received_power.dat\" for more details!\n");
                 fprintf(f_ReceivedPowers_StDev,
                         "time_(s)\tavg_of_received_power_(dBm)\tstdev_of_received_power_(dBm)\tmin_of_received_power_(dBm)\tmax_of_received_power_(dBm)\n");
+            }
+        }
+
+        if (FALSE != ActualSaveModes.SavePressure) {
+            strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+            strcat(OutputFileName, "/pressure.dat\0");
+            f_Pressure = fopen(OutputFileName, "w");
+            fprintf(f_Pressure,
+                    "\n# 1. time_(s)\n# 2. avg_of_pressure_(-)\n# 3. stdev_of_pressure_(-)\n# 4. min_of_pressure_(-)\n# 5. max_of_pressure_(-)\n\n");
+            fprintf(f_Pressure,
+                    "time_(s)\tavg_of_pressure_(-)\tstdev_of_pressure_(-)\tmin_of_pressure_(-)\tmax_of_pressure_(-)\n");
+            if (STAT == ActualSaveModes.SavePressure
+                    || STEADYSTAT == ActualSaveModes.SavePressure) {
+                strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+                strcat(OutputFileName, "/pressure_stdev.dat\0");
+                f_Pressure_StDev = fopen(OutputFileName, "w");
+                fprintf(f_Pressure_StDev,
+                        "This file contains standard deviations. Check out \"pressure.dat\" for more details!\n");
+                fprintf(f_Pressure_StDev,
+                        "time_(s)\tavg_of_pressure_(-)\tstdev_of_pressure_(-)\tmin_of_pressure_(-)\tmax_of_pressure_(-)\n");
             }
         }
 
@@ -2564,6 +2584,27 @@ int main(int argc, char *argv[]) {
             }
             }
 
+            if (FALSE != ActualSaveModes.SavePressure) {
+                StatData = StatOfPressure(&ActualPhase);
+            }
+            switch (ActualSaveModes.SavePressure) {
+            case TIMELINE:{
+                fprintf(f_Pressure, "%lf\t%lf\t%lf\t%lf\t%lf\n",
+                        ActualStatUtils.ElapsedTime, StatData[0], StatData[1],
+                        StatData[2], StatData[3]);
+                break;
+            }
+            case STAT:{
+                UPDATE_STATISTICS(Pressure, 4);
+                break;
+            }
+            case STEADYSTAT:{
+                UPDATE_STATISTICS(Pressure, 4);
+                break;
+            }
+
+            }
+
             /* Saving model-specific statistics */
             if (FALSE != ActualSaveModes.SaveModelSpecifics) {
                 SaveModelSpecificStats(&ActualPhase, &ActualStatUtils,
@@ -2649,6 +2690,11 @@ int main(int argc, char *argv[]) {
         if (FALSE != ActualSaveModes.SaveReceivedPowers) {
             SAVE_STATISTICS(ReceivedPowers, 4);
             fclose(f_ReceivedPowers);
+        }
+
+        if (FALSE != ActualSaveModes.SavePressure) {
+            SAVE_STATISTICS(Pressure, 4);
+            fclose(f_Pressure);
         }
 
         if (FALSE != ActualSaveModes.SaveModelSpecifics) {

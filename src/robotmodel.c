@@ -225,22 +225,40 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     NullVect(RealNeighboursPosition, 3);
 
     double InterAgentDistance;
-    double Press = 0;
+    double Press;
+    int NbOfPressingAgent = 0;
 
-    GetAgentsCoordinates(RealPosition, LocalActualPhaseToCreate, 0);
+    if (OrderByDistance) {
+        
+        GetAgentsCoordinates(RealPosition, LocalActualPhaseToCreate, 0);
 
-    for (i = 1; i < NumberOfNeighbours; i++) {
+        for (i = 1; i < NumberOfNeighbours; i++) {
 
-        GetAgentsCoordinates(RealNeighboursPosition, LocalActualPhaseToCreate, i);
-        VectDifference(RealNeighboursPosition, RealNeighboursPosition, RealPosition);
-        InterAgentDistance = VectAbs(RealNeighboursPosition);
-        if (InterAgentDistance <= R_0) {
-            Press += (R_0 - InterAgentDistance) / R_0;
+            GetAgentsCoordinates(RealNeighboursPosition, LocalActualPhaseToCreate, i);
+            VectDifference(RealNeighboursPosition, RealNeighboursPosition, RealPosition);
+            InterAgentDistance = VectAbs(RealNeighboursPosition);
+            if (InterAgentDistance <= R_0) {
+                Press += (R_0 - InterAgentDistance);
+                NbOfPressingAgent += 1;
+            }
         }
+        /* We divide the pressure by the nb of agents that generates pressure so as to normalize it */
+        if (NbOfPressingAgent != 0) {
+            Press /= NbOfPressingAgent;
+        }
+        else {
+            Press = 0;
+        }
+
+        LocalActualPhaseToCreate->Pressure[0] = Press;
+    }
+    else {
+        LocalActualPhaseToCreate->Pressure[0] = Phase->Pressure[WhichAgent];
     }
 
-    LocalActualPhaseToCreate->Pressure[0] = Press;
+    // LocalActualPhaseToCreate->Pressure[0] = Press;
     LocalActualPhaseToCreate->NumberOfAgents = NumberOfNeighbours;
+    // printf("%f\t%d\n", Press*0.01, WhichAgent);
 
 }
 
@@ -475,7 +493,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         }
 
         OutputPhase->Pressure[j] = TempPhase.Pressure[0];
-        
+
         /* CBP strategy (only on GPS tick) and Compute the pressure for each agent */
         // if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
         //     WhereInGrid(OutputPhase, SitParams->Resolution, j, ArenaCenterX, ArenaCenterY, ArenaRadius);

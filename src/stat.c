@@ -480,3 +480,52 @@ double *StatOfReceivedPower(phase_t * Phase) {
     return StatData;
 
 }
+
+/* Returns an array that contains the average, deviation, minimum and maximum of
+ * the pressure
+ */
+double *StatOfPressure(phase_t * Phase) {
+
+    int i;
+    double Pressure;
+
+    Avg = 0.0;
+    StDev = 0.0;
+    Min = 2e222;
+    Max = 0.0;
+
+    /* Output */
+    static double StatData[4];
+
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+
+        Pressure = Phase->Pressure[i];
+
+        Avg += Pressure;
+        StDev += Pressure * Pressure;
+
+        if (Pressure > Max) {
+            Max = Pressure;
+        }
+        if (Pressure < Min) {
+            Min = Pressure;
+        }
+
+    }
+
+    Avg /= Phase->NumberOfAgents;
+    StDev /= Phase->NumberOfAgents;
+    StDev -= Avg * Avg;
+
+    if (StDev < 0.0) {
+        StDev = 0.0;
+    }
+
+    StatData[0] = Avg;
+    StatData[1] = sqrt(StDev);
+    StatData[2] = Min;
+    StatData[3] = Max;
+
+    return StatData;
+
+}

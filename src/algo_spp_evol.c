@@ -321,7 +321,7 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Max = 3
     );
 
-    FlockingParams->NumberOfInnerStates = 2;
+    FlockingParams->NumberOfInnerStates = 3; // Columns 1 and 2 handle some target tracking functionalities and column 3 is for the agent own neighbourhood
 }
 
 /* *INDENT-ON* */
@@ -594,14 +594,14 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         /* Repulsion */
         RepulsionLin(PotentialVelocity, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
-        printf("%f\t", VectAbs(PotentialVelocity));
+        // printf("%f\t", VectAbs(PotentialVelocity));
         /* Attraction */
         AttractionLin(AttractionVelocity, Phase, V_Rep,
                 Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
 
         /* Press Rep */
         PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0);
-        printf("%f\t%d\n", VectAbs(PressureVelocity), WhichAgent);
+        // printf("%f\t%d\n", VectAbs(PressureVelocity), WhichAgent);
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
         //     R_0, 3 * R_0, WhichAgent, (int) Dim);
@@ -614,7 +614,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     else if (Flocking_type == 1) {
         /* Olfati Gradient based term for attraction//repulsion */
         GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, 3 * R_0, WhichAgent, (int) Dim);
+            R_0, (sqrt(2) + 1) * R_0, WhichAgent, (int) Dim);
         // UnitVect(GradientVelocity, GradientVelocity);
         MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
         // GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
@@ -680,7 +680,6 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     else if (Flocking_type == 1) {
         VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
-        // VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
         VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
         MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
     }

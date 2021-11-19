@@ -157,7 +157,7 @@ void AttractionLin(double *OutputVelocity,
 
         MultiplicateWithScalar(DifferenceVector, DifferenceVector,
                 SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
-        // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (2 * R_0_l), 0.3), Dim_l);
+        // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (3 * R_0_l), 0.3), Dim_l);
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 

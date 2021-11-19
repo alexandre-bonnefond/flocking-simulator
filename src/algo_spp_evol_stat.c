@@ -423,15 +423,33 @@ void SaveClusterDependentParams(phase_t * Phase, sit_parameters_t * SitParams,
 
 }
 
+bool PointtInObstacle(obstacle_t * obstacle, double *Point) {
+    bool c = false;
+    int nvert = obstacle->p_count;
+    int i, j = 0;
+    // Warning: this will crash if for some reason obstacle->p[j][1] == obstacle->p[i][1]
+    for (i = 0, j = nvert - 1; i < nvert; j = i++) {
+        if (((obstacle->p[i][1] > Point[1]) != (obstacle->p[j][1] > Point[1]))
+                && (Point[0] <
+                        (obstacle->p[j][0] - obstacle->p[i][0]) * (Point[1] -
+                                obstacle->p[i][1]) / (obstacle->p[j][1] -
+                                obstacle->p[i][1]) + obstacle->p[i][0])) {
+            c = !c;
+        }
+    }
+    return c;
+}
+
 void SaveModelSpecificStats(phase_t * Phase,
         stat_utils_t * StatUtils, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams,
         sit_parameters_t * SitParams) {
 
     /* Calculating distance from Arena */
-    int i;
+    int i, j;
     static int n;
     n = 0;
+    bool InObst;
 
     static double avg, stdev, min, max;
     min = 2e222;
@@ -451,6 +469,13 @@ void SaveModelSpecificStats(phase_t * Phase,
 
         //GetAgentsCoordinates (AgentsCoordinates, Phase, i);
         AgentsCoordinates = Phase->Coordinates[i];
+
+        // for (j = 0; j < obstacles.o_count; j++) {
+        //     InObst = PointtInObstacle(&obstacles.o[j], AgentsCoordinates);
+        //     if (InObst == true) {
+        //         printf("inside obstacle\n");
+        //     }
+        // }
 
         /* Distance from arena depends on the shape of the arena */
         if (0.0 == ArenaShape) {        // Sphere-shaped arena
@@ -547,7 +572,7 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * Uni
                 ElapsedTime, Data_Corr_Sum / ElapsedTime,
                 Data_CorrStd_Sum / ElapsedTime, Data_CorrMin_Sum / ElapsedTime,
                 Data_CorrMax_Sum / ElapsedTime);
-        printf("\t\t\t\t\t\t%f\n", Data_MaxCluster_Sum);
+        // printf("\t\t\t\t\t\t%f\n", Data_MaxCluster_Sum);
         fprintf(f_ClusterParams, "%lf\t%lf\t%lf\t%lf\n", ElapsedTime,
                 Data_MinCluster_Sum / ElapsedTime,
                 Data_MaxCluster_Sum / ElapsedTime,

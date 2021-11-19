@@ -25,6 +25,7 @@ void SetDefaultOutputModes(output_modes_t * OutputModes) {
     OutputModes->SaveAcceleration = FALSE;
     OutputModes->SaveReceivedPowers = FALSE;
     OutputModes->SaveHullArea = FALSE;
+    OutputModes->SavePressure = FALSE;
 
     // Mode-specific order parameters (still not complete)
     OutputModes->SaveModelSpecifics = FALSE;
@@ -140,6 +141,9 @@ void ReadOutputModes(output_modes_t * OutputModes, FILE * InputFile) {
                         CheckSaveMode(ReadedValue, ReadedName);
             } else if (strcmp(ReadedName, "SaveHullArea") == 0) {
                 OutputModes->SaveHullArea =
+                        CheckSaveMode(ReadedValue, ReadedName);
+            } else if (strcmp(ReadedName, "SavePressure") == 0) {
+                OutputModes->SavePressure =
                         CheckSaveMode(ReadedValue, ReadedName);
             }
 

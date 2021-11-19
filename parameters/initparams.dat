@@ -1,5 +1,5 @@
 # Number of agents
-NumberOfAgents=40
+NumberOfAgents=20
 # Length of the simulated experiment (s)
 # 
 Length=600.0
@@ -18,7 +18,7 @@ Radius=300.0
 # Length to store in memory (s)
 # Larger stored length means faster running,
 # but more allocated memory
-LengthToStore=5.0
+LengthToStore=15.0
 #
 # Default speed of visualization
 VizSpeedUp=40
