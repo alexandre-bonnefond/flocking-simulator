@@ -60,6 +60,8 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                     Phase->InnerStates[i][j];
         }
 
+        LocalActualPhaseToCreate->Pressure[i] = Phase->Pressure[i];
+
     }
 
     static double ActualAgentsPosition[3];
@@ -115,7 +117,6 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         GetAgentsCoordinates(NeighbourPosition, Phase, i);
         VectDifference(NeighbourDistance, NeighbourPosition, ActualAgentsPosition);
         Distance = VectAbs(NeighbourDistance);
-
         for (j = 0; j < cnt; j++) {
             double **Intersections;
             Intersections = doubleMatrix(2, 3);
@@ -138,7 +139,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             }
             freeMatrix(Intersections, 2, 3);
         }
-        LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);     
+        LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);
     }
 
     if (OrderByDistance) {
@@ -220,7 +221,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
     }
 
-    /* Computing the pressure */
+    /* Computing the pressure of WhichAgent */
     static double RealNeighboursPosition[3];
     NullVect(RealNeighboursPosition, 3);
 
@@ -237,6 +238,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             GetAgentsCoordinates(RealNeighboursPosition, LocalActualPhaseToCreate, i);
             VectDifference(RealNeighboursPosition, RealNeighboursPosition, RealPosition);
             InterAgentDistance = VectAbs(RealNeighboursPosition);
+            // printf("\n distance entre agent %d et %d vaut %f", TempPhase.RealIDs[0], TempPhase.RealIDs[i], InterAgentDistance);
             if (InterAgentDistance <= R_0) {
                 Press += (R_0 - InterAgentDistance);
                 NbOfPressingAgent += 1;
@@ -255,10 +257,9 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     else {
         LocalActualPhaseToCreate->Pressure[0] = Phase->Pressure[WhichAgent];
     }
-
-    // LocalActualPhaseToCreate->Pressure[0] = Press;
+    
     LocalActualPhaseToCreate->NumberOfAgents = NumberOfNeighbours;
-    // printf("%f\t%d\n", Press*0.01, WhichAgent);
+    // printf("\n%f\t%d\n", Press*0.01, WhichAgent);
 
 }
 
@@ -472,16 +473,15 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 j);
         GetAgentsVelocity(DebugInfo.AgentsRealVelocity, &LocalActualPhase, j);
         DebugInfo.RealPhase = &LocalActualPhase;
-
+        // printf("\nActual agent is %d\n", j);
+        // printf("Pressure of agent %d is %f\n", TempPhase.RealIDs[0], TempPhase.Pressure[0]);
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
                 TimeStepReal, &LocalActualDelayedPhase, Polygons, 
                 *Hull, j, UnitParams,
                 (TimeStepLooped % ((int) (UnitParams->t_GPS.Value /  
                 SitParams->DeltaT)) == 0));
-                                        
         GetAgentsVelocity(ActualRealVelocity, &LocalActualPhase, j);
-        
         /* Fill the Laplacian Matrix in dBm */
         for (i = 0; i < SitParams->NumberOfAgents; i++) {
             if ( j == TempPhase.RealIDs[i]) {
@@ -631,6 +631,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             OutputPhase->Coordinates[j][i] = SteppedPhase.Coordinates[j][i];
             OutputPhase->Velocities[j][i] = SteppedPhase.Velocities[j][i];
         }
+
         for (i = 0; i < SteppedPhase.NumberOfInnerStates; i++) {
             OutputPhase->InnerStates[j][i] = SteppedPhase.InnerStates[j][i];
         }

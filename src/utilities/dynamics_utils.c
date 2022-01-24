@@ -1839,22 +1839,25 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
-double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams) {
+double DegradedPower(const double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams) {
     
     double Power = 0;
     if (UnitParams->communication_type.Value == 2) {
-        if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+        if (Dist < UnitParams->ref_distance.Value && Dist != 0) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
             Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                 log10((UnitParams->ref_distance.Value - DistObst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2));
             }
-            else
+        else if (Dist == 0) {
+            Power = 0;
+        }
+        else
             {
                 Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                     log10((Dist - DistObst) * 0.01 * UnitParams->freq.Value) + 32.44 + Loss + randomizeGaussDouble(0, 2)); // c en m.GHz, dist in meters, freq in GHz (see Friis model)
             }
     }
     else {
-            if (Dist < UnitParams->ref_distance.Value) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
+            if (Dist < UnitParams->ref_distance.Value && Dist != 0) {  // Remember that all measured distances are in cm so Ref_dist should be in cm too
                 Power = UnitParams->transmit_power.Value - (10 * UnitParams->alpha.Value * 
                     log10(UnitParams->ref_distance.Value * 0.01 * UnitParams->freq.Value) + 32.44 + randomizeGaussDouble(0, 2));
             }

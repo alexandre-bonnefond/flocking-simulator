@@ -34,7 +34,7 @@ void RepulsionPowLin(double *OutputVelocity,
         const bool normalize);
 
 void PressureRepulsion(double *OutputVelocity, 
-            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0);
+            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0, const double v_max);
         
 /* attraction */
 

@@ -558,7 +558,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                     float gr[3] = {0, 1, 0};
                     DrawGradientColoredCircle(RealToGlCoord_2D(AgentsCoordinates[0] -
                             ActualVizParams.CenterX, ActualVizParams.MapSizeXY), RealToGlCoord_2D(AgentsCoordinates[1] -
-                            ActualVizParams.CenterY, ActualVizParams.MapSizeXY), RealToGlCoord_2D(1000 * Phase->Pressure[i],
+                            ActualVizParams.CenterY, ActualVizParams.MapSizeXY), RealToGlCoord_2D(3 * Phase->Pressure[i],
                             ActualVizParams.MapSizeXY), RealToGlCoord_2D(100, ActualVizParams.MapSizeXY), red, gr, 25);
                 }
             }

@@ -355,7 +355,7 @@ int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
-double DegradedPower(double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams);
+double DegradedPower(const double Dist, double DistObst, double Loss, unit_model_params_t * UnitParams);
 
 /* Voxel Traversal method for obstacle detection */
 void FastVoxelTraversal(phase_t *Phase, double *CoordsA, double *CoordsB, int WhichAgent,

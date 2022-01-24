@@ -7,9 +7,9 @@ V_Frict=63.000000
 # Maximum velocity (Multiply it with 0.010000 to get its Value in m/s)
 V_Max=700.000000
 # Equilibrium distance (Multiply it with 0.010000 to get its Value in m)
-R_0=4000.000000
+R_0=2000.000000
 # Slope of pressure repulsion (-)
-K_Press=0.000000
+K_Press=0.002000
 # Friction range (Multiply it with 0.010000 to get its Value in m)
 R_0_Offset_Frict=8530.000000
 # Shill dist offset (Multiply it with 0.010000 to get its Value in m)

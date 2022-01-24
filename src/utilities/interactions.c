@@ -137,6 +137,8 @@ void AttractionLin(double *OutputVelocity,
     static double DifferenceVector[3];
     static double DistanceFromNeighbour;
     /* Attractive interaction term */
+    // int vois = Phase->NumberOfAgents / 2;
+    // for (i = 0; i < vois; i++) {
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         if (i == WhichAgent)
             continue;
@@ -171,7 +173,7 @@ void AttractionLin(double *OutputVelocity,
 }
 
 void PressureRepulsion(double *OutputVelocity, 
-            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0) {
+            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0, const double v_max) {
     
     NullVect(OutputVelocity, 3);
 
@@ -185,11 +187,13 @@ void PressureRepulsion(double *OutputVelocity,
     
     static double DifferenceVector[3];
     static double DistanceFromNeighbour;
-    /* Attractive interaction term */
+
+    // int vois = Phase->NumberOfAgents / 2;
+    // for (i = 0; i < vois; i++) {
     for (i = 0; i < Phase->NumberOfAgents; i++) {
-        if (i == WhichAgent)
+        if (i == WhichAgent) {
             continue;
-        
+        }
         NeighboursCoordinates = Phase->Coordinates[i];
         VectDifference(DifferenceVector, AgentsCoordinates,
                 NeighboursCoordinates);
@@ -197,9 +201,20 @@ void PressureRepulsion(double *OutputVelocity,
             DifferenceVector[2] = 0.0;
         }
 
+        DistanceFromNeighbour = VectAbs(DifferenceVector);
+        /* Check if we interact at all */
+        if (DistanceFromNeighbour >= 3 * R_0)
+            continue;
+        n += 1;
+
         UnitVect(DifferenceVector, DifferenceVector);
 
-        MultiplicateWithScalar(DifferenceVector, DifferenceVector, k * Phase->Pressure[i], Dim_l);
+        double speed = VectAbs(Phase->Velocities[WhichAgent]);
+        double mult = k * Phase->Pressure[i] * speed;
+        if (mult >= v_max) {
+            mult = v_max;
+        }
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector, mult, Dim_l);
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 }

@@ -466,14 +466,16 @@ void SaveModelSpecificStats(phase_t * Phase,
     for (i = 0; i < SitParams->NumberOfAgents; i++) {
 
         static double dist;
-
+        static int cnt = 0;
         //GetAgentsCoordinates (AgentsCoordinates, Phase, i);
         AgentsCoordinates = Phase->Coordinates[i];
 
         // for (j = 0; j < obstacles.o_count; j++) {
         //     InObst = PointtInObstacle(&obstacles.o[j], AgentsCoordinates);
         //     if (InObst == true) {
-        //         printf("inside obstacle\n");
+        //         printf("inside obstacle %d\n", cnt);
+        //         cnt++;
+
         //     }
         // }
 

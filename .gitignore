@@ -4,8 +4,8 @@
 # ignore all files in the following directories
 output_default*/
 output_folder/
-# config/
-# parameters/
+config/
+parameters/
 obstacles/
 .vscode/*
 

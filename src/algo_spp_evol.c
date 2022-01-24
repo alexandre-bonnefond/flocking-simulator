@@ -79,9 +79,9 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
     CREATE_FLOCKING_PARAM(K_Press, 
         .Name = "Slope of pressure repulsion",
         .UnitOfMeas = "-",
-        .Value = 100,
-        .Digits = 1,
-        .SizeOfStep = 1,
+        .Value = 0.01,
+        .Digits = 3,
+        .SizeOfStep = 0.001,
         .Mult = 1,
         .Min = 0,
         .Max = 2e222
@@ -321,7 +321,10 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
         .Max = 3
     );
 
-    FlockingParams->NumberOfInnerStates = 3; // Columns 1 and 2 handle some target tracking functionalities and column 3 is for the agent own neighbourhood
+    // FlockingParams->NumberOfInnerStates = 3; // Columns 1 and 2 handle some target tracking functionalities and column 3 is for the agent own neighbourhood
+    FlockingParams->NumberOfInnerStates = 2; // Column 1 is for att/rep neighbourhood ratio and column 2 is for the alignment. (For ex, \\
+    0.5 for column 1 and agent 1 means that this agent will only use half of its available neighbourhood to compute its att/rep forces) \\
+    This is to prepare the RL framework.
 }
 
 /* *INDENT-ON* */
@@ -592,21 +595,20 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     if (Flocking_type == 0) {
         /* Repulsion */
-        RepulsionLin(PotentialVelocity, Phase, V_Rep,
-                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+        // RepulsionLin(PotentialVelocity, Phase, V_Rep,
+        //         Slope_Rep, R_0, WhichAgent, (int) Dim, false);
         // printf("%f\t", VectAbs(PotentialVelocity));
         /* Attraction */
-        AttractionLin(AttractionVelocity, Phase, V_Rep,
+        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
                 Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
+        // printf("%f\t", VectAbs(AttractionVelocity));
 
         /* Press Rep */
-        PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0);
-        // printf("%f\t%d\n", VectAbs(PressureVelocity), WhichAgent);
+        PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0, V_Rep);
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
         //     R_0, 3 * R_0, WhichAgent, (int) Dim);
         // MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
-        
         // printf("%f\t%f\t%f\t%f\t%f\n", VectAbs(test1), VectAbs(PotentialVelocity), VectAbs(test2), VectAbs(AttractionVelocity), VectAbs(GradientAcceleration));
     }
 
@@ -656,6 +658,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
             Slope_Frict, R_0 + R_0_Offset_Frict, WhichAgent, (int) Dim);
+    // printf("%f\n", VectAbs(AttractionVelocity));
 
     /* Interaction with walls of the arena (shill agents) */
     Shill_Wall_LinSqrt(ArenaVelocity, Phase, ArenaCenterX, ArenaCenterY,
