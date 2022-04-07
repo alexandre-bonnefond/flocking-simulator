@@ -69,6 +69,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
     int HullLength;
     HullLength = stack_count(Hull);
     int cnt = 0;
+    int leaderID;
     if (Hull != NULL) {
         double **HullPolygon;
         double **ObstPolygon;
@@ -119,11 +120,10 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         Distance = VectAbs(NeighbourDistance);
         for (j = 0; j < cnt; j++) {
             double **Intersections;
-            Intersections = doubleMatrix(2, 3);
+            Intersections = doubleMatrix(4, 3);
             int NumberOfIntersections;
             
             static double DistanceThrough[3];
-
             NumberOfIntersections = IntersectionOfSegmentAndPolygon2D(Intersections,
             ActualAgentsPosition, NeighbourPosition, Polygons[NearObstacles[j]], obstacles.o[NearObstacles[j]].p_count);
 
@@ -137,7 +137,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
                 dist_obst = 0;
                 Loss = 0;
             }
-            freeMatrix(Intersections, 2, 3);
+            freeMatrix(Intersections, 4, 3);
         }
         LocalActualPhaseToCreate->ReceivedPower[i] = DegradedPower(Distance, dist_obst, Loss, UnitParams);
     }
@@ -153,7 +153,7 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
         
         if ((int)UnitParams->communication_type.Value == 1 || (int)UnitParams->communication_type.Value == 2) {
-            OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours, WhichAgent);
+            leaderID = OrderAgentsByPower(LocalActualPhaseToCreate, NumberOfNeighbours, WhichAgent);
         }
         else if ((int)UnitParams->communication_type.Value == 0) {
             OrderAgentsByDistance(LocalActualPhaseToCreate, ActualAgentsPosition);
@@ -163,10 +163,17 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             NumberOfNeighbours = Size_Neighbourhood;
         }
 
+        if (leaderID > Size_Neighbourhood) {
+            SwapAgents(LocalActualPhaseToCreate, leaderID, Size_Neighbourhood, WhichAgent);
+            // printf("On phase of agent %d we swap leader %d with %f agent\n", WhichAgent, leaderID, Size_Neighbourhood);
+            NumberOfNeighbours += 1;
+        }
+
     } else {
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0, WhichAgent);
         NumberOfNeighbours = 1;
     }
+    // printf("inner state of agent %d is %f\n", WhichAgent, Phase->InnerStates[WhichAgent][2]);
 
     /* Setting up delay and GPS inaccuracy for positions and velocities */
 
@@ -321,7 +328,6 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         const int WhichAgent, double *WindVelocityVector) {
 
     int i;
-
     /*
      * The units in the array "Phase" ara ordered by the distance from "WhichAgent"th unit.
      * Therefore, Position and velocity of "WhichAgent"th unit is stored in Phase[0] - Phase[5].
@@ -331,6 +337,15 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
     GetAgentsVelocity(PreviousVelocity, Phase, 0);
 
     static double TempTarget[3];
+
+    int NeighbourhoodRep = (int) Phase->NumberOfAgents * Phase->InnerStates[0][0];
+    if (Phase->Pressure[0] == 0 && NeighbourhoodRep < Phase->NumberOfAgents) {
+        Phase->InnerStates[0][0] += 0.05;
+    }
+    else if (Phase->Pressure[0] > 0 && NeighbourhoodRep > 3) {
+        Phase->InnerStates[0][0] -= 0.05;
+    }
+
     for (i = 0; i < Phase->NumberOfInnerStates; i++) {
         OutputInnerState[i] = Phase->InnerStates[0][i];
     }
@@ -350,8 +365,6 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         }
 
     }
-    // printf("%f\t%d\n", PreferredVelocities[0][0], TimeStepReal);
-
     for (i = 0; i < 2; i++) {
 
         OutputVelocity[i] =
@@ -455,6 +468,14 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         StepGPSNoises(GPSDelayedPhase, UnitParams);
     }
 
+    /* If leader mode is activated, agent 0 becomes leader */
+    if (VizParams->DisplayLeader == 1) {
+        LocalActualPhase.InnerStates[0][2] = 1;
+    }
+    else {
+        LocalActualPhase.InnerStates[0][2] = 0;
+    }
+
     /* Step Wind vector */
     //StepWind (UnitParams, SitParams->DeltaT, WindVelocityVector);
 
@@ -473,8 +494,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
                 j);
         GetAgentsVelocity(DebugInfo.AgentsRealVelocity, &LocalActualPhase, j);
         DebugInfo.RealPhase = &LocalActualPhase;
-        // printf("\nActual agent is %d\n", j);
-        // printf("Pressure of agent %d is %f\n", TempPhase.RealIDs[0], TempPhase.Pressure[0]);
+        
         /* Creating phase from the viewpoint of the actual agent */
         CreatePhase(&TempPhase, GPSPhase, GPSDelayedPhase, &LocalActualPhase,
                 TimeStepReal, &LocalActualDelayedPhase, Polygons, 

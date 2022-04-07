@@ -162,6 +162,13 @@ void Initialize() {
             ActualPhase.Coordinates[i][j] = PhaseData[0].Coordinates[i][j];
         }
     }
+    // TargetsArray = malloc( sizeof *TargetsArray );
+    // TargetsArray[0] = malloc( sizeof **TargetsArray * 4);
+    // TargetsArray[0][0] = 55000;
+    // TargetsArray[0][1] = 32000;
+    // TargetsArray[0][2] = 0;
+    // TargetsArray[0][3] = 1;
+    // cnt +=1;
 
     CBPObst = tripleIntMatrix(ActualSitParams.NumberOfAgents, ActualSitParams.NumberOfAgents, 2 * sqrt(2) * ActualSitParams.Resolution);
 
@@ -408,30 +415,51 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         HowManyTics = (int) HowManyTics *1.5;
 
         /* Drawing ground */
-        glColor3f(ActualColorConfig.AxisColor[0],
-                ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
-        glBegin(GL_LINES);
-        for (i = -HowManyTics; i < HowManyTics; i++) {
-            glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
-            glVertex2d(i * TicDensity, LengthOfAxis);
-            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
-                RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
-            glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
-                RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
+        // glColor3f(ActualColorConfig.AxisColor[0],
+        //         ActualColorConfig.AxisColor[1], ActualColorConfig.AxisColor[2]);
+        // glBegin(GL_LINES);
+        // for (i = -HowManyTics; i < HowManyTics; i++) {
+        //     glVertex2d(i * TicDensity, -HowManyTics * TicDensity);
+        //     glVertex2d(i * TicDensity, LengthOfAxis);
+        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY), 
+        //         RealToGlCoord_2D(ArenaCenterY - ArenaRadius, ActualVizParams.MapSizeXY));
+        //     glVertex2d(RealToGlCoord_2D(ArenaCenterX - ArenaRadius + i * TicDensity, ActualVizParams.MapSizeXY),
+        //         RealToGlCoord_2D(LengthOfAxis, ActualVizParams.MapSizeXY));
 
-        }
-        for (i = -HowManyTics; i < HowManyTics; i++) {
+        // }
+        // for (i = -HowManyTics; i < HowManyTics; i++) {
 
-            glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
-            glVertex2d(LengthOfAxis, i * TicDensity);
+        //     glVertex2d(-HowManyTics * TicDensity, i * TicDensity);
+        //     glVertex2d(LengthOfAxis, i * TicDensity);
 
-        }
-        glEnd();
+        // }
+        // glEnd();
 
         /* Draw target */
-        if (ActualUnitParams.flocking_type.Value == 2) {
+        // if (ActualUnitParams.flocking_type.Value == 2) {
 
-            for (i = 0; i < cnt; i++) {
+        //     for (i = 0; i < cnt; i++) {
+        //         if (TargetsArray[i][3] == 1) {
+        //             DrawCopter_2D(TargetsArray[i][0] -
+        //                     ActualVizParams.CenterX,
+        //                     TargetsArray[i][1] - ActualVizParams.CenterY,
+        //                     ActualVizParams.MapSizeXY, 15000,
+        //                     ActualColorConfig.AgentsColor[0]);
+                    
+        //             char TargetLabel[3];
+        //             sprintf(TargetLabel, "%d", i);
+        //             DrawString(RealToGlCoord_2D(TargetsArray[i][0] - ActualVizParams.CenterX + 120.0,
+        //                 ActualVizParams.MapSizeXY),
+        //                 RealToGlCoord_2D(TargetsArray[i][1] - ActualVizParams.CenterY + 120.0,
+        //                 ActualVizParams.MapSizeXY), GLUT_BITMAP_TIMES_ROMAN_10,
+        //                 TargetLabel, ActualColorConfig.AgentsColor[0]);
+
+        //         }
+        //     }
+            
+        // }
+
+        for (i = 0; i < cnt; i++) {
                 if (TargetsArray[i][3] == 1) {
                     DrawCopter_2D(TargetsArray[i][0] -
                             ActualVizParams.CenterX,
@@ -449,8 +477,6 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
                 }
             }
-            
-        }
 
         /* Draw Tails */
         if (true == ActualVizParams.DisplayTail) {
@@ -535,8 +561,30 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
                 GetAgentsCoordinates(AgentsCoordinates, Phase, i);
                 char str[10];
+                float red[3] = {1, 0, 0};
+                float gr[3] = {0, 1, 0};
+                float bl[3] = {0, 0, 1};
+                float or[3] = {0.8, 0.3, 0.1};
+                float gl[3] = {.6, 0.5, .0};
                 sprintf(str, "%d", i);
-                DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, ActualColorConfig.LabelColor);
+                if (ActualVizParams.DisplayLeader != 0 && Phase->InnerStates[i][2] == 1) {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, red);
+                }
+                else if (ActualVizParams.DisplayLeader != 0 && Phase->InnerStates[i][2] == 2) {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, gr);
+                }
+                else if (ActualVizParams.DisplayLeader != 0 && Phase->InnerStates[i][2] == 3) {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, bl);
+                }
+                else if (ActualVizParams.DisplayLeader != 0 && Phase->InnerStates[i][2] == 4) {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, or);
+                }
+                else if (ActualVizParams.DisplayLeader != 0 && Phase->InnerStates[i][2] == 5) {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, red);
+                }
+                else {
+                    DrawAgentLabel_2D(Phase, i, str, true, &ActualVizParams, ActualColorConfig.LabelColor);
+                }
                 //DrawAgentLabel_2D(Phase, i, , true, &ActualVizParams, ActualColorConfig.LabelColor);
                 /* Draw Agents */
                 if (AgentsInDanger[i] == true) {
@@ -545,6 +593,36 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                             AgentsCoordinates[1] - ActualVizParams.CenterY,
                             ActualVizParams.MapSizeXY, ActualSitParams.Radius,
                             ActualColorConfig.AgentsInDangerColor);
+                } else if (ActualVizParams.DisplayLeader == 1 && i == 0) {
+                    DrawCopter_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, ActualSitParams.Radius,
+                            red);
+                } else if (ActualVizParams.DisplayLeader == 1 && Phase->InnerStates[i][2] == 2) {
+                    DrawCopter_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, ActualSitParams.Radius,
+                            gr);
+                } else if (ActualVizParams.DisplayLeader == 1 && Phase->InnerStates[i][2] == 3) {
+                    DrawCopter_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, ActualSitParams.Radius,
+                            bl);
+                } else if (ActualVizParams.DisplayLeader == 1 && Phase->InnerStates[i][2] == 4) {
+                    DrawCopter_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, ActualSitParams.Radius,
+                            or);
+                } else if (ActualVizParams.DisplayLeader == 1 && Phase->InnerStates[i][2] == 5) {
+                    DrawCopter_2D(AgentsCoordinates[0] -
+                            ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            ActualVizParams.MapSizeXY, ActualSitParams.Radius,
+                            red);
                 } else {
                     DrawCopter_2D(AgentsCoordinates[0] -
                             ActualVizParams.CenterX,
@@ -554,8 +632,6 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                 }
 
                 if (ActualVizParams.DisplayPressure == true) {
-                    float red[3] = {1, 0, 0};
-                    float gr[3] = {0, 1, 0};
                     DrawGradientColoredCircle(RealToGlCoord_2D(AgentsCoordinates[0] -
                             ActualVizParams.CenterX, ActualVizParams.MapSizeXY), RealToGlCoord_2D(AgentsCoordinates[1] -
                             ActualVizParams.CenterY, ActualVizParams.MapSizeXY), RealToGlCoord_2D(3 * Phase->Pressure[i],
@@ -595,6 +671,23 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
             }
 
         }
+
+        /* Draw Interactions Arrows */
+        if (ActualVizParams.DisplayInt == true) {
+            float colors[5][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0.8, 0.3, 0.1}}; //red = rep; green = att; blue = align; orange = obst
+            for (i = 0; i < Phase->NumberOfAgents; i++) {
+                for (int comp = 0; comp < 4; comp ++) {
+                    GetAgentsCoordinates(AgentsCoordinates, Phase, i);
+
+                    DrawVelocityArrow_2D(AgentsCoordinates[0] - ActualVizParams.CenterX,
+                            AgentsCoordinates[1] - ActualVizParams.CenterY,
+                            Phase->InnerStates[i][3 + 2 * comp] * 40, Phase->InnerStates[i][3 + 2 * comp + 1] * 40,
+                            ActualVizParams.MapSizeXY,
+                            colors[comp]);
+                }
+            }
+        }
+
 
         /* Drawing wind speed */
         if (ActualUnitParams.Wind_Magn_Avg.Value > 0.0) {
@@ -1467,6 +1560,12 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
         /* F1 toggles Hull display */
     } else if (key == GLUT_KEY_F10) {
         ActualVizParams.DisplayPressure = !ActualVizParams.DisplayPressure;
+    
+    } else if (key == GLUT_KEY_F9) {
+        ActualVizParams.DisplayLeader = !ActualVizParams.DisplayLeader;
+
+    } else if (key == GLUT_KEY_F4) {
+        ActualVizParams.DisplayInt = !ActualVizParams.DisplayInt;
 
         /* F5 Saves the parameters */
     } else if (key == GLUT_KEY_F5) {
@@ -2294,9 +2393,9 @@ int main(int argc, char *argv[]) {
             strcat(OutputFileName, "/pressure.dat\0");
             f_Pressure = fopen(OutputFileName, "w");
             fprintf(f_Pressure,
-                    "\n# 1. time_(s)\n# 2. avg_of_pressure_(-)\n# 3. stdev_of_pressure_(-)\n# 4. min_of_pressure_(-)\n# 5. max_of_pressure_(-)\n\n");
+                    "\n# 1. time_(s)\n# 2. avg_of_pressure_(cm)\n# 3. stdev_of_pressure_(cm)\n# 4. min_of_pressure_(cm)\n# 5. max_of_pressure_(cm)\n\n");
             fprintf(f_Pressure,
-                    "time_(s)\tavg_of_pressure_(-)\tstdev_of_pressure_(-)\tmin_of_pressure_(-)\tmax_of_pressure_(-)\n");
+                    "time_(s)\tavg_of_pressure_(cm)\tstdev_of_pressure_(cm)\tmin_of_pressure_(cm)\tmax_of_pressure_(cm)\n");
             if (STAT == ActualSaveModes.SavePressure
                     || STEADYSTAT == ActualSaveModes.SavePressure) {
                 strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
@@ -2305,7 +2404,7 @@ int main(int argc, char *argv[]) {
                 fprintf(f_Pressure_StDev,
                         "This file contains standard deviations. Check out \"pressure.dat\" for more details!\n");
                 fprintf(f_Pressure_StDev,
-                        "time_(s)\tavg_of_pressure_(-)\tstdev_of_pressure_(-)\tmin_of_pressure_(-)\tmax_of_pressure_(-)\n");
+                        "time_(s)\tavg_of_pressure_(cm)\tstdev_of_pressure_(cm)\tmin_of_pressure_(cm)\tmax_of_pressure_(cm)\n");
             }
         }
 

@@ -235,9 +235,9 @@ void HandleSpecialMouseEvent(int button,
     if (VizParams->TwoDimViz == true) {
         if (button == 0 && state == GLUT_DOWN && Modifier == 2) {
             Phase->Coordinates[0][0] = MouseCoordToReal_2D(x, VizParams->MapSizeXY,
-                    VizParams->Resolution);
+                    VizParams->Resolution) + VizParams->CenterX;
             Phase->Coordinates[0][1] = -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
-                    VizParams->Resolution);
+                    VizParams->Resolution) + VizParams->CenterY;
         }
     }
 

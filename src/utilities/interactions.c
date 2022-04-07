@@ -131,7 +131,6 @@ void AttractionLin(double *OutputVelocity,
 
     double *AgentsCoordinates;
     double *NeighboursCoordinates;
-    // printf("nb agents = %d\n", Phase->NumberOfAgents);
     AgentsCoordinates = Phase->Coordinates[WhichAgent];
     
     static double DifferenceVector[3];
@@ -172,9 +171,11 @@ void AttractionLin(double *OutputVelocity,
     //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
 }
 
-void PressureRepulsion(double *OutputVelocity, 
-            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0, const double v_max) {
-    
+void AttractionAsym(double *OutputVelocity,
+        phase_t * Phase, const double V_Rep_l, const double p_l,
+        const double R_0_l, const int WhichAgent, const int NeighMax, const int Dim_l,
+        const bool normalize) {
+
     NullVect(OutputVelocity, 3);
 
     int i;
@@ -187,9 +188,64 @@ void PressureRepulsion(double *OutputVelocity,
     
     static double DifferenceVector[3];
     static double DistanceFromNeighbour;
-
+    /* Attractive interaction term */
     // int vois = Phase->NumberOfAgents / 2;
     // for (i = 0; i < vois; i++) {
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+        if (i == WhichAgent)
+            continue;
+        
+        NeighboursCoordinates = Phase->Coordinates[i];
+        VectDifference(DifferenceVector, AgentsCoordinates,
+                NeighboursCoordinates);
+        if (2 == Dim_l) {
+            DifferenceVector[2] = 0.0;
+        }
+        DistanceFromNeighbour = VectAbs(DifferenceVector);
+        /* Check if we interact at all */
+        if (DistanceFromNeighbour <= R_0_l)
+            continue;
+        n += 1;
+
+        UnitVect(DifferenceVector, DifferenceVector);
+
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector,
+                SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector, NeighMax - Phase->NumberOfAgents + 1, (int) Dim_l); 
+        // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (3 * R_0_l), 0.3), Dim_l);
+        VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+    }
+
+    /* divide result by number of interacting units */
+    if (normalize && n > 1) {
+        double length = VectAbs(OutputVelocity) / n;
+        UnitVect(OutputVelocity, OutputVelocity);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, length, Dim_l);
+    }
+    //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
+}
+
+
+void PressureRepulsion(double *OutputVelocity, 
+            phase_t * Phase, const double k, const int WhichAgent, const int Dim_l, const double R_0, const double v_max) {
+    
+    NullVect(OutputVelocity, 3);
+
+    int i;
+    int n = 0;
+
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+    AgentsCoordinates = Phase->Coordinates[WhichAgent];
+    
+    static double DifferenceVector[3];
+    static double DistanceFromNeighbour;
+
+    int NeighbourhoodRep;
+    NeighbourhoodRep = (int) Phase->NumberOfAgents * Phase->InnerStates[0][0];
+    // printf("New neigh of agent %d is %d because its pressure is %f and ration is %f\n", Phase->RealIDs[0], NeighbourhoodRep, Phase->Pressure[0], Phase->InnerStates[0][0]);
+
+    // for (i = 0; i < NeighbourhoodRep; i++) {
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         if (i == WhichAgent) {
             continue;
@@ -203,7 +259,7 @@ void PressureRepulsion(double *OutputVelocity,
 
         DistanceFromNeighbour = VectAbs(DifferenceVector);
         /* Check if we interact at all */
-        if (DistanceFromNeighbour >= 3 * R_0)
+        if (DistanceFromNeighbour >= 2 * R_0)
             continue;
         n += 1;
 
@@ -390,7 +446,8 @@ void TargetTracking(double *OutputVelocity, double *TargetPosition,
         double CoMCoords[3];
         double CoMComponent[3];
 
-        GetNeighbourhoodSpecificCoM(CoMCoords, Phase, SizeOfNeighbourhood);
+        // GetNeighbourhoodSpecificCoM(CoMCoords, Phase, SizeOfNeighbourhood);
+        GetNeighbourhoodSpecificCoM(CoMCoords, Phase, Phase->NumberOfAgents);
         VectDifference(CoMDifferenceVector, CoMCoords, AgentsCoordinates);
         UnitVect(CoMComponent, CoMDifferenceVector);
 
@@ -412,5 +469,36 @@ void TargetTracking(double *OutputVelocity, double *TargetPosition,
 
         /* Add and normalize */
         VectSum(OutputVelocity, CoMComponent, TrgComponent);
+
+        }
+
+
+/* Target tracking function without attrcaction to CoM */
+void TargetTrackingSimple(double *OutputVelocity, double *TargetPosition,
+        phase_t * Phase, const double R_trg, const double d_trg, 
+        const int WhichAgent, const int Dim_l) {
+
+
+        NullVect(OutputVelocity, 3);
+
+        double *AgentsCoordinates;
+        double TargetComponent[3];
+
+        AgentsCoordinates = Phase->Coordinates[WhichAgent];
+
+        /* Trg component */
+        static double TrgDifferenceVector[3];
+        double TrgCoef;
+        double TrgComponent[3];
+
+        VectDifference(TrgDifferenceVector, TargetPosition, AgentsCoordinates);
+        UnitVect(TrgComponent, TrgDifferenceVector);
+
+        TrgCoef = SigmoidLike(VectAbs(TrgDifferenceVector), R_trg, d_trg);
+
+        MultiplicateWithScalar(TrgComponent, TrgComponent, TrgCoef, Dim_l);
+
+        /* Add and normalize */
+        VectSum(OutputVelocity, OutputVelocity, TrgComponent);
 
         }

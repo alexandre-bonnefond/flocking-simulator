@@ -895,6 +895,11 @@ void RandomizePhase(phase_t * Phase,
         InsertAgentsCoordinates(Phase, RandomPlaceVector, i);
         NullVect(RandomPlaceVector, 3);
         InsertAgentsVelocity(Phase, RandomPlaceVector, i);
+        for (j = 0; j < 2; j++)// filling first 2 columns with 1 (neighbourhood)
+        {
+            Phase->InnerStates[i][j] = 1;
+        }
+        
     }
 
     NullVect(ActualAgentsVelocity, 3);
@@ -1738,10 +1743,12 @@ void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition) {
 
 /* Orders agents by Received Power */
 /* Warning! Simple insertion sort! */
-void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent) {
+int OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent) {
 
     static double RP1;
     static double RP2;
+
+    int leaderID = 0;
 
     int i, j;
 
@@ -1765,6 +1772,18 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent) {
 
         }
     }
+
+    for (i = 1; i < SizeToSort; i++) {
+        if (Phase->InnerStates[i][2] == 1) {
+            leaderID = i;
+            break;
+            // printf("Ordered phase of %d leader position is %d\n",WhichAgent, i);
+        }
+        else if (Phase->InnerStates[i][2] != 0 && Phase->InnerStates[0][2] == 0) {
+            leaderID = i;
+        }
+    }
+    return leaderID;
 }
 
 /* Packing of nearby agents to the first blocks of the phase space */
@@ -1835,6 +1854,53 @@ int SelectNearbyVisibleAgents(phase_t * Phase,
     // printf("\n\n");
     return NumberOfNearbyAgents;
 
+}
+/* Compute the inner state of the agent (which following level) and return which agent to follow */
+int AssignInnerState(double *InnerState, const phase_t * Phase) {
+
+    int WhoLeads = 0;
+    int i;
+
+    if (InnerState[2] == 0) {
+        for (i = Phase->NumberOfAgents - 1; i > 0; i--) {
+            if (Phase->InnerStates[i][2] !=0) {
+                // printf("\t\t\t\t%f\n", Phase->InnerStates[i][2]);
+                WhoLeads = i;
+                InnerState[2] = Phase->InnerStates[i][2] + 1;
+                break;
+            }
+        }
+    }
+    else {
+        double min = InnerState[2];
+        for (i = Phase->NumberOfAgents - 1; i > 0; i--) {
+            if (Phase->InnerStates[i][2] < min && Phase->InnerStates[i][2] != 0) {
+                // printf("\t\t\t\t\t%f\n", Phase->InnerStates[i][2]);
+                min = Phase->InnerStates[i][2];
+                WhoLeads = i;
+                InnerState[2] = min + 1;
+            }
+        }
+    }
+    
+    
+    // for (int i = Phase->NumberOfAgents - 1; i > 0; i--) {
+
+    //     if (Phase->InnerStates[i][2] == 1) {
+    //         WhoLeads = i;
+    //         InnerState[2] = 2;
+    //         break;
+    //     }
+    //     else if (Phase->InnerStates[i][2] == 2){// || Phase->InnerStates[i][2] == 3) {
+    //         WhoLeads = i;
+    //         InnerState[2] = 3;
+    //     }
+    //     else if (Phase->InnerStates[i][2] == 3 && InnerState[2] != 3) {
+    //         WhoLeads = i;
+    //         InnerState[2] = 4;
+    //     }
+    // }
+    return WhoLeads;
 }
 
 /* Calculate the received power of an agent depending on which method is used */

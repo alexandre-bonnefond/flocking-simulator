@@ -1292,10 +1292,9 @@ int IntersectionOfSegmentAndPolygon2D(double ** IntersectionPoints,
     int i;
     int NumberOfIntersections = 0;
 
-    static double TempVect1[3];
-    static double TempVect2[3];
-    static double TempIntersect[3];
-
+    double TempVect1[3];
+    double TempVect2[3];
+    double TempIntersect[3];
     for (i = 0; i < NumberOfVertices * 2; i += 2) {
         FillVect(TempVect1, Polygon[i], Polygon[i + 1], 0.0);
         FillVect(TempVect2, Polygon[(i + 2) % (2 * NumberOfVertices)],

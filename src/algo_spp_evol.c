@@ -322,9 +322,14 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
     );
 
     // FlockingParams->NumberOfInnerStates = 3; // Columns 1 and 2 handle some target tracking functionalities and column 3 is for the agent own neighbourhood
-    FlockingParams->NumberOfInnerStates = 2; // Column 1 is for att/rep neighbourhood ratio and column 2 is for the alignment. (For ex, \\
+    FlockingParams->NumberOfInnerStates = 11; // Column 1 is for att/rep neighbourhood ratio and column 2 is for the alignment. (For ex, \\
     0.5 for column 1 and agent 1 means that this agent will only use half of its available neighbourhood to compute its att/rep forces) \\
-    This is to prepare the RL framework.
+    This is to prepare the RL framework. 
+    //Column 3 is to know which agent is the leader (1 if yes).
+    // Columns 4, 5, 6, 7, 8, 9, 10, 11 are to save and plot the interaction components (Two for one arrow x, y). 
+    // 4, 5 for repulsion x, y ; 6,7 attraction
+    // 8,9 alignment, 10, 11, obstacles
+    
 }
 
 /* *INDENT-ON* */
@@ -574,7 +579,10 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     static double NormalizedTargetTracking[3];
     static double test1[3];
     static double test2[3];
-
+    static double LeaderFollower[3];
+    NullVect(LeaderFollower, 3);
+    static double NormalizedLF[3];
+    NullVect(NormalizedLF, 3);
 
     /* SPP term */
     FillVect(NormalizedAgentsVelocity, AgentsVelocity[0], AgentsVelocity[1],
@@ -592,19 +600,78 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
     static double dist;
     
-
     if (Flocking_type == 0) {
         /* Repulsion */
         // RepulsionLin(PotentialVelocity, Phase, V_Rep,
         //         Slope_Rep, R_0, WhichAgent, (int) Dim, false);
         // printf("%f\t", VectAbs(PotentialVelocity));
+
         /* Attraction */
-        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
-                Slope_Att, R_0 + 500, WhichAgent, (int) Dim, false);
-        // printf("%f\t", VectAbs(AttractionVelocity));
+        AttractionLin(AttractionVelocity, Phase, 2 * V_Rep,
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false);
+        
+        // AttractionAsym(AttractionVelocity, Phase, 2 * V_Rep,
+        //         Slope_Att, R_0 + 100, WhichAgent, Size_Neighbourhood, (int) Dim, false);
 
         /* Press Rep */
         PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0, V_Rep);
+
+        /* Target tracking */
+        if (WhichTarget != 0 && Phase->RealIDs[WhichAgent] == 0) {
+            // printf("%d\n", Phase->RealIDs[WhichAgent]);
+            TargetTrackingSimple(TargetTrackingVelocity, TargetsArray[WhichTarget - 1], 
+                    Phase, 5000, 10000, WhichAgent, (int)Dim);
+            MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 
+                    V_Flock, (int)Dim);
+            UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
+            MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
+                    MIN(V_Flock*0.5, VectAbs(TargetTrackingVelocity)), (int)Dim);
+            // MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 0.3, (int) Dim);
+        }
+
+        if (Phase->RealIDs[WhichAgent] != 0 && VizParams->DisplayLeader == 1) {
+
+            int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+            // printf("%d following %d and innner state is %f\n", DebugInfo->AgentsSeqNumber, WhoLeads, OutputInnerState[2]);
+            // int WhoLeads = 0;
+            // for (i = Phase->NumberOfAgents - 1; i > 0; i --) {
+
+            //     if (Phase->InnerStates[i][2] == 1) {
+            //         WhoLeads = i;
+            //         OutputInnerState[2] = 2;
+            //         break;
+            //     }
+            //     else if (Phase->InnerStates[i][2] == 2){// || Phase->InnerStates[i][2] == 3) {
+            //         WhoLeads = i;
+            //         OutputInnerState[2] = 3;
+            //     }
+            //     else if (Phase->InnerStates[i][2] == 3 && OutputInnerState[2] != 3) {
+            //         WhoLeads = i;
+            //         OutputInnerState[2] = 4;
+            //     }
+            //     else if (Phase->InnerStates[i][2] == 4 && OutputInnerState[2] != 4) {
+            //         WhoLeads = i;
+            //         OutputInnerState[2] = 5;
+            //     }
+            //     else if (Phase->InnerStates[i][2] == 5 && OutputInnerState[2] != 5) {
+            //         WhoLeads = i;
+            //         OutputInnerState[2] = 6;
+            //     }
+            //     else {
+            //         OutputInnerState[2] = 0;
+            //     }       
+            // }
+            if (WhoLeads != 0){
+                TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+                MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+                V_Flock, (int)Dim);
+                UnitVect(NormalizedLF, LeaderFollower);
+                MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+            }
+            else { 
+                OutputInnerState[2] = 0; 
+                }
+        }
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
         //     R_0, 3 * R_0, WhichAgent, (int) Dim);
@@ -614,22 +681,90 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
 
     else if (Flocking_type == 1) {
+        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
+                Slope_Att, R_0 + 200, WhichAgent, (int) Dim, false);
+
+        RepulsionLin(PotentialVelocity, Phase, V_Rep,
+                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+
+
+        if (WhichTarget != 0 && Phase->RealIDs[WhichAgent] == 0) {
+            TargetTrackingSimple(TargetTrackingVelocity, TargetsArray[WhichTarget -1], 
+                    Phase, 5000, 10000, WhichAgent, (int)Dim);
+            MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 
+                    V_Flock, (int)Dim);
+            UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
+            MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
+                    MIN(V_Flock*0.5, VectAbs(TargetTrackingVelocity)), (int)Dim);
+            // MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 0.4, (int) Dim);
+        }
+
+        if (Phase->RealIDs[WhichAgent] != 0 && VizParams->DisplayLeader == 1) {
+
+            int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+
+            if (WhoLeads != 0){
+                TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+                MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+                V_Flock, (int)Dim);
+                UnitVect(NormalizedLF, LeaderFollower);
+                MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+            }
+            else { 
+                OutputInnerState[2] = 0; 
+            }
+        }
+        
         /* Olfati Gradient based term for attraction//repulsion */
-        GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-            R_0, (sqrt(2) + 1) * R_0, WhichAgent, (int) Dim);
-        // UnitVect(GradientVelocity, GradientVelocity);
-        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
-        // GradientBased(GradientVelocity, Phase, .1, 500, 1000, 0.2, R_0, 10000, WhichAgent, (int) Dim);
-        // MultiplicateWithScalar(GradientVelocity, GradientVelocity, 100, (int) Dim);
-        // GradientBased(GradientVelocity, Phase, .1, 400, 450, 0.3,
-        //  R_0, 50000, WhichAgent, (int) Dim);
-        AlignmentOlfati(AlignOlfati, Phase, H_Bump, 2 * R_0, WhichAgent, (int) Dim, Epsilon);
-        // MultiplicateWithScalar(AlignOlfati, AlignOlfati, 5, (int)Dim);
-        // TrackingOlfati(TrackOlfati, TargetPosition, velo, Phase, WhichAgent, (int) Dim);
-                         
+        // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+        //     R_0, (sqrt(2) + 1) * R_0, WhichAgent, (int) Dim);
+        // MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
+        // AlignmentOlfati(AlignOlfati, Phase, H_Bump, 2 * R_0, WhichAgent, (int) Dim, Epsilon);                         
     }
 
     else if (Flocking_type == 2) {
+
+        /* Olfati Gradient based term for attraction//repulsion */
+        GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
+            R_0, (sqrt(2) + 1) * R_0, WhichAgent, (int) Dim);
+        MultiplicateWithScalar(GradientAcceleration, GradientAcceleration, 3, (int)Dim);
+        AlignmentOlfati(AlignOlfati, Phase, H_Bump, 2 * R_0, WhichAgent, (int) Dim, Epsilon);
+
+        if (WhichTarget != 0 && Phase->RealIDs[WhichAgent] == 0) {
+            TargetTrackingSimple(TargetTrackingVelocity, TargetsArray[WhichTarget - 1], 
+                    Phase, 5000, 10000, WhichAgent, (int)Dim);
+            MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 
+                    V_Flock, (int)Dim);
+            UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
+            MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
+                    MIN(V_Flock, VectAbs(TargetTrackingVelocity)), (int)Dim);
+            // MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 0.4, (int) Dim);
+        }
+        // printf("%f\n", VectAbs(GradientAcceleration));
+
+        if (Phase->RealIDs[WhichAgent] != 0 && VizParams->DisplayLeader == 1) {
+
+            int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+
+            if (WhoLeads != 0){
+                // TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+                // MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+                // V_Flock, (int)Dim);
+                // UnitVect(NormalizedLF, LeaderFollower);
+                // MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+                // MultiplicateWithScalar(LeaderFollower, NormalizedLF, 100000, (int)Dim);
+                // printf("\t%f\n", VectAbs(LeaderFollower));
+                TrackingOlfati(LeaderFollower, Phase->Coordinates[WhoLeads], Phase->Velocities[WhoLeads], 
+                Phase, WhichAgent, (int)Dim);
+                
+            }
+            else { 
+                OutputInnerState[2] = 0; 
+            }
+        }
+    }
+
+    else if (Flocking_type == 3) {
         /* Target tracking component (doesn't include repulsion so add it) */
         RepulsionLin(PotentialVelocity, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
@@ -647,13 +782,21 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         }
 
     }
+    // stratégie de flocking avec target tracking automatique si un agent se perd 
+    else if (Flocking_type == 4) {
+        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false);
+        PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0, V_Rep);
 
-    // else if (Flocking_type == 3) {
-    //    GradientBased(GradientVelocity, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
-    //         R_0, 3.0 * R_0, WhichAgent, (int) Dim);
-    //     // NormalizeVector(GradientVelocity, GradientVelocity, V_Flock/2);//, (int)Dim);
+        if (Phase->NumberOfAgents <= 2) {
+            TargetTrackingSimple(LeaderFollower, Phase->Coordinates[Phase->NumberOfAgents - 1], Phase, R_0, R_0+100, WhichAgent, (int)Dim);
+            MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+            V_Flock, (int)Dim);
+            UnitVect(NormalizedLF, LeaderFollower);
+            MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+        }
 
-    // }
+    }
 
     /* (by now far from but better than) Viscous friction-like term */
     FrictionLinSqrt(SlipVelocity, Phase, C_Frict, V_Frict, Acc_Frict,
@@ -675,20 +818,92 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     // VectSum(OutputVelocity, OutputVelocity, test2);
 
     if (Flocking_type == 0) {
-        VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
-        VectSum(OutputVelocity, OutputVelocity, PressureVelocity);
-        VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
-        VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
+        OutputInnerState[3] = PressureVelocity[0];
+        OutputInnerState[4] = PressureVelocity[1];
+    }
+    else if (Flocking_type == 1) {
+        OutputInnerState[3] = PotentialVelocity[0];
+        OutputInnerState[4] = PotentialVelocity[1];
+    }
+    OutputInnerState[5] = AttractionVelocity[0];
+    OutputInnerState[6] = AttractionVelocity[1];
+    OutputInnerState[7] = SlipVelocity[0];
+    OutputInnerState[8] = SlipVelocity[1];
+    OutputInnerState[9] = ObstacleVelocity[0];
+    OutputInnerState[10] = ObstacleVelocity[1];
+
+    // if (Phase->RealIDs[WhichAgent] == 0) {
+    // printf("Pressure Repulsion = %f \nAttraction = %f\nAlignement = %f\nObstacles = %f\n\n", VectAbs(PressureVelocity),
+    //     VectAbs(AttractionVelocity), VectAbs(SlipVelocity), VectAbs(ObstacleVelocity));
+    // }
+    
+    if (Flocking_type == 0) {
+
+        if (WhichTarget == 0 || Phase->RealIDs[WhichAgent] != 0) {
+            // VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+            VectSum(OutputVelocity, OutputVelocity, PressureVelocity);
+            VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+            VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
+            // VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
+            VectSum(OutputVelocity, OutputVelocity, LeaderFollower);
+        }
+
+        else {
+            NullVect(OutputVelocity, (int) Dim);
+            VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
+            VectSum(OutputVelocity, OutputVelocity, PressureVelocity);
+            // VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+            // VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
+            VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
+            // MultiplicateWithScalar(OutputVelocity, OutputVelocity, .5, (int)Dim);
+
+        }
     }
 
     else if (Flocking_type == 1) {
-        VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
-        VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
-        MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
+
+        if (WhichTarget == 0 || Phase->RealIDs[WhichAgent] != 0) {
+            VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+            VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
+            VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
+            VectSum(OutputVelocity, OutputVelocity, LeaderFollower);
+            // VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
+        }
+    
+        else {
+            NullVect(OutputVelocity, (int) Dim);
+            VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
+            VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
+            VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
+        }
+
+
+        // VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
+        // VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
+        // MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
+    }
+
+    else if (Flocking_type == 2) {
+
+        if (WhichTarget == 0 || Phase->RealIDs[WhichAgent] != 0) {
+            VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
+            VectSum(OutputVelocity, OutputVelocity, AlignOlfati);
+            MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
+            VectSum(OutputVelocity, OutputVelocity, LeaderFollower);
+        }
+        else {
+            NullVect(OutputVelocity, (int) Dim);
+            VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
+            VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
+            MultiplicateWithScalar(OutputVelocity, OutputVelocity, 0.01, (int)Dim);
+            VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
+        }
+
+
     }
 
     
-    else if (Flocking_type == 2) {
+    else if (Flocking_type == 3) {
         VectSum(OutputVelocity, OutputVelocity, PotentialVelocity);
         VectSum(OutputVelocity, OutputVelocity, TargetTrackingVelocity);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
@@ -727,16 +942,21 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         }
     }
 
-    else if (Flocking_type == 3) {
-        VectSum(OutputVelocity, OutputVelocity, GradientAcceleration);
+    else if (Flocking_type == 4) {
+        if (Phase->NumberOfAgents < 3) {
+            NullVect(OutputVelocity, (int) Dim);
+        }
+        VectSum(OutputVelocity, OutputVelocity, PressureVelocity);
+        VectSum(OutputVelocity, OutputVelocity, AttractionVelocity);
         VectSum(OutputVelocity, OutputVelocity, SlipVelocity);
+        VectSum(OutputVelocity, OutputVelocity, LeaderFollower);
     }
     
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);
 
     /* V_pref saturates at V_Max */
-    static bool CutOffMode = false;
+    static bool CutOffMode = true;
     if (false == CutOffMode) {
         UnitVect(OutputVelocity, OutputVelocity);
         MultiplicateWithScalar(OutputVelocity, OutputVelocity, V_Flock,

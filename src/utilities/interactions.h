@@ -43,6 +43,11 @@ void AttractionLin(double *OutputVelocity,
         const double R_0_l, const int WhichAgent, const int Dim_l,
         const bool normalize);
 
+void AttractionAsym(double *OutputVelocity,
+        phase_t * Phase, const double V_Rep_l, const double p_l,
+        const double R_0_l, const int WhichAgent, const int NeighMax, const int Dim_l,
+        const bool normalize);
+
 void AttractionPowLin(double *OutputVelocity,
         phase_t * Phase, const double ActualTime, const double V_Rep_l, const double p_l,
         const double RP_min, const int WhichAgent, const int Dim_l,
@@ -75,5 +80,10 @@ void TargetTracking(double *OutputVelocity, double *TargetPosition,
         const double R_trg, const double d_trg, 
         const int SizeOfNeighbourhood, const int WhichAgent, 
         const int Dim_l);
+
+/* Target tracking function without attrcaction to CoM */
+void TargetTrackingSimple(double *OutputVelocity, double *TargetPosition,
+        phase_t * Phase, const double R_trg, const double d_trg, 
+        const int WhichAgent, const int Dim_l);
         
 #endif

@@ -343,7 +343,7 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent);
 void OrderAgentsByDistance(phase_t * Phase, double *ReferencePosition);
 
 /* Orders agents by Received Power */
-void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent);
+int OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent);
 
 /* Packing of nearby agents to the first blocks of the phase space
  * Returns the number of agents which are closer than R_C and whose packets
@@ -352,6 +352,8 @@ void OrderAgentsByPower(phase_t * Phase, int SizeToSort, int WhichAgent);
 int SelectNearbyVisibleAgents(phase_t * Phase, double *ReferencePosition,
         const double Range, const double power_thresh, const int communication_mode, 
         const int TrueAgent, const double packet_loss);
+
+int AssignInnerState(double *InnerState, const phase_t * Phase);
 
 /* Calculate the received power of an agent depending on which method is used */
 /* The log-distance with varying alpha is chosen here and we have a reference distance */
