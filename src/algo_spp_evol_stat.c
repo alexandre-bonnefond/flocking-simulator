@@ -40,6 +40,7 @@ static int Dimension;
 bool *Visited;                  // for DFS algorithm
 
 double TimeElapsedNearArena = 0.0;
+double TimeElapsedInObst = 0.0;
 
 /* Variables for storing time averages */
 double Data_Corr_Sum = 0.0, Data_CorrStd_Sum = 0.0, Data_CorrMin_Sum =
@@ -52,7 +53,7 @@ double Data_IndependentAgents_Sum = 0;
 double Data_DistanceFromArena_Sum = 0.0, Data_DistanceFromArenaMin_Sum = 0.0,
         Data_DistanceFromArenaMax_Sum = 0.0, Data_DistanceFromArenaStd_Sum =
         0.0;
-
+double Data_DistanceFromObst_Sum = 0.0;
 /* Variables for storing standard deviations */
 double Data_Corr_StDev = 0.0, Data_CorrStd_StDev = 0.0, Data_CorrMin_StDev =
         0.0, Data_CorrMax_StDev = 0.0;
@@ -65,6 +66,7 @@ double Data_DistanceFromArena_StDev = 0.0, Data_DistanceFromArenaMin_StDev =
         0.0, Data_DistanceFromArenaStd_StDev = 0.0;
 
 double n_Avg = 0.0, n_StDev = 0.0;
+double n_Avg_obst = 0.0;
 
 /* Function for opening stat files, creating header lines, etc. */
 void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
@@ -91,7 +93,7 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils) {
     if (STAT == StatUtils->SaveMode || STEADYSTAT == StatUtils->SaveMode) {
 
         fprintf(f_DistanceFromArenaFile,
-                "time_elapsed_near_arena_(s)\tdistance_from_arena_avg_(cm)\tdistance_from_arena_stdev_(cm)\tdistance_from_arena_min_(cm)\tdistance_from_arena_max_(cm)\tnumber_of_agents_outside\n");
+                "time_elapsed_near_arena_(s)\tdistance_from_arena_avg_(cm)\tdistance_from_arena_stdev_(cm)\tdistance_from_arena_min_(cm)\tdistance_from_arena_max_(cm)\tnumber_of_agents_outside\ttime_near_obst\tdist_obst_avg\tnumber_of_agent_in_obst\n");
 
         INITIALIZE_OUTPUT_FILE("distance_from_arena_stdev.dat",
                 f_DistanceFromArenaFile_StDev);
@@ -443,19 +445,30 @@ bool PointtInObstacle(obstacle_t * obstacle, double *Point) {
 void SaveModelSpecificStats(phase_t * Phase,
         stat_utils_t * StatUtils, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams,
-        sit_parameters_t * SitParams) {
+        sit_parameters_t * SitParams, bool *AgentInObst) {
 
     /* Calculating distance from Arena */
     int i, j;
     static int n;
     n = 0;
     bool InObst;
+    static int n_obst;
+    n_obst = 0;
+    static int cnt;
 
     static double avg, stdev, min, max;
     min = 2e222;
     max = 0.0;
     avg = 0.0;
     stdev = 0.0;
+
+    // static double avgobst, stdevobst, minobst, maxobst;
+    // minobst = 2e222;
+    // maxobst = 0.0;
+    // avgobst = 0.0;
+    // stdevobst = 0.0;
+    static double avgobst;
+    avgobst = 0;
 
     double *AgentsCoordinates;
     static double ArenaCoordinates[3];
@@ -466,18 +479,26 @@ void SaveModelSpecificStats(phase_t * Phase,
     for (i = 0; i < SitParams->NumberOfAgents; i++) {
 
         static double dist;
-        static int cnt = 0;
         //GetAgentsCoordinates (AgentsCoordinates, Phase, i);
         AgentsCoordinates = Phase->Coordinates[i];
+        if (StatUtils->ElapsedTime > 20) {
+            for (j = 0; j < obstacles.o_count; j++) {
+                InObst = PointtInObstacle(&obstacles.o[j], AgentsCoordinates);
+                if (InObst == true) {
+                    n_obst++;
+                    // printf("inside obstacle %d\n", n_obst);
+                    if (AgentInObst[i] == false) {
+                        cnt++;
+                    }
+                    AgentInObst[i] = true;
+                    break;
 
-        // for (j = 0; j < obstacles.o_count; j++) {
-        //     InObst = PointtInObstacle(&obstacles.o[j], AgentsCoordinates);
-        //     if (InObst == true) {
-        //         printf("inside obstacle %d\n", cnt);
-        //         cnt++;
-
-        //     }
-        // }
+                }
+            }
+            if (InObst == false) {
+                AgentInObst[i] = false;
+            }
+        }
 
         /* Distance from arena depends on the shape of the arena */
         if (0.0 == ArenaShape) {        // Sphere-shaped arena
@@ -515,6 +536,12 @@ void SaveModelSpecificStats(phase_t * Phase,
         }
 
     }
+    if (n_obst != 0) {
+        avgobst = 200;
+    }
+    else {
+        avgobst = 0;
+    }
 
     if (n != 0.0) {
         avg /= n;
@@ -539,6 +566,7 @@ void SaveModelSpecificStats(phase_t * Phase,
         }
     } else if (StatUtils->SaveMode != STEADYSTAT
             || StatUtils->ElapsedTime > SitParams->StartOfSteadyState) {
+        // printf("%f\t%f\n", n_Avg, n_Avg_obst);
         if (avg > 0.0 || 0.0 == n_Avg) {
             Data_DistanceFromArena_Sum += avg * SitParams->DeltaT;
             Data_DistanceFromArenaStd_Sum += sqrt(stdev) * SitParams->DeltaT;
@@ -554,6 +582,12 @@ void SaveModelSpecificStats(phase_t * Phase,
             n_StDev += n * n * SitParams->DeltaT;
 
             TimeElapsedNearArena += SitParams->DeltaT;
+        }
+        if (avgobst > 0.0 || 0.0 == n_Avg_obst) {
+            Data_DistanceFromObst_Sum += avgobst * SitParams->DeltaT;
+            TimeElapsedInObst += SitParams->DeltaT;
+            // n_Avg_obst += n_obst * SitParams->DeltaT;
+            n_Avg_obst = cnt;
         }
     }
 
@@ -589,7 +623,9 @@ void CloseModelSpecificStats(stat_utils_t * StatUtils, unit_model_params_t * Uni
                 Data_DistanceFromArenaStd_Sum / TimeElapsedNearArena,
                 Data_DistanceFromArenaMin_Sum / TimeElapsedNearArena,
                 Data_DistanceFromArenaMax_Sum / TimeElapsedNearArena);
-        fprintf(f_DistanceFromArenaFile, "%lf\n", n_Avg / TimeElapsedNearArena);
+        fprintf(f_DistanceFromArenaFile, "%lf\t", n_Avg / TimeElapsedNearArena);
+        fprintf(f_DistanceFromArenaFile, "%lf\t%lf\t%lf\n", TimeElapsedInObst, 
+                Data_DistanceFromObst_Sum / TimeElapsedInObst, n_Avg_obst);// / TimeElapsedInObst);
 
         /* Standard deviations */
 

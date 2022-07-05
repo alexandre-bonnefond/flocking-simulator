@@ -122,7 +122,7 @@ void RepulsionLin(double *OutputVelocity,
 void AttractionLin(double *OutputVelocity,
         phase_t * Phase, const double V_Rep_l, const double p_l,
         const double R_0_l, const int WhichAgent, const int Dim_l,
-        const bool normalize) {
+        const bool normalize, double ** Jacard) {
 
     NullVect(OutputVelocity, 3);
 
@@ -139,8 +139,9 @@ void AttractionLin(double *OutputVelocity,
     // int vois = Phase->NumberOfAgents / 2;
     // for (i = 0; i < vois; i++) {
     for (i = 0; i < Phase->NumberOfAgents; i++) {
-        if (i == WhichAgent)
+        if (i == WhichAgent || Jacard[Phase->RealIDs[WhichAgent]][Phase->RealIDs[i]] > 0) {
             continue;
+        }
         
         NeighboursCoordinates = Phase->Coordinates[i];
         VectDifference(DifferenceVector, AgentsCoordinates,
@@ -156,9 +157,12 @@ void AttractionLin(double *OutputVelocity,
 
         UnitVect(DifferenceVector, DifferenceVector);
 
+        // printf("coef of agent %d with agent %d is %f\n", Phase->RealIDs[WhichAgent], Phase->RealIDs[i],2 * (1 + Jacard[Phase->RealIDs[WhichAgent]][Phase->RealIDs[i]]));
+
         MultiplicateWithScalar(DifferenceVector, DifferenceVector,
-                SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
+                SigmoidLin(DistanceFromNeighbour * log(DistanceFromNeighbour), p_l, V_Rep_l, R_0_l), Dim_l);
         // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (3 * R_0_l), 0.3), Dim_l);
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector,2 * (1 + Jacard[Phase->RealIDs[WhichAgent]][Phase->RealIDs[i]]), Dim_l);
         VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
     }
 
@@ -170,6 +174,64 @@ void AttractionLin(double *OutputVelocity,
     }
     //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
 }
+
+
+void AttractionVAT(double *OutputVelocity,
+        phase_t * Phase, const double V_Rep_l, const double p_l,
+        const double R_0_l, const int WhichAgent, const int Dim_l,
+        const bool normalize, double ** Jacard) {
+
+    NullVect(OutputVelocity, 3);
+
+    int i;
+    int n = 0;
+
+    double *AgentsCoordinates;
+    double *NeighboursCoordinates;
+    AgentsCoordinates = Phase->Coordinates[WhichAgent];
+    
+    static double DifferenceVector[3];
+    static double DistanceFromNeighbour;
+    /* Attractive interaction term */
+    // int vois = Phase->NumberOfAgents / 2;
+    // for (i = 0; i < vois; i++) {
+    for (i = 0; i < Phase->NumberOfAgents; i++) {
+        if (i == WhichAgent) {
+            continue;
+        }
+        
+        NeighboursCoordinates = Phase->Coordinates[i];
+        VectDifference(DifferenceVector, AgentsCoordinates,
+                NeighboursCoordinates);
+        if (2 == Dim_l) {
+            DifferenceVector[2] = 0.0;
+        }
+        DistanceFromNeighbour = VectAbs(DifferenceVector);
+        /* Check if we interact at all */
+        if (DistanceFromNeighbour <= R_0_l)
+            continue;
+        n += 1;
+
+        UnitVect(DifferenceVector, DifferenceVector);
+
+        // printf("coef of agent %d with agent %d is %f\n", Phase->RealIDs[WhichAgent], Phase->RealIDs[i],2 * (1 + Jacard[Phase->RealIDs[WhichAgent]][Phase->RealIDs[i]]));
+
+        MultiplicateWithScalar(DifferenceVector, DifferenceVector,
+                SigmoidLin(DistanceFromNeighbour, p_l, V_Rep_l, R_0_l), Dim_l);
+        // MultiplicateWithScalar(DifferenceVector, DifferenceVector, BumpFunction(DistanceFromNeighbour / (3 * R_0_l), 0.3), Dim_l);
+        // MultiplicateWithScalar(DifferenceVector, DifferenceVector,2 * (1 + Jacard[Phase->RealIDs[WhichAgent]][Phase->RealIDs[i]]), Dim_l);
+        VectSum(OutputVelocity, OutputVelocity, DifferenceVector);
+    }
+
+    /* divide result by number of interacting units */
+    if (normalize && n > 1) {
+        double length = VectAbs(OutputVelocity) / n;
+        UnitVect(OutputVelocity, OutputVelocity);
+        MultiplicateWithScalar(OutputVelocity, OutputVelocity, length, Dim_l);
+    }
+    //printf("Number of Attractive neighbours: %d Norm of attractive term relative to max repulsion velocity: %f\n", n, VectAbs (OutputVelocity)/V_Rep_l);
+}
+
 
 void AttractionAsym(double *OutputVelocity,
         phase_t * Phase, const double V_Rep_l, const double p_l,

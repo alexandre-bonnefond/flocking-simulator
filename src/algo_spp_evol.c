@@ -322,7 +322,7 @@ void InitializeFlockingParams (flocking_model_params_t * FlockingParams) {
     );
 
     // FlockingParams->NumberOfInnerStates = 3; // Columns 1 and 2 handle some target tracking functionalities and column 3 is for the agent own neighbourhood
-    FlockingParams->NumberOfInnerStates = 11; // Column 1 is for att/rep neighbourhood ratio and column 2 is for the alignment. (For ex, \\
+    FlockingParams->NumberOfInnerStates = 13; // Column 1 is for att/rep neighbourhood ratio and column 2 is for the alignment. (For ex, \\
     0.5 for column 1 and agent 1 means that this agent will only use half of its available neighbourhood to compute its att/rep forces) \\
     This is to prepare the RL framework. 
     //Column 3 is to know which agent is the leader (1 if yes).
@@ -374,11 +374,11 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
             ArenaCenterX, ArenaCenterY, 0,
             0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
 
-    // PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
-    //          ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    PlaceAgentsInsideARing(Phase, 5000, 0, Phase->NumberOfAgents,
+             ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
     
-    PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
-             ArenaCenterX - 50000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    // PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
+    //          ArenaCenterX - 50000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
     /* reset z coordinate in two dimensions */
     if (2 == Dim) {
@@ -491,12 +491,13 @@ void Shill_Obstacle_LinSqrt(double *OutputVelocity, phase_t * Phase,
         VectDifference(ToArena, AgentsPosition, ToArena);
     }
     ToArena[2] = 0;
-    UnitVect(ToArena, ToArena);
+    UnitVect(ToArena, ToArena);    
     MultiplicateWithScalar(ToArena, ToArena, V_Shill, 3);
     VectDifference(ToArena, ToArena, AgentsVelocity);
     ToArena[2] = 0;
     VelDiff = VectAbs(ToArena);
     UnitVect(ToArena, ToArena);
+    // RotateVectXY(ToArena, ToArena, M_PI_2);
     // calculate max allowed velocity difference at a given distance based
     // on an optimal linsqrt breaking curve
     MaxVelDiff = VelDecayLinSqrt(DistFromWall, Slope_Shill, Acc_Shill,
@@ -527,7 +528,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         vizmode_params_t * VizParams,
         const double Delay,
         const double ActualTime, agent_debug_info_t * DebugInfo,
-        const int Flocking_type) {
+        const int Flocking_type, double ** Jacard) {
 
     /* Clear output velocity */
     NullVect(OutputVelocity, 3);
@@ -608,9 +609,9 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
         /* Attraction */
         AttractionLin(AttractionVelocity, Phase, 2 * V_Rep,
-                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false);
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false, Jacard);
         
-        // AttractionAsym(AttractionVelocity, Phase, 2 * V_Rep,
+        // AttractionVAT(AttractionVelocity, Phase, 2 * V_Rep,
         //         Slope_Att, R_0 + 100, WhichAgent, Size_Neighbourhood, (int) Dim, false);
 
         /* Press Rep */
@@ -681,8 +682,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
 
 
     else if (Flocking_type == 1) {
-        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
-                Slope_Att, R_0 + 200, WhichAgent, (int) Dim, false);
+        AttractionVAT(AttractionVelocity, Phase, 1.6 * V_Rep,
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false, Jacard);
 
         RepulsionLin(PotentialVelocity, Phase, V_Rep,
                 Slope_Rep, R_0, WhichAgent, (int) Dim, false);
@@ -785,7 +786,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     // stratégie de flocking avec target tracking automatique si un agent se perd 
     else if (Flocking_type == 4) {
         AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
-                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false);
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false, Jacard);
         PressureRepulsion(PressureVelocity, Phase, K_Press, WhichAgent, (int) Dim, R_0, V_Rep);
 
         if (Phase->NumberOfAgents <= 2) {
@@ -794,6 +795,41 @@ void CalculatePreferredVelocity(double *OutputVelocity,
             V_Flock, (int)Dim);
             UnitVect(NormalizedLF, LeaderFollower);
             MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+        }
+
+    }
+    else if (Flocking_type == 5) {
+
+        AttractionLin(AttractionVelocity, Phase, 1.6 * V_Rep,
+                Slope_Att, R_0 + 100, WhichAgent, (int) Dim, false, Jacard);
+
+        RepulsionLin(PotentialVelocity, Phase, V_Rep,
+                Slope_Rep, R_0, WhichAgent, (int) Dim, false);
+
+        if (WhichTarget != 0 && Phase->RealIDs[WhichAgent] == 0) {
+            TargetTrackingSimple(TargetTrackingVelocity, TargetsArray[WhichTarget -1], 
+                    Phase, 5000, 10000, WhichAgent, (int)Dim);
+            MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 
+                    V_Flock, (int)Dim);
+            UnitVect(NormalizedTargetTracking, TargetTrackingVelocity);
+            MultiplicateWithScalar(TargetTrackingVelocity, NormalizedTargetTracking, 
+                    MIN(V_Flock*0.5, VectAbs(TargetTrackingVelocity)), (int)Dim);
+            // MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 0.4, (int) Dim);
+        }
+        if (Phase->RealIDs[WhichAgent] != 0 && WhichTarget != 0) {
+
+            int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+
+            if (WhoLeads != 0){
+                TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+                MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+                V_Flock, (int)Dim);
+                UnitVect(NormalizedLF, LeaderFollower);
+                MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+            }
+            else { 
+                OutputInnerState[2] = 0; 
+            }
         }
 
     }
@@ -832,8 +868,11 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     OutputInnerState[9] = ObstacleVelocity[0];
     OutputInnerState[10] = ObstacleVelocity[1];
 
+    OutputInnerState[11] = NormalizedAgentsVelocity[0];
+    OutputInnerState[12] = NormalizedAgentsVelocity[1];
+
     // if (Phase->RealIDs[WhichAgent] == 0) {
-    // printf("Pressure Repulsion = %f \nAttraction = %f\nAlignement = %f\nObstacles = %f\n\n", VectAbs(PressureVelocity),
+    // printf("Agent %d\nPressure Repulsion = %f \nAttraction = %f\nAlignement = %f\nObstacles = %f\n\n",Phase->RealIDs[WhichAgent], VectAbs(PressureVelocity),
     //     VectAbs(AttractionVelocity), VectAbs(SlipVelocity), VectAbs(ObstacleVelocity));
     // }
     
@@ -955,8 +994,14 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     VectSum(OutputVelocity, OutputVelocity, ArenaVelocity);
     VectSum(OutputVelocity, OutputVelocity, ObstacleVelocity);
 
+    // printf("%f\n", VectAbs(OutputVelocity));
+
     /* V_pref saturates at V_Max */
     static bool CutOffMode = true;
+    // if (VectAbs(AttractionVelocity) > VectAbs(NormalizedAgentsVelocity)) {
+    //     CutOffMode = true;
+    //     printf("Over Ride\n");
+    // }
     if (false == CutOffMode) {
         UnitVect(OutputVelocity, OutputVelocity);
         MultiplicateWithScalar(OutputVelocity, OutputVelocity, V_Flock,

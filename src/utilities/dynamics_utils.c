@@ -14,7 +14,7 @@
 
 void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
         const int NumberOfInnerStates, const int Resolution) {
-    int i;
+    int i,j;
 
     Phase->NumberOfAgents = NumberOfAgents;
     Phase->Coordinates = doubleMatrix(NumberOfAgents, 3);
@@ -24,12 +24,18 @@ void AllocatePhase(phase_t * Phase, const int NumberOfAgents,
     Phase->ReceivedPower = doubleVector(NumberOfAgents);
     Phase->InnerStates = doubleMatrix(NumberOfAgents, NumberOfInnerStates);
     Phase->RealIDs = intData(NumberOfAgents);
+    Phase->NeighSet = doubleMatrix(NumberOfAgents, NumberOfAgents);
     Phase->NumberOfInnerStates = NumberOfInnerStates;
     Phase->CBP = allocMeasurementMatrix(NumberOfAgents, Resolution, Resolution, 0);
 
     /* Initialize RealIDs and ReceivedPower and Laplacian*/
     for (i = 0; i < NumberOfAgents; i++) {
         Phase->RealIDs[i] = i;
+        for (j = 0; j < NumberOfAgents; j++)
+        {
+            Phase->NeighSet[i][j] = -1;
+        }
+        
     }
 }
 
@@ -42,6 +48,7 @@ void freePhase(phase_t * Phase, const int Resolution) {
     freeMatrix(Phase->InnerStates, Phase->NumberOfAgents,
             Phase->NumberOfInnerStates);
     free(Phase->RealIDs);
+    freeMatrix(Phase->NeighSet, Phase->NumberOfAgents, Phase->NumberOfAgents);
     free(Phase->ReceivedPower);
     freeMeasurementMatrix(Phase->CBP, Phase->NumberOfAgents, Resolution, Resolution);
 }
@@ -727,6 +734,10 @@ void InsertPhaseToDataLine(phase_t * PhaseData, phase_t * Phase,
             PhaseData[WhichStep].Laplacian[j][i] = Phase->Laplacian[j][i];
         }
         PhaseData[WhichStep].Pressure[j] = Phase->Pressure[j];
+
+        for (i = 0; i < Phase->NumberOfAgents; i++) {
+            PhaseData[WhichStep].NeighSet[j][i] = Phase->NeighSet[j][i];
+        }
     }
     for (i = 0; i < Phase->NumberOfAgents; i++) {
         for (j = 0; j < Resolution; j++) {
@@ -978,7 +989,7 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
 
     }
     FillVect(ActualAgentsVelocity, 1000, 3000, 0);
-    //NullVect(ActualAgentsVelocity, 3);
+    NullVect(ActualAgentsVelocity, 3);
     StepCount = 0;
 
     for (i = fromAgent; i < toAgent; i++) {
@@ -1694,6 +1705,11 @@ void SwapAgents(phase_t * Phase, const int i, const int j, const int TrueAgent) 
     pressure = Phase->Pressure[i];
     Phase->Pressure[i] = Phase->Pressure[j];
     Phase->Pressure[j] = pressure;
+
+    /* Neighbourhood set */
+    temp_pointer = Phase->NeighSet[i];
+    Phase->NeighSet[i] = Phase->NeighSet[j];
+    Phase->NeighSet[j] = temp_pointer;
 }
 
 /* Orders agents by distance from a given position */

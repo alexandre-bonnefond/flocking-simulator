@@ -88,6 +88,9 @@ node *Hull;
 
 /* CBP */
 static int ***CBPObst;
+
+/* Display of interactions */
+int cntInt = 0;
  
 // Temporary...
 static bool HighRes = true;
@@ -122,6 +125,8 @@ double TargetPosition[3];
 double **TargetsArray; // = NULL;
 int cnt = 0;                    // Which target is on
 
+/* Vector to count obstacles collisions */
+bool *AgentInObst;
 
 int NumberOfModelSpecificColors;
 model_specific_color_t ModelSpecificColors[MAX_NUMBER_OF_COLORS];
@@ -674,9 +679,10 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
 
         /* Draw Interactions Arrows */
         if (ActualVizParams.DisplayInt == true) {
-            float colors[5][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0.8, 0.3, 0.1}}; //red = rep; green = att; blue = align; orange = obst
+            float colors[5][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0.8, 0.3, 0.1}, {1, 1, 1}}; //red = rep; green = att; blue = align; orange = obst; white = spp
             for (i = 0; i < Phase->NumberOfAgents; i++) {
-                for (int comp = 0; comp < 4; comp ++) {
+                for (int comp = 0; comp < cntInt%5; comp ++) {
+                    // comp = 1;
                     GetAgentsCoordinates(AgentsCoordinates, Phase, i);
 
                     DrawVelocityArrow_2D(AgentsCoordinates[0] - ActualVizParams.CenterX,
@@ -686,6 +692,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
                             colors[comp]);
                 }
             }
+            // printf("%d\n", cntInt);
         }
 
 
@@ -1566,6 +1573,7 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
 
     } else if (key == GLUT_KEY_F4) {
         ActualVizParams.DisplayInt = !ActualVizParams.DisplayInt;
+        cntInt++;
 
         /* F5 Saves the parameters */
     } else if (key == GLUT_KEY_F5) {
@@ -2046,11 +2054,16 @@ int main(int argc, char *argv[]) {
                 ActualPhase.NumberOfInnerStates, ActualSitParams.Resolution);
     }
     AgentsInDanger = BooleanData(ActualSitParams.NumberOfAgents);
+    AgentInObst = BooleanData(ActualSitParams.NumberOfAgents);
     InitializePreferredVelocities(&ActualPhase, &ActualFlockingParams,
             &ActualSitParams, &ActualUnitParams, WindVelocityVector);
     for (i = 0; i < ActualSitParams.NumberOfAgents; i++) {
         AgentsInDanger[i] = false;
+        AgentInObst[i] = false;
     }
+
+    
+
 
     /* Initializing positions, "conditions reset" variables and map properties */
     Initialize();
@@ -2708,7 +2721,7 @@ int main(int argc, char *argv[]) {
             if (FALSE != ActualSaveModes.SaveModelSpecifics) {
                 SaveModelSpecificStats(&ActualPhase, &ActualStatUtils,
                         &ActualUnitParams, &ActualFlockingParams,
-                        &ActualSitParams);
+                        &ActualSitParams, AgentInObst);
             }
 
             ActualStatUtils.ElapsedTime += ActualSitParams.DeltaT;

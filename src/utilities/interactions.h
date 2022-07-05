@@ -41,7 +41,12 @@ void PressureRepulsion(double *OutputVelocity,
 void AttractionLin(double *OutputVelocity,
         phase_t * Phase, const double V_Rep_l, const double p_l,
         const double R_0_l, const int WhichAgent, const int Dim_l,
-        const bool normalize);
+        const bool normalize, double ** Jacard);
+
+void AttractionVAT(double *OutputVelocity,
+        phase_t * Phase, const double V_Rep_l, const double p_l,
+        const double R_0_l, const int WhichAgent, const int Dim_l,
+        const bool normalize, double ** Jacard);
 
 void AttractionAsym(double *OutputVelocity,
         phase_t * Phase, const double V_Rep_l, const double p_l,

@@ -46,7 +46,7 @@ void InitializeModelSpecificStats(stat_utils_t * StatUtils);
 
 void SaveModelSpecificStats(phase_t * Phase, stat_utils_t * StatUtils,
         unit_model_params_t * UnitParams,
-        flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams);
+        flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams, bool *AgentInObst);
 
 /* For closing stat files 
  */

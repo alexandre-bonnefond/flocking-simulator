@@ -44,6 +44,7 @@ typedef struct {
     double *Pressure;
     double *ReceivedPower;
     int *RealIDs;
+    double **NeighSet;
     int NumberOfInnerStates;
     int NumberOfAgents;
     measurement_bundle ***CBP; 

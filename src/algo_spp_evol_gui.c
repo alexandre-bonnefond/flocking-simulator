@@ -230,14 +230,15 @@ void HandleSpecialMouseEvent(int button,
         double * CoordTarg, double *** TargetsArray,
         const int Modifier, phase_t * Phase) {
 
-    // static int count = 0;
+    static int count;
 
     if (VizParams->TwoDimViz == true) {
         if (button == 0 && state == GLUT_DOWN && Modifier == 2) {
-            Phase->Coordinates[0][0] = MouseCoordToReal_2D(x, VizParams->MapSizeXY,
+            Phase->Coordinates[count][0] = MouseCoordToReal_2D(x, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterX;
-            Phase->Coordinates[0][1] = -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
+            Phase->Coordinates[count][1] = -MouseCoordToReal_2D(y, VizParams->MapSizeXY,
                     VizParams->Resolution) + VizParams->CenterY;
+            // count++;
         }
     }
 

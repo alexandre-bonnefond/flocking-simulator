@@ -154,6 +154,23 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
         static double angle;
         static double CenterX1, CenterX2, CenterY1, CenterY2; 
 
+        static char JacCoef[5];
+
+        double *ToSort;
+        ToSort = malloc(sizeof(double) * PhaseData[0].NumberOfAgents);
+        for (int k = 0; k < PhaseData[0].NumberOfAgents; k++) {
+                ToSort[k] = PhaseData[Now].Laplacian[WhichAgent][k];
+        }
+
+        int *Indexes;
+        Indexes = malloc(sizeof(int) * PhaseData[0].NumberOfAgents);
+        
+        ArgMaxSort(ToSort, PhaseData[0].NumberOfAgents, Indexes);
+
+        free(ToSort);
+
+        
+
         for (i = 0; i < PhaseData[0].NumberOfAgents; i++) {
 
                 if (i != WhichAgent) {
@@ -164,16 +181,23 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                 NeighboursCoordinates);
                         AbsDistance = VectAbs(DifferenceVector);
                         
-                        double *ToSort;
-                        ToSort = malloc(sizeof(double) * PhaseData[0].NumberOfAgents);
+                        double *NeighToSort;
+                        NeighToSort = malloc(sizeof(double) * PhaseData[0].NumberOfAgents);
                         for (int k = 0; k < PhaseData[0].NumberOfAgents; k++) {
-                                ToSort[k] = PhaseData[Now].Laplacian[WhichAgent][k];
+                                NeighToSort[k] = PhaseData[Now].Laplacian[i][k];
                         }
 
-                        int *Indexes;
-                        Indexes = malloc(sizeof(int) * PhaseData[0].NumberOfAgents);
+                        int *NeighIndexes;
+                        NeighIndexes = malloc(sizeof(int) * PhaseData[0].NumberOfAgents);
                         
-                        ArgMaxSort(ToSort, PhaseData[0].NumberOfAgents, Indexes);
+                        ArgMaxSort(NeighToSort, PhaseData[0].NumberOfAgents, NeighIndexes);
+
+                        bool NeighIsLeading = false;
+                        for (int l = 0; l < Size_Neighbourhood; l++) {
+                                if (WhichAgent == NeighIndexes[l]) {
+                                        NeighIsLeading = true;
+                                }
+                        }
 
                         bool IsLeading = false;
                         for (int l = 0; l < Size_Neighbourhood; l++) {
@@ -181,8 +205,8 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                         IsLeading = true;
                                 }
                         }
-                        free(Indexes);
-                        free(ToSort);
+                        free(NeighIndexes);
+                        free(NeighToSort);
 
                         if ((int)(Unit_params->communication_type.Value) == 0) {
 
@@ -275,11 +299,41 @@ void DrawSensorRangeNetwork_2D(phase_t * PhaseData,
                                         DifferenceVector[2] = 0;
                                         angle = -atan2(DifferenceVector[1], DifferenceVector[0]);
 
-                                        DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
-                                                RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
-                                                RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
-                                                        VizParams->MapSizeXY), RealToGlCoord_2D(30,
-                                                        VizParams->MapSizeXY), angle, color);
+                                        if (NeighIsLeading) {
+
+                                                DrawThinArrow(RealToGlCoord_2D(ArrowCenterX,VizParams->MapSizeXY),
+                                                        RealToGlCoord_2D(ArrowCenterY, VizParams->MapSizeXY),
+                                                        RealToGlCoord_2D(VectAbs(DifferenceVector) - 60,
+                                                                VizParams->MapSizeXY), RealToGlCoord_2D(30,
+                                                                VizParams->MapSizeXY), angle, color);
+
+                                                // if (VizParams->MapSizeXY < 3000.0) {
+
+                                                //         /* If we are zoomed colse to the agents... */
+                                                //         sprintf(JacCoef, "%1.1f m/s", PhaseData[Now].Pressure[i]);
+
+                                                //         DrawString(RealToGlCoord_2D(ArrowCenterX,
+                                                //                         VizParams->MapSizeXY),
+                                                //                 RealToGlCoord_2D(ArrowCenterY,
+                                                //                         VizParams->MapSizeXY),
+                                                //                 GLUT_BITMAP_TIMES_ROMAN_10, JacCoef,
+                                                //                 color);
+
+                                                // }
+                                        }
+                                        else {
+                                                CenterX1 = ActualAgentsCoordinates[0] - VizParams->CenterX;
+                                                CenterY1 = ActualAgentsCoordinates[1] - VizParams->CenterY;
+
+                                                CenterX2 = NeighboursCoordinates[0] - VizParams->CenterX;
+                                                CenterY2 = NeighboursCoordinates[1] - VizParams->CenterY;
+
+                                                DrawDashedLine(RealToGlCoord_2D(CenterX1,VizParams->MapSizeXY),
+                                                        RealToGlCoord_2D(CenterY1, VizParams->MapSizeXY),
+                                                        RealToGlCoord_2D(CenterX2,VizParams->MapSizeXY),
+                                                        RealToGlCoord_2D(CenterY2, VizParams->MapSizeXY),
+                                                        color);
+                                        }
 
                                         for (j = 0; j < obstacles.o_count; j++){
 

@@ -62,6 +62,11 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
 
         LocalActualPhaseToCreate->Pressure[i] = Phase->Pressure[i];
 
+        for (j = 0; j < Phase->NumberOfAgents; j++) {
+            LocalActualPhaseToCreate->NeighSet[i][j] = Phase->NeighSet[i][j];
+            // printf("%f\t", Phase->NeighSet[i][j]);
+        }
+        // printf("\n");
     }
 
     static double ActualAgentsPosition[3];
@@ -163,6 +168,17 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
             NumberOfNeighbours = Size_Neighbourhood;
         }
 
+        for (i = 0; i < Phase->NumberOfAgents; i ++) {
+            if (i < NumberOfNeighbours) {
+                LocalActualPhaseToCreate->NeighSet[0][i] = LocalActualPhaseToCreate->RealIDs[i];
+            }
+            else {
+                LocalActualPhaseToCreate->NeighSet[0][i] = -1;
+            }
+            // printf("%d is connected to %f\n", WhichAgent, LocalActualPhaseToCreate->NeighSet[0][i]);
+        }
+        // printf("\n\n");
+
         if (leaderID > Size_Neighbourhood) {
             SwapAgents(LocalActualPhaseToCreate, leaderID, Size_Neighbourhood, WhichAgent);
             // printf("On phase of agent %d we swap leader %d with %f agent\n", WhichAgent, leaderID, Size_Neighbourhood);
@@ -173,6 +189,17 @@ void CreatePhase(phase_t * LocalActualPhaseToCreate,
         SwapAgents(LocalActualPhaseToCreate, WhichAgent, 0, WhichAgent);
         NumberOfNeighbours = 1;
     }
+
+    // for (i = 0; i < Phase->NumberOfAgents; i ++) {
+    //     if (i < NumberOfNeighbours) {
+    //         LocalActualPhaseToCreate->NeighSet[0][i] = LocalActualPhaseToCreate->RealIDs[i];
+    //     }
+    //     else {
+    //         LocalActualPhaseToCreate->NeighSet[0][i] = -1;
+    //     }
+    //     printf("%d is connected to %f\n", WhichAgent, LocalActualPhaseToCreate->NeighSet[0][i]);
+    // }
+    // printf("\n");
     // printf("inner state of agent %d is %f\n", WhichAgent, Phase->InnerStates[WhichAgent][2]);
 
     /* Setting up delay and GPS inaccuracy for positions and velocities */
@@ -325,7 +352,7 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         phase_t * Phase, double *RealVelocity, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams, vizmode_params_t * VizParams,
         const double DeltaT, const int TimeStepReal, const int TimeStepLooped,
-        const int WhichAgent, double *WindVelocityVector) {
+        const int WhichAgent, double *WindVelocityVector, double ** Jacard) {
 
     int i;
     /*
@@ -356,7 +383,7 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
 
         CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 
                 TargetsArray, WhichTarget, 0, FlockingParams, VizParams, UnitParams->t_del.Value,
-                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value);
+                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value, Jacard);
 
         for (i = 0; i < 3; i++) {
 
@@ -419,6 +446,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     static double DelayStep;
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
 
+    double ** Jacard = doubleMatrix(SitParams->NumberOfAgents, SitParams->NumberOfAgents);
+    
     static point_xy *points;
     if (points == NULL) {        
         points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
@@ -509,10 +538,50 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             }
             else {
                 OutputPhase->Laplacian[j][TempPhase.RealIDs[i]] = TempPhase.ReceivedPower[i];        
-            }           
+            }      
+            OutputPhase->NeighSet[j][i] = TempPhase.NeighSet[0][i];
         }
-
         OutputPhase->Pressure[j] = TempPhase.Pressure[0];
+
+
+        // printf("Agent %d\n", j);
+        // for (i = 0; i < TempPhase.NumberOfAgents; i++){
+        //     printf("Neigh set of agent %d\n", TempPhase.RealIDs[i]);
+        //     for (int m = 0; m < SitParams->NumberOfAgents; m++){
+        //         printf("%1.0f ",TempPhase.NeighSet[i][m]);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\n\n");
+
+        int k, m, l;
+        int Union;
+        int Intersect;
+        double Bilateral;
+        for (k = 1; k < TempPhase.NumberOfAgents; k++) {
+            Intersect = 0;
+            Bilateral = -1;
+            for (m = 0; m < TempPhase.NumberOfAgents; m++) {
+                l = 1;
+                Union = 0;
+                while (TempPhase.NeighSet[k][l] != -1) {
+                    Union++;
+                    if (TempPhase.NeighSet[k][l] == TempPhase.NeighSet[0][0]) {
+                        Bilateral = 1;
+                        l++;
+                        continue;
+                    }
+                    if (TempPhase.NeighSet[k][l] == TempPhase.NeighSet[0][m]) {
+                        Intersect += 1;
+                    }
+                    l++;
+                }
+            }
+            Union += (TempPhase.NumberOfAgents - Intersect) - 1;
+            Jacard[j][TempPhase.RealIDs[k]] = Bilateral * ((double) Intersect / Union);
+            // printf("Jacard's coef of agent %d with agent %d is %f because intersect is %d and union is %d\n", j, TempPhase.RealIDs[k], Jacard[j][TempPhase.RealIDs[k]], Intersect, Union);
+        }
+        // printf("\n");
 
         /* CBP strategy (only on GPS tick) and Compute the pressure for each agent */
         // if ((TimeStepLooped) % ((int) (UnitParams->t_GPS.Value / SitParams->DeltaT)) == 0) {
@@ -528,7 +597,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
                 TargetsArray, WhichTarget, &TempPhase, ActualRealVelocity, UnitParams, 
                 FlockingParams, VizParams, SitParams->DeltaT, TimeStepReal, 
-                TimeStepLooped, j, WindVelocityVector);
+                TimeStepLooped, j, WindVelocityVector, Jacard);
 
         NullVect(CheckVelocityCache, 3);
         VectSum(CheckVelocityCache, CheckVelocityCache, RealCoptForceVector);
@@ -538,6 +607,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         for (k = 0; k < PhaseData[0].NumberOfInnerStates; k++) {
             SteppedPhase.InnerStates[j][k] = ChangedInnerStateOfActualAgent[k];
         }
+
     }
 
     // for (i = 0; i < SitParams->Resolution; i++){
@@ -548,17 +618,20 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     // }
     // printf("\n\n\n\n");
 
-    /* Print the Laplacian */
+    /* Print smthg */
     // for (i = 0; i < SitParams->NumberOfAgents; i++){
+    //     printf("%d\t", i);
+    //     double mean = 0;
+    //     int cnt = 0;
     //     for (j = 0; j < SitParams->NumberOfAgents; j++){
-    //         if (i == j)
-    //         {
-    //             printf("%d\t",(int) OutputPhase->Laplacian[i][i]);
+    //         printf("%.3f ", Jacard[i][j]);
+    //         if (Jacard[i][j] != 0) {
+    //             mean += Jacard[i][j];
+    //             cnt ++;
     //         }
-    //         else
-    //         {
-    //             printf("%f\t", OutputPhase->Laplacian[i][j]);
-    //         }
+    //     }
+    //     if (cnt != 0) {
+    //         printf("%f", mean/cnt);
     //     }
     //     printf("\n");
     // }

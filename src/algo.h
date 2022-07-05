@@ -54,7 +54,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         vizmode_params_t * VizParams,
         const double Delay,
         const double ActualTime, agent_debug_info_t * DebugInfo,
-        const int Flocking_type);
+        const int Flocking_type, double ** Jacard);
 
 /* Destruction of all model-specific objects initilalized in InitializePhase */
 void DestroyPhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
