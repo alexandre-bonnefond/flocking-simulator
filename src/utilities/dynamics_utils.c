@@ -1046,6 +1046,91 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
 
 }
 
+/* Setting up deterministic positions inside a ring for repeatable experiment */
+void PlaceAgentsNoRandomInsideARing(phase_t * Phase, const double SizeOfRing,
+        const int fromAgent, const int toAgent,
+        const double XCenter, const double YCenter,
+        const double ZCenter, const double ZSize, const double RadiusOfCopter) {
+
+    int i, j, StepCount;
+    static int MaxStep;
+    MaxStep = 100 * Phase->NumberOfAgents;
+
+    static double RandomPlaceVector[3];
+    static double ActualAgentsVelocity[3];
+
+    static double AgentjsCoords[3];
+    static double DiffCoords[3];
+
+    static double temp;
+    static double rad;
+    static bool isArrangementCorrect;
+    isArrangementCorrect = false;
+
+    // for (i = fromAgent; i < toAgent; i++) {
+
+    //     FillVect(RandomPlaceVector, 2e22, 2e22, 2e22);
+    //     InsertAgentsCoordinates(Phase, RandomPlaceVector, i);
+    //     NullVect(RandomPlaceVector, 3);
+    //     InsertAgentsVelocity(Phase, RandomPlaceVector, i);
+
+    // }
+    // FillVect(ActualAgentsVelocity, 1000, 3000, 0);
+    NullVect(ActualAgentsVelocity, 3);
+    StepCount = 0;
+    temp = 0;
+    rad = 0;
+    RandomPlaceVector[0] = 0;
+    for (i = fromAgent; i < toAgent; i++) {
+
+        while (false == isArrangementCorrect) {
+
+            isArrangementCorrect = true;
+
+            rad += (2.0 * M_PI / Phase->NumberOfAgents);
+            temp += SizeOfRing / (2*Phase->NumberOfAgents);
+            RandomPlaceVector[1] = YCenter + temp * cos(rad);
+            RandomPlaceVector[0] = XCenter + temp * sin(rad);
+            RandomPlaceVector[2] = 0;
+            // printf("%f is the rad and %f is the dist\n", rad, temp);
+            for (j = 0; j < Phase->NumberOfAgents; j++) {
+
+                /* Skip positions of "unplaced" agents */
+                if (i == j) {
+                    j = toAgent - 1;
+                    continue;
+                };
+
+                GetAgentsCoordinates(AgentjsCoords, Phase, j);
+                VectDifference(DiffCoords, AgentjsCoords, RandomPlaceVector);
+                if (VectAbs(DiffCoords) <= RadiusOfCopter) {
+
+                    isArrangementCorrect = false;
+
+                }
+
+            }
+
+            StepCount++;
+
+            if (StepCount > MaxStep) {
+                fprintf(stderr, "Please, increase the initial area sizes!!\n");
+                exit(-1);
+            }
+
+        }
+
+        InsertAgentsVelocity(Phase, ActualAgentsVelocity, i);
+        InsertAgentsCoordinates(Phase, RandomPlaceVector, i);
+        isArrangementCorrect = false;
+
+    }
+
+}
+
+
+
+
 /* Setting up random positions inside a sphere */
 void PlaceAgentsInsideASphere(phase_t * Phase, const double SizeOfSphere,
         const int fromAgent, const int toAgent,

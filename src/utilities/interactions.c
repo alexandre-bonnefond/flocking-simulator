@@ -326,7 +326,6 @@ void PressureRepulsion(double *OutputVelocity,
         n += 1;
 
         UnitVect(DifferenceVector, DifferenceVector);
-
         double speed = VectAbs(Phase->Velocities[WhichAgent]);
         double mult = k * Phase->Pressure[i] * speed;
         if (mult >= v_max) {

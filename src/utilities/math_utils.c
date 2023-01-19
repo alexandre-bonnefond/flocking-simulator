@@ -774,6 +774,7 @@ double SigmoidLin(const double x, const double p, const double v_max,
     if (p <= 0)
         return 0;
     if (vel >= v_max){
+        // printf("%f\t%f\n", v_max, vel);
         // printf("\t\t\t\t au dessus de la limite\n");
         return v_max;
     }

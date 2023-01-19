@@ -271,6 +271,13 @@ void PlaceAgentsInsideARing(phase_t * Phase, const double SizeOfRing,
         const double XCenter, const double YCenter,
         const double ZCenter, const double ZSize, const double RadiusOfCopter);
 
+/* Setting up deterministic positions inside a ring for repeatable experiment */
+void PlaceAgentsNoRandomInsideARing(phase_t * Phase, const double SizeOfRing,
+        const int fromAgent, const int toAgent,
+        const double XCenter, const double YCenter,
+        const double ZCenter, const double ZSize, const double RadiusOfCopter);
+
+
 /* Setting up random positions inside a sphere
  */
 void PlaceAgentsInsideASphere(phase_t * Phase, const double SizeOfSphere,

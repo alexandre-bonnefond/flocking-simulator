@@ -167,13 +167,15 @@ void Initialize() {
             ActualPhase.Coordinates[i][j] = PhaseData[0].Coordinates[i][j];
         }
     }
-    // TargetsArray = malloc( sizeof *TargetsArray );
-    // TargetsArray[0] = malloc( sizeof **TargetsArray * 4);
-    // TargetsArray[0][0] = 55000;
-    // TargetsArray[0][1] = 32000;
-    // TargetsArray[0][2] = 0;
-    // TargetsArray[0][3] = 1;
-    // cnt +=1;
+    TargetsArray = malloc( sizeof *TargetsArray );
+    TargetsArray[0] = malloc( sizeof **TargetsArray * 4);
+    TargetsArray[0][0] = 55000;
+    TargetsArray[0][1] = 32000;
+    TargetsArray[0][2] = 0;
+    TargetsArray[0][3] = 1;
+    cnt +=1;
+    ActualVizParams.DisplayLeader = true;
+    // printf("%d ", ActualVizParams.DisplayLeader);
 
     CBPObst = tripleIntMatrix(ActualSitParams.NumberOfAgents, ActualSitParams.NumberOfAgents, 2 * sqrt(2) * ActualSitParams.Resolution);
 
@@ -215,7 +217,7 @@ void Initialize() {
 
     /* Tail display is OFF. */
     ActualVizParams.DisplayTail = false;
-    ActualVizParams.LengthOfTail = 500;
+    ActualVizParams.LengthOfTail = 2500;
 
     /* Synchronizing visualization speed */
     ActualVizParams.VizSpeedUp = ActualSitParams.VizSpeedUp;
@@ -1477,11 +1479,11 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
         /* Reset number of collisions and elapsed time and Targets Array */
         Collisions = 0;
         TimeStep = 0;
-        cnt = 0;
-        for (i = 0; i < cnt; i ++) {
-            free(TargetsArray[i]);
-        }
-        free(TargetsArray);
+        // cnt = 0;
+        // for (i = 0; i < cnt; i ++) {
+        //     free(TargetsArray[i]);
+        // }
+        // free(TargetsArray);
 
     } else if (key == GLUT_KEY_F11) {
 

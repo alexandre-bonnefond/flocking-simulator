@@ -374,9 +374,26 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
             ArenaCenterX, ArenaCenterY, 0,
             0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
 
-    PlaceAgentsInsideARing(Phase, 5000, 0, Phase->NumberOfAgents,
-             ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    // PlaceAgentsInsideARing(Phase, 30000, 0, Phase->NumberOfAgents,
+    //          ArenaCenterX - 25000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
     
+    PlaceAgentsNoRandomInsideARing(Phase, 30000, 0, Phase->NumberOfAgents,
+            ArenaCenterX - 20000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    Phase->Coordinates[0][0] += 12000;
+    //  Phase->Coordinates[0][0] += 20000;
+
+    // int start = ArenaCenterX - 50000;
+
+    // for (i = Phase->NumberOfAgents - 1; i >= 0; i--) {
+    //     Phase->Coordinates[i][0] = start;
+    //     Phase->Coordinates[i][1] = 0;
+    //     start += 2000;
+    // }
+    // Phase->Coordinates[0][0] = -1000;
+    // Phase->Velocities[0][0] = 100;
+
+
+
     // PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
     //          ArenaCenterX - 50000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
@@ -630,9 +647,24 @@ void CalculatePreferredVelocity(double *OutputVelocity,
             // MultiplicateWithScalar(TargetTrackingVelocity, TargetTrackingVelocity, 0.3, (int) Dim);
         }
 
+        bool ILFalgo = true;
+
         if (Phase->RealIDs[WhichAgent] != 0 && VizParams->DisplayLeader == 1) {
 
-            int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+            if (ILFalgo) {
+
+                int WhoLeads = AssignInnerState(OutputInnerState, Phase);
+                if (WhoLeads != 0){
+                    TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+                    MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+                    V_Flock, (int)Dim);
+                    UnitVect(NormalizedLF, LeaderFollower);
+                    MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+                }
+                else { 
+                    OutputInnerState[2] = 0; 
+                }
+            }
             // printf("%d following %d and innner state is %f\n", DebugInfo->AgentsSeqNumber, WhoLeads, OutputInnerState[2]);
             // int WhoLeads = 0;
             // for (i = Phase->NumberOfAgents - 1; i > 0; i --) {
@@ -662,16 +694,29 @@ void CalculatePreferredVelocity(double *OutputVelocity,
             //         OutputInnerState[2] = 0;
             //     }       
             // }
-            if (WhoLeads != 0){
-                TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
-                MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
-                V_Flock, (int)Dim);
-                UnitVect(NormalizedLF, LeaderFollower);
-                MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
-            }
-            else { 
-                OutputInnerState[2] = 0; 
+            else {
+                int WhoLeads = 0;
+                for (i = 0; i < Phase->NumberOfAgents; i++) {
+                    if (Phase->RealIDs[i] == 0) {
+                        WhoLeads = i;
+                        OutputInnerState[2] = 2;
+                        break;
+                    }
+                    else {
+                        OutputInnerState[2] = 0;
+                    }
                 }
+            }
+            // if (WhoLeads != 0){
+            //     TargetTrackingSimple(LeaderFollower, Phase->Coordinates[WhoLeads], Phase, 4000, 6000, WhichAgent, (int)Dim);
+            //     MultiplicateWithScalar(LeaderFollower, LeaderFollower, 
+            //     V_Flock, (int)Dim);
+            //     UnitVect(NormalizedLF, LeaderFollower);
+            //     MultiplicateWithScalar(LeaderFollower, NormalizedLF, MIN(V_Flock, VectAbs(LeaderFollower)), (int)Dim);
+            // }
+            // else { 
+            //     OutputInnerState[2] = 0; 
+            //     }
         }
 
         // GradientBased(GradientAcceleration, Phase, Epsilon, A_Action_Function, B_Action_Function, H_Bump,
