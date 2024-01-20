@@ -5,8 +5,10 @@
 output_default*/
 output_folder/
 config/
-parameters/
-obstacles/
+parameters/*
+!parameters/APR06_27.dat
+obstacles/*
+!obstacles/obst40optim*
 .vscode/*
 
 robotflocksim_main
