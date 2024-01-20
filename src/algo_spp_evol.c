@@ -370,16 +370,16 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
 
     /* randomize phase within 2D grid arena */
     // Here we assume 1s delay in V_Flock*2
-    /*PlaceAgentsOnXYPlane(Phase, 2 * ArenaRadius, 2 * ArenaRadius,
-            ArenaCenterX, ArenaCenterY, 0,
-            0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));*/
+    // PlaceAgentsOnXYPlane(Phase, 2 * ArenaRadius, 2 * ArenaRadius,
+    //         ArenaCenterX, ArenaCenterY, 0,
+    //         0, Phase->NumberOfAgents, MAX(SitParams->Radius, V_Flock * 2));
 
     // PlaceAgentsInsideARing(Phase, 30000, 0, Phase->NumberOfAgents,
     //          ArenaCenterX - 25000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
     
-    PlaceAgentsNoRandomInsideARing(Phase, 30000, 0, Phase->NumberOfAgents,
-            ArenaCenterX - 20000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
-    Phase->Coordinates[0][0] += 12000;
+    // PlaceAgentsNoRandomInsideARing(Phase, 30000, 0, Phase->NumberOfAgents,
+    //         ArenaCenterX - 20000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    // Phase->Coordinates[0][0] += 12000;
     //  Phase->Coordinates[0][0] += 20000;
 
     // int start = ArenaCenterX - 50000;
@@ -394,8 +394,8 @@ void InitializePhase(phase_t * Phase, flocking_model_params_t * FlockingParams,
 
 
 
-    // PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
-    //          ArenaCenterX - 50000, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
+    PlaceAgentsInsideARing(Phase, 12000, 0, Phase->NumberOfAgents,
+             ArenaCenterX, ArenaCenterY, 0, 0, MAX(SitParams->Radius, V_Flock * 2));
 
     /* reset z coordinate in two dimensions */
     if (2 == Dim) {
@@ -485,7 +485,8 @@ double DistanceOfNearestPointOfObstacle(double *NearestPointOfPolygon,
 void Shill_Obstacle_LinSqrt(double *OutputVelocity, phase_t * Phase,
         obstacle_t * obstacle, const double V_Shill,
         const double R0_Offset_Shill, const double Acc_Shill,
-        const double Slope_Shill, const int WhichAgent) {
+        const double Slope_Shill, const int WhichAgent, 
+        int* CollisionsObst, bool* AgentInObst, int ObstIndex) {
 
     int i;
     double *AgentsPosition = Phase->Coordinates[WhichAgent];
@@ -494,18 +495,30 @@ void Shill_Obstacle_LinSqrt(double *OutputVelocity, phase_t * Phase,
     static double VelDiff;
     static double DistFromWall; // negative inside obstacle, positive outside
     static double MaxVelDiff;
+    static int WhichObst = -1;
 
     // get target point on obstacle wall in ToArena and distance from it in DistFromWall
     // latter will be negative if we are inside obstacle
     DistFromWall =
             DistanceOfNearestPointOfObstacle(ToArena, obstacle, AgentsPosition);
+
     // inside, shill is going towards arena
     if (DistFromWall < 0) {
         VectDifference(ToArena, ToArena, AgentsPosition);
+        if (AgentInObst[Phase->RealIDs[WhichAgent]] == false) {
+            (*CollisionsObst) += 1;
+            WhichObst = ObstIndex;
+            // printf("%d\n", *CollisionsObst);
+            AgentInObst[Phase->RealIDs[WhichAgent]] = true;
+        }
+        
     }
     // outside, shill is going away from arena
     else {
         VectDifference(ToArena, AgentsPosition, ToArena);
+        if (ObstIndex == WhichObst) {
+            AgentInObst[Phase->RealIDs[WhichAgent]] = false;
+        }
     }
     ToArena[2] = 0;
     UnitVect(ToArena, ToArena);    
@@ -545,7 +558,8 @@ void CalculatePreferredVelocity(double *OutputVelocity,
         vizmode_params_t * VizParams,
         const double Delay,
         const double ActualTime, agent_debug_info_t * DebugInfo,
-        const int Flocking_type, double ** Jacard) {
+        const int Flocking_type, double ** Jacard, 
+        int * CollisionsObst, bool* AgentInObst) {
 
     /* Clear output velocity */
     NullVect(OutputVelocity, 3);
@@ -892,7 +906,12 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     /* Interaction with obstacles (shill agents) */
     for (i = 0; i < obstacles.o_count; i++) {
         Shill_Obstacle_LinSqrt(ObstacleVelocity, Phase, &obstacles.o[i],
-                V_Shill, R_0_Shill, Acc_Shill, Slope_Shill, WhichAgent);
+                V_Shill, R_0_Shill, Acc_Shill, Slope_Shill, 
+                WhichAgent, CollisionsObst, AgentInObst, i);
+    }
+
+    if (ActualTime < 20) {
+        *CollisionsObst = 0;
     }
 
     VectSum(OutputVelocity, OutputVelocity, NormalizedAgentsVelocity);
@@ -1042,7 +1061,7 @@ void CalculatePreferredVelocity(double *OutputVelocity,
     // printf("%f\n", VectAbs(OutputVelocity));
 
     /* V_pref saturates at V_Max */
-    static bool CutOffMode = true;
+    static bool CutOffMode = false;
     // if (VectAbs(AttractionVelocity) > VectAbs(NormalizedAgentsVelocity)) {
     //     CutOffMode = true;
     //     printf("Over Ride\n");

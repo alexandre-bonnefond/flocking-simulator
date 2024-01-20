@@ -39,7 +39,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
-        bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations,
+        bool * AgentsInDanger, int *CollisionsObst, bool* AgentInObst,
+        double *WindVelocityVector, double *Accelerations,
         double ** TargetsArray, double **Polygons, node **Hull, int Verbose);
 
 /*  Initialization and killing

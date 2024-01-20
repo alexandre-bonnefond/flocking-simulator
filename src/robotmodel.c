@@ -352,7 +352,8 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
         phase_t * Phase, double *RealVelocity, unit_model_params_t * UnitParams,
         flocking_model_params_t * FlockingParams, vizmode_params_t * VizParams,
         const double DeltaT, const int TimeStepReal, const int TimeStepLooped,
-        const int WhichAgent, double *WindVelocityVector, double ** Jacard) {
+        const int WhichAgent, double *WindVelocityVector, double ** Jacard, 
+        int *CollisionsObst, bool* AgentInObst) {
 
     int i;
     /*
@@ -383,7 +384,8 @@ void RealCoptForceLaw(double *OutputVelocity, double *OutputInnerState,
 
         CalculatePreferredVelocity(TempTarget, OutputInnerState, Phase, 
                 TargetsArray, WhichTarget, 0, FlockingParams, VizParams, UnitParams->t_del.Value,
-                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value, Jacard);
+                TimeStepReal * DeltaT, &DebugInfo, (int)UnitParams->flocking_type.Value, Jacard, 
+                CollisionsObst, AgentInObst);
 
         for (i = 0; i < 3; i++) {
 
@@ -431,7 +433,8 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         flocking_model_params_t * FlockingParams, sit_parameters_t * SitParams,
         vizmode_params_t * VizParams, int TimeStepLooped, int TimeStepReal,
         bool CountCollisions, bool * ConditionsReset, int *Collisions,
-        bool * AgentsInDanger, double *WindVelocityVector, double *Accelerations, 
+        bool * AgentsInDanger, int *CollisionsObst, bool* AgentInObst, 
+        double *WindVelocityVector, double *Accelerations, 
         double ** TargetsArray, double **Polygons, node **Hull, int Verbose) {
             
     int i, j, k;
@@ -447,7 +450,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
     DelayStep = (UnitParams->t_del.Value / SitParams->DeltaT);
 
     double ** Jacard = doubleMatrix(SitParams->NumberOfAgents, SitParams->NumberOfAgents);
-    
+    // printf("%d", *CollisionsObst);
     static point_xy *points;
     if (points == NULL) {        
         points = malloc(SitParams->NumberOfAgents * sizeof(point_xy));
@@ -564,7 +567,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
             for (m = 0; m < TempPhase.NumberOfAgents; m++) {
                 l = 1;
                 Union = 0;
-                while (TempPhase.NeighSet[k][l] != -1) {
+                while (TempPhase.NeighSet[k][l] != -1 && l < TempPhase.NumberOfAgents) {
                     Union++;
                     if (TempPhase.NeighSet[k][l] == TempPhase.NeighSet[0][0]) {
                         Bilateral = 1;
@@ -597,7 +600,7 @@ void Step(phase_t * OutputPhase, phase_t * GPSPhase, phase_t * GPSDelayedPhase,
         RealCoptForceLaw(RealCoptForceVector, ChangedInnerStateOfActualAgent, 
                 TargetsArray, WhichTarget, &TempPhase, ActualRealVelocity, UnitParams, 
                 FlockingParams, VizParams, SitParams->DeltaT, TimeStepReal, 
-                TimeStepLooped, j, WindVelocityVector, Jacard);
+                TimeStepLooped, j, WindVelocityVector, Jacard, CollisionsObst, AgentInObst);
 
         NullVect(CheckVelocityCache, 3);
         VectSum(CheckVelocityCache, CheckVelocityCache, RealCoptForceVector);

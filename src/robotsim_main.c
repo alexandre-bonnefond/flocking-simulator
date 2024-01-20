@@ -119,6 +119,7 @@ bool ConditionsReset[2];
 bool TrajViz = false;
 bool *AgentsInDanger;
 int Collisions;
+int CollisionsObst;
 int NumberOfCluster;
 double DistanceBetweenAgentsLive;
 double TargetPosition[3];
@@ -169,12 +170,12 @@ void Initialize() {
     }
     TargetsArray = malloc( sizeof *TargetsArray );
     TargetsArray[0] = malloc( sizeof **TargetsArray * 4);
-    TargetsArray[0][0] = 55000;
-    TargetsArray[0][1] = 32000;
-    TargetsArray[0][2] = 0;
-    TargetsArray[0][3] = 1;
-    cnt +=1;
-    ActualVizParams.DisplayLeader = true;
+    // TargetsArray[0][0] = 55000;
+    // TargetsArray[0][1] = 32000;
+    // TargetsArray[0][2] = 0;
+    // TargetsArray[0][3] = 1;
+    // cnt +=1;
+    // ActualVizParams.DisplayLeader = true;
     // printf("%d ", ActualVizParams.DisplayLeader);
 
     CBPObst = tripleIntMatrix(ActualSitParams.NumberOfAgents, ActualSitParams.NumberOfAgents, 2 * sqrt(2) * ActualSitParams.Resolution);
@@ -904,6 +905,7 @@ void UpdateMenu() {
 void DisplayTrajs() {
 
     static char CollisionsToWriteOut[18];
+    static char CollisionsObstToWriteOut[30];
     static char TimeToWriteOut[40];
     static const char PausedCaption[6] = "Paused";
     static int LastTimeStep = 0;
@@ -935,6 +937,21 @@ void DisplayTrajs() {
         }
 
         DrawString(-0.95, -0.9, GLUT_BITMAP_9_BY_15, CollisionsToWriteOut,
+                ActualColorConfig.MenuSelectionColor);
+
+    }
+
+    /* Writing out number of collisions with obstacles*/
+    if (CollisionsObst != 0 && ActualVizParams.TwoDimViz == true) {
+
+        /* Grammar... */
+        if (CollisionsObst != 1) {
+            sprintf(CollisionsObstToWriteOut, "%d collisions obst!", CollisionsObst);
+        } else {
+            sprintf(CollisionsObstToWriteOut, "%d collision obst!", CollisionsObst);
+        }
+
+        DrawString(-0.95, -0.85, GLUT_BITMAP_9_BY_15, CollisionsObstToWriteOut,
                 ActualColorConfig.MenuSelectionColor);
 
     }
@@ -1114,7 +1131,7 @@ void UpdatePositionsToDisplay() {
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase,
                         PhaseData, &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep,
-                        true, ConditionsReset, &Collisions, AgentsInDanger,
+                        true, ConditionsReset, &Collisions, AgentsInDanger, &CollisionsObst, AgentInObst,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
@@ -1168,7 +1185,7 @@ void UpdatePositionsToDisplay() {
                 Step(&ActualPhase, &GPSPhase, &GPSDelayedPhase, PhaseData,
                         &ActualUnitParams, cnt, &ActualFlockingParams,
                         &ActualSitParams, &ActualVizParams, Now, TimeStep, true,
-                        ConditionsReset, &Collisions, AgentsInDanger,
+                        ConditionsReset, &Collisions, AgentsInDanger, &CollisionsObst, AgentInObst,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
@@ -2442,7 +2459,7 @@ int main(int argc, char *argv[]) {
                         (int) (ActualStatUtils.ElapsedTime /
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
-                        ConditionsReset, &Collisions, AgentsInDanger,
+                        ConditionsReset, &Collisions, AgentsInDanger, &CollisionsObst, AgentInObst,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
@@ -2466,7 +2483,7 @@ int main(int argc, char *argv[]) {
                         (int) (ActualStatUtils.ElapsedTime /
                                 ActualSitParams.DeltaT),
                         (FALSE != ActualSaveModes.SaveCollisions),
-                        ConditionsReset, &Collisions, AgentsInDanger,
+                        ConditionsReset, &Collisions, AgentsInDanger, &CollisionsObst, AgentInObst,
                         WindVelocityVector, Accelerations, TargetsArray, Polygons, &Hull, Verbose);
 
                 HandleOuterVariables(&ActualPhase, &ActualVizParams,
