@@ -684,7 +684,7 @@ void DrawCopters(phase_t * Phase, phase_t * GPSPhase, const int TimeStep) {
         if (ActualVizParams.DisplayInt == true) {
             float colors[5][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0.8, 0.3, 0.1}, {1, 1, 1}}; //red = rep; green = att; blue = align; orange = obst; white = spp
             for (i = 0; i < Phase->NumberOfAgents; i++) {
-                for (int comp = 0; comp < cntInt%5; comp ++) {
+                for (int comp = 0; comp < cntInt; comp ++) {
                     // comp = 1;
                     GetAgentsCoordinates(AgentsCoordinates, Phase, i);
 
@@ -1592,7 +1592,7 @@ void HandleKeyBoardSpecial(int key, int x, int y) {
 
     } else if (key == GLUT_KEY_F4) {
         ActualVizParams.DisplayInt = !ActualVizParams.DisplayInt;
-        cntInt++;
+        cntInt = 5;
 
         /* F5 Saves the parameters */
     } else if (key == GLUT_KEY_F5) {
@@ -2209,7 +2209,7 @@ int main(int argc, char *argv[]) {
         /* Opening output files */
         FILE *f_Correlation, *f_CoM, *f_Velocity, *f_HullArea,
                 *f_DistanceBetweenNeighbours, *f_DistanceBetweenUnits,
-                *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions, *f_Pressure;
+                *f_CollisionRatio, *f_Acceleration, *f_ReceivedPowers, *f_Collisions, *f_CollisionsObst, *f_Pressure;
         FILE *f_Correlation_StDev, *f_CoM_StDev, *f_Velocity_StDev, *f_HullArea_StDev,
                 *f_CollisionRatio_StDev, *f_DistanceBetweenUnits_StDev,
                 *f_Acceleration_StDev, *f_ReceivedPowers_StDev, *f_DistanceBetweenNeighbours_StDev, *f_Pressure_StDev;
@@ -2245,6 +2245,13 @@ int main(int argc, char *argv[]) {
             strcat(OutputFileName, "/collisions.dat\0");
             f_Collisions = fopen(OutputFileName, "w");
             fprintf(f_Collisions, "time_(s)\tnumber_of_collisions\n\n");
+        }
+
+        if (FALSE != ActualSaveModes.SaveCollisionsObst) {
+            strcpy(OutputFileName, ActualStatUtils.OutputDirectory);
+            strcat(OutputFileName, "/collisionsObst.dat\0");
+            f_CollisionsObst = fopen(OutputFileName, "w");
+            fprintf(f_CollisionsObst, "time_(s)\tnumber_of_collisions_with_obst\n\n");
         }
 
         if (FALSE != ActualSaveModes.SaveDistanceBetweenUnits) {
@@ -2504,6 +2511,7 @@ int main(int argc, char *argv[]) {
                     ActualStatUtils.ElapsedTime <
                     ActualSitParams.StartOfSteadyState) {
                 Collisions = 0;
+                CollisionsObst = 0;
             }
 
             /* Saving trajectories */
@@ -2516,6 +2524,11 @@ int main(int argc, char *argv[]) {
             if (TIMELINE == ActualSaveModes.SaveCollisions) {
                 fprintf(f_Collisions, "%lf\t%d\n", ActualStatUtils.ElapsedTime,
                         Collisions);
+            }
+
+            if (TIMELINE == ActualSaveModes.SaveCollisionsObst) {
+                fprintf(f_CollisionsObst, "%lf\t%d\n", ActualStatUtils.ElapsedTime,
+                        CollisionsObst);
             }
 
             if (FALSE != ActualSaveModes.SaveDistanceBetweenUnits) {
@@ -2812,6 +2825,18 @@ int main(int argc, char *argv[]) {
                         ActualSitParams.StartOfSteadyState, Collisions);
             }
             fclose(f_Collisions);
+        }
+
+        if (FALSE != ActualSaveModes.SaveCollisionsObst) {
+            if (STAT == ActualSaveModes.SaveCollisions) {
+                fprintf(f_CollisionsObst, "%lf\t%d\n", ActualStatUtils.ElapsedTime,
+                        CollisionsObst);
+            } else if (STEADYSTAT == ActualSaveModes.SaveCollisions) {
+                fprintf(f_CollisionsObst, "%lf\t%d\n",
+                        ActualStatUtils.ElapsedTime -
+                        ActualSitParams.StartOfSteadyState, CollisionsObst);
+            }
+            fclose(f_CollisionsObst);
         }
         if (FALSE != ActualSaveModes.SaveAcceleration) {
             SAVE_STATISTICS(Acceleration, 4);

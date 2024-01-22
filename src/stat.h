@@ -29,6 +29,7 @@ typedef struct {
     double Data_CoM_Sum[3];
     double Data_HullArea_Sum[4];
     double Data_Pressure_Sum[4];
+    // double Data_Collision_Obst;
 
     /* stDevs */
     double Data_Acceleration_StDev[4];
@@ -41,6 +42,7 @@ typedef struct {
     double Data_Velocity_StDev[8];
     double Data_HullArea_StDev[4];
     double Data_Pressure_StDev[4];
+    // double Data_Collision_Obst_StDev;
 
 } statistics_t;
 

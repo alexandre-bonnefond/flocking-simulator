@@ -130,6 +130,9 @@ void ReadOutputModes(output_modes_t * OutputModes, FILE * InputFile) {
             } else if (strcmp(ReadedName, "SaveCollisions") == 0) {
                 OutputModes->SaveCollisions =
                         CheckSaveMode(ReadedValue, ReadedName);
+            } else if (strcmp(ReadedName, "SaveCollisionsObst") == 0) {
+                OutputModes->SaveCollisionsObst =
+                        CheckSaveMode(ReadedValue, ReadedName);
             } else if (strcmp(ReadedName, "SaveAcceleration") == 0) {
                 OutputModes->SaveAcceleration =
                         CheckSaveMode(ReadedValue, ReadedName);
